@@ -1,0 +1,4 @@
+fastapi>=0.95.2
+uvicorn[standard]>=0.22.0
+# Przydatne lokalnie do wczytywania zmiennych środowiskowych z pliku .env
+python-dotenv>=1.0.0
