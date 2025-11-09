@@ -1,13 +1,9 @@
 import os
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-
-# Ten moduł eksponuje obiekt `app` (ASGI) — uruchom serwer używając np.:
-#   uvicorn main:app --host 0.0.0.0 --port 8000
 
 app = FastAPI()
 
-# 🔓 Włącz CORS, żeby frontend (np. localhost:5173) mógł się łączyć
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # na hackathonie możesz zostawić *, potem zawęź
@@ -20,11 +16,36 @@ app.add_middleware(
 def read_root():
     return {"status": "ok", "message": "Backend działa 🚀"}
 
-# 📡 Prosty websocket echo
+# 📡 Manager połączeń
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
-    await ws.accept()
-    await ws.send_text("✅ Połączenie WebSocket nawiązane!")
-    while True:
-        data = await ws.receive_text()
-        await ws.send_text(f"Echo: {data}")
+    await manager.connect(ws)
+    await manager.send_personal_message("✅ Połączenie WebSocket nawiązane!", ws)
+    try:
+        while True:
+            data = await ws.receive_text()
+            # Rozsyłamy do wszystkich klientów
+            await manager.broadcast(f"📩 {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(ws)
+        await manager.broadcast("⚠️ Jeden z klientów się rozłączył")
