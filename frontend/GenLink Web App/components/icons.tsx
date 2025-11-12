@@ -249,3 +249,31 @@ export const PhoneCheckIcon: React.FC<IconSvgProps> = ({
     />
   </svg>
 );
+
+export const MenuIcon: React.FC<IconSvgProps> = ({ size = 24, width, height, ...props }) => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    height={size || height}
+    viewBox="0 0 24 24"
+    width={size || width}
+    {...props}
+  >
+    <path d="M4 8h16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+    <path d="M4 16h16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+  </svg>
+);
+
+export const CloseIcon: React.FC<IconSvgProps> = ({ size = 24, width, height, ...props }) => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    height={size || height}
+    viewBox="0 0 24 24"
+    width={size || width}
+    {...props}
+  >
+    <path d="M6 6l12 12" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+    <path d="M18 6L6 18" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+  </svg>
+);
