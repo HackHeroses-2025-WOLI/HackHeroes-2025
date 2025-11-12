@@ -19,12 +19,17 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite:///./users.db"
     
-    # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    # CORS - will be parsed from comma-separated string
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
     
     # Server
     HOST: str = "0.0.0.0"
     PORT: int = 8000
+    
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Parse CORS origins from comma-separated string."""
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
     
     class Config:
         env_file = ".env"

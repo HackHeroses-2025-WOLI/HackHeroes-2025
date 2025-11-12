@@ -32,7 +32,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,7 +71,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 async def health_check():
     """Health check endpoint."""
     return {
-        "status": "healthy",
+        "status": "OK",
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION
     }

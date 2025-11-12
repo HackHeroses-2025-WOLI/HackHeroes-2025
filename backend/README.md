@@ -82,14 +82,32 @@ copy .env.example .env
 
 ### 5. Run the application
 ```bash
-# Development mode with auto-reload
+# Method 1: Using run.py script (recommended)
+python run.py
+
+# Method 2: Using uvicorn directly
 uvicorn app.main:app --reload
 
-# Or use Python directly
-python -m app.main
+# Method 3: Production mode
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
 
-# Production mode
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+### 6. Initialize database (first time only)
+```bash
+python init_db.py
+```
+
+## 🚀 Quick Start Commands
+
+```powershell
+# Windows PowerShell - Full setup
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+copy .env.example .env
+# Edit .env and set SECRET_KEY
+python init_db.py
+python run.py
 ```
 
 ## 📚 API Documentation
@@ -101,16 +119,110 @@ Once running, visit:
 
 ## 🔑 API Endpoints
 
-### Authentication
-- `POST /api/v1/auth/register` - Register new user
-- `POST /api/v1/auth/login` - Login and get JWT token
-
-### Users (Protected)
-- `GET /api/v1/users/me` - Get current user profile
-- `GET /api/v1/users/{user_id}` - Get user by ID
-
-### Health Check
+### 🏥 Health & Status
 - `GET /health` - Check API health status
+
+---
+
+### 👥 **KONTA (Accounts)** - `/api/v1/konta`
+
+#### Rejestracja i Logowanie
+- `POST /api/v1/konta/register` - Rejestracja nowego konta
+  ```json
+  {
+    "login_email": "user@example.com",
+    "haslo": "SecurePass123",
+    "imie_nazwisko": "Jan Kowalski",
+    "nr_tel": "123456789",
+    "miejscowosc": "Warszawa",
+    "typ_dostepnosci": 1,
+    "dostepnosc_json": "{\"high_contrast\": true}"
+  }
+  ```
+
+- `POST /api/v1/konta/login` - Logowanie
+  ```json
+  {
+    "login_email": "user@example.com",
+    "haslo": "SecurePass123"
+  }
+  ```
+
+#### Zarządzanie Kontami
+- `GET /api/v1/konta/me` - Pobierz swoje konto (wymaga auth)
+- `GET /api/v1/konta/{email}` - Pobierz konto po emailu
+- `GET /api/v1/konta/?skip=0&limit=100` - Pobierz wszystkie konta (paginacja)
+- `PUT /api/v1/konta/{email}` - Aktualizuj konto
+- `DELETE /api/v1/konta/{email}` - Usuń konto
+
+---
+
+### 📋 **ZGŁOSZENIA (Reports)** - `/api/v1/zgloszenia`
+
+#### Tworzenie i Zarządzanie
+- `POST /api/v1/zgloszenia/` - Utwórz nowe zgłoszenie
+  ```json
+  {
+    "imie_nazwisko": "Anna Nowak",
+    "nr_tel": "987654321",
+    "wiek": 45,
+    "adres": "ul. Przykładowa 10",
+    "miejscowosc": "Kraków",
+    "problem": "Brak podjazdu dla wózków inwalidzkich przy wejściu do urzędu",
+    "czy_do_kontaktu": true,
+    "typ_zgloszenia_id": 1,
+    "zgloszenie_szczegoly": "Dodatkowe informacje..."
+  }
+  ```
+
+#### Przeglądanie Zgłoszeń
+- `GET /api/v1/zgloszenia/` - Pobierz wszystkie zgłoszenia
+  - Query params: `skip`, `limit`, `typ_zgloszenia_id`, `miejscowosc`
+  - Przykład: `/api/v1/zgloszenia/?miejscowosc=Warszawa&limit=50`
+
+- `GET /api/v1/zgloszenia/{id}` - Pobierz zgłoszenie po ID
+- `GET /api/v1/zgloszenia/stats` - Statystyki zgłoszeń
+- `GET /api/v1/zgloszenia/reporter/{email}` - Zgłoszenia użytkownika
+
+#### Edycja i Usuwanie
+- `PUT /api/v1/zgloszenia/{id}` - Aktualizuj zgłoszenie
+- `DELETE /api/v1/zgloszenia/{id}` - Usuń zgłoszenie
+
+---
+
+### 🏷️ **TYPY (Types)** - `/api/v1/typy`
+
+#### Typ Dostępności
+- `GET /api/v1/typy/dostepnosci` - Pobierz wszystkie typy dostępności
+- `GET /api/v1/typy/dostepnosci/{id}` - Pobierz typ po ID
+- `POST /api/v1/typy/dostepnosci` - Utwórz nowy typ
+  ```json
+  {
+    "nazwa": "Niewidomy",
+    "opis": "Użytkownik niewidomy korzystający z czytnika ekranu"
+  }
+  ```
+
+#### Typ Zgłoszenia
+- `GET /api/v1/typy/zgloszen` - Pobierz wszystkie typy zgłoszeń
+- `GET /api/v1/typy/zgloszen/{id}` - Pobierz typ po ID
+- `POST /api/v1/typy/zgloszen` - Utwórz nowy typ
+  ```json
+  {
+    "nazwa": "Bariery architektoniczne",
+    "opis": "Problemy z dostępnością budynków"
+  }
+  ```
+
+---
+
+### 🔐 **Authentication (Legacy)** - `/api/v1/auth`
+- `POST /api/v1/auth/register` - Rejestracja (stary system)
+- `POST /api/v1/auth/login` - Logowanie (stary system)
+
+### 👤 **Users (Legacy)** - `/api/v1/users`
+- `GET /api/v1/users/me` - Pobierz profil (stary system)
+- `GET /api/v1/users/{user_id}` - Pobierz użytkownika po ID
 
 ## 🔐 Authentication Flow
 
