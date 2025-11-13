@@ -39,7 +39,7 @@ const hasActiveAssignment = Boolean(activeAssignment);
 
 export default function VolunteerPanelPage() {
   return (
-  <div className="flex flex-col gap-8 py-6">
+  <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
         <h1 className="text-3xl font-semibold text-default-900">Witaj w panelu wolontariusza</h1>
         <p className="text-sm text-default-500">

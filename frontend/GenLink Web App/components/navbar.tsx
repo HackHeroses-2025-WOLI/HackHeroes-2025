@@ -15,7 +15,7 @@ import { Link } from "@heroui/link";
 import { link as linkStyles } from "@heroui/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { siteConfig } from "@/config/site";
@@ -26,6 +26,7 @@ export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const { show: showLoader } = useNavigationLoader();
+  const scrollPositionRef = useRef<number | null>(null);
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -71,6 +72,42 @@ export const Navbar = () => {
     ),
     [],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const body = document.body;
+
+    if (isMenuOpen) {
+      scrollPositionRef.current = window.scrollY;
+      body.style.position = "fixed";
+      body.style.width = "100%";
+      body.style.top = `-${scrollPositionRef.current}px`;
+      body.style.overflow = "hidden";
+    } else if (scrollPositionRef.current !== null) {
+      body.style.position = "";
+      body.style.width = "";
+      body.style.top = "";
+      body.style.overflow = "";
+      window.scrollTo({ top: scrollPositionRef.current });
+      scrollPositionRef.current = null;
+    }
+
+    return () => {
+      body.style.position = "";
+      body.style.width = "";
+      body.style.top = "";
+      body.style.overflow = "";
+    };
+  }, [isMenuOpen]);
+
+  const volunteerButtonClassName =
+    "font-semibold text-primary border border-primary/25 bg-primary/5 shadow-[0_18px_45px_rgba(37,99,235,0.18)] hover:bg-primary/10";
+  const mobileVolunteerButtonClassName =
+    "w-full border border-white/60 bg-white/55 text-slate-900 font-semibold hover:bg-white/70"
+      + " focus-visible:ring-2 focus-visible:ring-white/60";
 
   return (
     <HeroUINavbar
@@ -130,6 +167,8 @@ export const Navbar = () => {
             radius="full"
             size="md"
             variant="bordered"
+            // color="primary"
+            className={volunteerButtonClassName}
             onPress={() => handleNavigate("/wolontariusz/login")}
           >
             Chcę pomagać
@@ -145,50 +184,57 @@ export const Navbar = () => {
         />
       </NavbarContent>
 
-      <NavbarMenu>
-        <div className="mx-4 mt-4 flex flex-col gap-2">
-          {siteConfig.navMenuItems.map((item) => (
-            <NavbarMenuItem key={item.href}>
-              {item.href.startsWith("mailto:") ? (
-                <Link
-                  color="foreground"
-                  href={item.href}
-                  size="lg"
-                  onPress={handleMenuClose}
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <NextLink
-                  className="text-lg text-foreground"
-                  href={item.href}
-                  onClick={() => handleNavigate(item.href)}
-                >
-                  {item.label}
-                </NextLink>
-              )}
-            </NavbarMenuItem>
-          ))}
-        </div>
-        <div className="mx-4 mt-6 flex flex-col gap-2">
-          <Button
-            as={NextLink}
-            color="primary"
-            href="/pomoc"
-            onPress={() => handleNavigate("/pomoc")}
-            radius="lg"
-          >
-            Potrzebuję pomocy
-          </Button>
-          <Button
-            as={NextLink}
-            href="/wolontariusz/login"
-            onPress={() => handleNavigate("/wolontariusz/login")}
-            radius="lg"
-            variant="bordered"
-          >
-            Chcę pomagać
-          </Button>
+      <NavbarMenu className="sm:hidden bg-transparent px-0 py-0 backdrop-blur-0">
+        <div className="mx-3 my-4 rounded-[20px] bg-gradient-to-b from-white/95 via-white/85 to-white/80 p-5 shadow-[0_35px_100px_rgba(15,23,42,0.12)] ring-1 ring-white/50 backdrop-blur-lg">
+          <div className="flex flex-col gap-2">
+            {siteConfig.navMenuItems.map((item) => (
+              <NavbarMenuItem key={item.href}>
+                {item.href.startsWith("mailto:") ? (
+                  <Link
+                    color="foreground"
+                    href={item.href}
+                    size="lg"
+                    onPress={handleMenuClose}
+                  >
+                    {item.label}
+                  </Link>
+                ) : (
+                  <NextLink
+                    className="text-lg text-foreground"
+                    href={item.href}
+                    onClick={() => handleNavigate(item.href)}
+                  >
+                    {item.label}
+                  </NextLink>
+                )}
+              </NavbarMenuItem>
+            ))}
+          </div>
+          <div className="mt-6 flex flex-col gap-2">
+            <Button
+              as={NextLink}
+              className="w-full font-semibold shadow-[0_25px_80px_rgba(37,99,235,0.35)]"
+              color="primary"
+              href="/pomoc"
+              onPress={() => handleNavigate("/pomoc")}
+              radius="lg"
+              size="md"
+            >
+              Potrzebuję pomocy
+            </Button>
+            <Button
+              as={NextLink}
+              className={mobileVolunteerButtonClassName}
+              color="default"
+              href="/wolontariusz/login"
+              onPress={() => handleNavigate("/wolontariusz/login")}
+              radius="lg"
+              size="md"
+              variant="bordered"
+            >
+              Chcę pomagać
+            </Button>
+          </div>
         </div>
       </NavbarMenu>
     </HeroUINavbar>

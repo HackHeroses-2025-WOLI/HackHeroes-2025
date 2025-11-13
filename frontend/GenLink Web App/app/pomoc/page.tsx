@@ -221,26 +221,53 @@ export default function HelpPage() {
 
   const volunteerInfo = useMemo(() => {
     if (isLoadingStats) {
-      return "Trwa pobieranie...";
+      return {
+        volunteersText: "Trwa pobieranie…",
+        etaText: "",
+      };
     }
 
     if (!stats) {
-      return "Dane chwilowo niedostępne";
+      return {
+        volunteersText: "Dane chwilowo niedostępne",
+        etaText: "",
+      };
     }
 
-    return `${stats.volunteers} wolontariuszy w gotowości • średni telefon za ${stats.etaMinutes} min`;
+    return {
+      volunteersText: `${stats.volunteers} wolontariuszy w gotowości`,
+      etaText: `Średni telefon za ${stats.etaMinutes} min`,
+    };
   }, [isLoadingStats, stats]);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 py-8">
-      <Card className="border border-default-100">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
+      <Card className="border border-default-100/60 shadow-lg">
         <CardHeader className="flex flex-col gap-3 text-left">
-          <Chip color="success" variant="flat">
-            {volunteerInfo}
+          <Chip
+            color="success"
+            variant="flat"
+            className="w-full rounded-full bg-success-50 px-6 py-4 text-base font-semibold text-success-900 shadow-sm sm:w-auto sm:px-8 sm:py-4 sm:text-lg"
+          >
+            <div className="flex flex-col gap-3 text-left sm:flex-row sm:items-center sm:gap-8">
+              <span className="flex w-full items-start gap-3 text-left sm:w-auto">
+                <span className="mt-1 h-2 w-2 rounded-full bg-success-500 sm:mt-0" />
+                <span className="leading-tight text-pretty">{volunteerInfo.volunteersText}</span>
+              </span>
+
+              {volunteerInfo.etaText ? (
+                <span className="flex w-full items-start gap-3 text-left sm:w-auto">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-success-500 sm:mt-0" />
+                  <span className="leading-tight text-pretty">{volunteerInfo.etaText}</span>
+                </span>
+              ) : null}
+            </div>
           </Chip>
+
           <h1 className="text-3xl font-semibold">Poproś o pomoc wolontariusza</h1>
           <p className="text-sm text-default-500">
-            Wypełnij formularz, a wolontariusz GenLink zadzwoni do Ciebie, aby spokojnie dopytać o szczegóły i przeprowadzić przez rozwiązanie krok po kroku.
+            Wypełnij formularz, a wolontariusz GenLink zadzwoni do Ciebie, aby spokojnie dopytać o szczegóły i
+            przeprowadzić przez rozwiązanie krok po kroku.
           </p>
         </CardHeader>
         <Divider />

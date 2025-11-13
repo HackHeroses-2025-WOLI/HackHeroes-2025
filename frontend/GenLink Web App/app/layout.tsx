@@ -45,7 +45,7 @@ export default function RootLayout({
           <NavigationLoaderProvider>
             <div className="relative flex min-h-screen flex-col">
               <Navbar />
-              <main className="container mx-auto max-w-7xl flex-grow px-6 pt-12">
+              <main className="container mx-auto max-w-7xl flex-grow px-6 pt-1 md:pt-1"/*można zmniejszyć padding top i coś */>
                 {children}
               </main>
               <footer className="border-t border-default-100 bg-default-50 py-8">

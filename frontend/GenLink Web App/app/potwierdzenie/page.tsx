@@ -27,7 +27,7 @@ export default function ConfirmationPage({ searchParams }: ConfirmationPageProps
         </CardHeader>
         <CardBody className="flex flex-col gap-2 text-sm text-default-600">
           <div className="flex flex-col gap-3 rounded-lg p-1 text-sm">
-            <Chip size="md" color="warning" className="font-semibold">
+            <Chip className="bg-[#CCE3FD] text-black" size="md">
               Pamiętaj!
             </Chip>
             <p className="text-default-700 font-semibold">
