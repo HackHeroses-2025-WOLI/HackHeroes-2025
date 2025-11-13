@@ -103,12 +103,6 @@ export const Navbar = () => {
     };
   }, [isMenuOpen]);
 
-  const volunteerButtonClassName =
-    "font-semibold text-primary border border-primary/25 bg-primary/5 shadow-[0_18px_45px_rgba(37,99,235,0.18)] hover:bg-primary/10";
-  const mobileVolunteerButtonClassName =
-    "w-full border border-white/60 bg-white/55 text-slate-900 font-semibold hover:bg-white/70"
-      + " focus-visible:ring-2 focus-visible:ring-white/60";
-
   return (
     <HeroUINavbar
       className="w-full"
@@ -168,7 +162,7 @@ export const Navbar = () => {
             size="md"
             variant="bordered"
             // color="primary"
-            className={volunteerButtonClassName}
+            className={"font-semibold text-primary border-2 border-primary/25 bg-primary/5 shadow-[0_18px_45px_rgba(37,99,235,0.18)] hover:bg-primary/10"}
             onPress={() => handleNavigate("/wolontariusz/login")}
           >
             Chcę pomagać
@@ -224,7 +218,7 @@ export const Navbar = () => {
             </Button>
             <Button
               as={NextLink}
-              className={mobileVolunteerButtonClassName}
+              className={"font-semibold text-primary border-2 border-primary/25 bg-primary/5 shadow-[0_18px_45px_rgba(37,99,235,0.18)] hover:bg-primary/10"}
               color="default"
               href="/wolontariusz/login"
               onPress={() => handleNavigate("/wolontariusz/login")}
