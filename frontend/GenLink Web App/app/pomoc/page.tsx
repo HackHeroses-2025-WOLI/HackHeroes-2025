@@ -244,25 +244,18 @@ export default function HelpPage() {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
       <Card className="border border-default-100/60 shadow-lg">
         <CardHeader className="flex flex-col gap-3 text-left">
-          <Chip
-            color="success"
-            variant="flat"
-            className="w-full rounded-full bg-success-50 px-6 py-4 text-base font-semibold text-success-900 shadow-sm sm:w-auto sm:px-8 sm:py-4 sm:text-lg"
-          >
-            <div className="flex flex-col gap-3 text-left sm:flex-row sm:items-center sm:gap-8">
-              <span className="flex w-full items-start gap-3 text-left sm:w-auto">
-                <span className="mt-1 h-2 w-2 rounded-full bg-success-500 sm:mt-0" />
-                <span className="leading-tight text-pretty">{volunteerInfo.volunteersText}</span>
-              </span>
-
-              {volunteerInfo.etaText ? (
-                <span className="flex w-full items-start gap-3 text-left sm:w-auto">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-success-500 sm:mt-0" />
-                  <span className="leading-tight text-pretty">{volunteerInfo.etaText}</span>
-                </span>
-              ) : null}
+          <div className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl bg-success-50 p-4 text-center text-sm font-semibold text-success-800 shadow-sm ring-1 ring-inset ring-success-200/50 sm:flex-row sm:divide-x sm:divide-success-200/80 sm:p-3 sm:text-base">
+            <div className="flex items-center gap-2 px-4">
+              <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-success-400 sm:hidden" />
+              <span className="text-pretty">{volunteerInfo.volunteersText}</span>
             </div>
-          </Chip>
+            {volunteerInfo.etaText ? (
+              <div className="flex items-center gap-2 px-4">
+                <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-success-400 sm:hidden" />
+                <span className="text-pretty">{volunteerInfo.etaText}</span>
+              </div>
+            ) : null}
+          </div>
 
           <h1 className="text-3xl font-semibold">Poproś o pomoc wolontariusza</h1>
           <p className="text-sm text-default-500">
