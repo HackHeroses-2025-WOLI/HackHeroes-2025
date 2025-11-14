@@ -17,7 +17,6 @@ const FORM_STORAGE_KEY = "genlink-help-form-v1";
 
 interface VolunteerStats {
   volunteers: number;
-  etaMinutes: number;
 }
 
 interface StoredForm {
@@ -209,8 +208,7 @@ export default function HelpPage() {
         }
       }
 
-      const eta = stats?.etaMinutes ?? 30;
-      router.push(`/potwierdzenie?eta=${eta}`);
+  router.push(`/potwierdzenie`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Nieoczekiwany błąd";
       setSubmitError(message);
@@ -221,46 +219,26 @@ export default function HelpPage() {
 
   const volunteerInfo = useMemo(() => {
     if (isLoadingStats) {
-      return {
-        volunteersText: "Trwa pobieranie…",
-        etaText: "",
-      };
+      return "Trwa pobieranie...";
     }
 
     if (!stats) {
-      return {
-        volunteersText: "Dane chwilowo niedostępne",
-        etaText: "",
-      };
+      return "Dane chwilowo niedostępne";
     }
 
-    return {
-      volunteersText: `${stats.volunteers} wolontariuszy w gotowości`,
-      etaText: `Średni telefon za ${stats.etaMinutes} min`,
-    };
+    return `${stats.volunteers} wolontariuszy w gotowości`;
   }, [isLoadingStats, stats]);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <Card className="border border-default-100/60 shadow-lg">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 py-8">
+      <Card className="border border-default-100">
         <CardHeader className="flex flex-col gap-3 text-left">
-          <div className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl bg-success-50 p-4 text-center text-sm font-semibold text-success-800 shadow-sm ring-1 ring-inset ring-success-200/50 sm:flex-row sm:divide-x sm:divide-success-200/80 sm:p-3 sm:text-base">
-            <div className="flex items-center gap-2 px-4">
-              <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-success-400 sm:hidden" />
-              <span className="text-pretty">{volunteerInfo.volunteersText}</span>
-            </div>
-            {volunteerInfo.etaText ? (
-              <div className="flex items-center gap-2 px-4">
-                <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-success-400 sm:hidden" />
-                <span className="text-pretty">{volunteerInfo.etaText}</span>
-              </div>
-            ) : null}
-          </div>
-
+          <Chip color="success" variant="flat">
+            {volunteerInfo}
+          </Chip>
           <h1 className="text-3xl font-semibold">Poproś o pomoc wolontariusza</h1>
           <p className="text-sm text-default-500">
-            Wypełnij formularz, a wolontariusz GenLink zadzwoni do Ciebie, aby spokojnie dopytać o szczegóły i
-            przeprowadzić przez rozwiązanie krok po kroku.
+            Wypełnij formularz, a wolontariusz GenLink zadzwoni do Ciebie, aby spokojnie dopytać o szczegóły i przeprowadzić przez rozwiązanie krok po kroku.
           </p>
         </CardHeader>
         <Divider />
