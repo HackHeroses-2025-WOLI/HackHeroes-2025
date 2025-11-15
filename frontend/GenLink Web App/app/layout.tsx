@@ -43,7 +43,7 @@ export default function RootLayout({
           themeProps={{ attribute: "class", defaultTheme: "light", forcedTheme: "light" }}
         >
           <NavigationLoaderProvider>
-            <div className="relative flex min-h-screen flex-col">
+            <div className="relative flex min-h-screen flex-col pt-16">
               <Navbar />
               <main className="container mx-auto max-w-7xl flex-grow px-6 pt-1 md:pt-1"/*można zmniejszyć padding top i coś */>
                 {children}

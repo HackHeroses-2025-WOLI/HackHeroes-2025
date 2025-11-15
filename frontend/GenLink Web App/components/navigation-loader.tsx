@@ -26,7 +26,7 @@ export const NavigationLoaderProvider = ({ children }: { children: ReactNode }) 
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const showRef = useRef<() => void>(() => setIsVisible(true));
+  const showRef = useRef<() => void>(() => Promise.resolve().then(() => setIsVisible(true)));
   const lastLocationRef = useRef<string | null>(null);
   const showTimestampRef = useRef<number | null>(null);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -96,9 +96,13 @@ export const NavigationLoaderProvider = ({ children }: { children: ReactNode }) 
   );
 
   const show = useCallback(() => {
+    // clear any pending hide timers and record when we showed the loader
     clearHideTimeout();
     showTimestampRef.current = getNow();
-    setIsVisible(true);
+
+    // schedule the visible state change in a microtask to avoid
+    // triggering setState during insertion effects in React internals.
+    Promise.resolve().then(() => setIsVisible(true));
   }, [clearHideTimeout, getNow]);
 
   const scheduleHide = useCallback(() => {

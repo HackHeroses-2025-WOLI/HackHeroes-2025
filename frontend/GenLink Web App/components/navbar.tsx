@@ -90,136 +90,134 @@ export const Navbar = () => {
   }, [isMenuOpen]);
 
   return (
-    <HeroUINavbar
-      className={clsx(
-        "w-full z-50 left-0 right-0 top-0",
-        isMenuOpen ? "fixed" : "sticky",
-      )}
-      isBlurred
-      isMenuOpen={isMenuOpen}
-      maxWidth="xl"
-      onMenuOpenChange={setIsMenuOpen}
-      position="static"
-    >
-      <NavbarContent className="basis-1/2 sm:basis-full" justify="start">
-        <NavbarBrand as="li" className="gap-3 max-w-fit">
-          <NextLink
-            className="flex items-center gap-2"
-            href="/"
-            onClick={() => handleNavigate("/")}
-          >
-            <Logo />
-            <p className="font-semibold tracking-tight text-inherit">GenLink</p>
-          </NextLink>
-        </NavbarBrand>
-        <ul className="hidden lg:flex gap-6">
-          {siteConfig.navItems.map((item) => (
-            <NavbarItem key={item.href}>
-              <NextLink
-                className={clsx(
-                  linkStyles({ color: "foreground" }),
-                  "text-sm font-medium data-[active=true]:text-primary",
-                )}
-                href={item.href}
-                onClick={() => handleNavigate(item.href)}
-              >
-                {item.label}
-              </NextLink>
-            </NavbarItem>
-          ))}
-        </ul>
-      </NavbarContent>
-
-      <NavbarContent className="hidden sm:flex basis-1/2 sm:basis-full" justify="end">
-        <NavbarItem className="hidden md:flex">
-          <Button
-            as={NextLink}
-            color="primary"
-            href="/pomoc"
-            radius="full"
-            size="md"
-            onPress={() => handleNavigate("/pomoc")}
-          >
-            Potrzebuję pomocy
-          </Button>
-        </NavbarItem>
-        <NavbarItem className="hidden md:flex">
-          <Button
-            as={NextLink}
-            href="/wolontariusz/login"
-            radius="full"
-            size="md"
-            variant="bordered"
-            // color="primary"
-            className={"font-semibold text-primary border-2 border-primary/25 bg-primary/5 shadow-[0_18px_45px_rgba(37,99,235,0.18)] hover:bg-primary/10"}
-            onPress={() => handleNavigate("/wolontariusz/login")}
-          >
-            Chcę pomagać
-          </Button>
-        </NavbarItem>
-      </NavbarContent>
-
-      <NavbarContent className="sm:hidden basis-1 justify-end gap-2" justify="end">
-        <NavbarMenuToggle
-          aria-label="Otwórz menu"
-          className="text-primary"
-          icon={renderToggleIcon}
-        />
-      </NavbarContent>
-
-      <NavbarMenu className="sm:hidden bg-transparent px-0 py-0 backdrop-blur-0">
-        <div className="mx-3 my-4 rounded-[20px] bg-gradient-to-b from-white/95 via-white/85 to-white/80 p-5 shadow-[0_35px_100px_rgba(15,23,42,0.12)] ring-1 ring-white/50 backdrop-blur-lg">
-          <div className="flex flex-col gap-2">
-            {siteConfig.navMenuItems.map((item) => (
-              <NavbarMenuItem key={item.href}>
-                {item.href.startsWith("mailto:") ? (
-                  <Link
-                    color="foreground"
-                    href={item.href}
-                    size="lg"
-                    onPress={handleMenuClose}
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <NextLink
-                    className="text-lg text-foreground"
-                    href={item.href}
-                    onClick={() => handleNavigate(item.href)}
-                  >
-                    {item.label}
-                  </NextLink>
-                )}
-              </NavbarMenuItem>
+      <HeroUINavbar
+        className={clsx(
+          "fixed w-full z-50 left-0 right-0 top-0"
+        )}
+        isBlurred
+        isMenuOpen={isMenuOpen}
+        maxWidth="xl"
+        onMenuOpenChange={setIsMenuOpen}
+        position="static"
+      >
+        <NavbarContent className="basis-1/2 sm:basis-full" justify="start">
+          <NavbarBrand as="li" className="gap-3 max-w-fit">
+            <NextLink
+              className="flex items-center gap-2"
+              href="/"
+              onClick={() => handleNavigate("/")}
+            >
+              <Logo />
+              <p className="font-semibold tracking-tight text-inherit">GenLink</p>
+            </NextLink>
+          </NavbarBrand>
+          <ul className="hidden lg:flex gap-6">
+            {siteConfig.navItems.map((item) => (
+              <NavbarItem key={item.href}>
+                <NextLink
+                  className={clsx(
+                    linkStyles({ color: "foreground" }),
+                    "text-sm font-medium data-[active=true]:text-primary",
+                  )}
+                  href={item.href}
+                  onClick={() => handleNavigate(item.href)}
+                >
+                  {item.label}
+                </NextLink>
+              </NavbarItem>
             ))}
-          </div>
-          <div className="mt-6 flex flex-col gap-2">
+          </ul>
+        </NavbarContent>
+
+        <NavbarContent className="hidden sm:flex basis-1/2 sm:basis-full" justify="end">
+          <NavbarItem className="hidden md:flex">
             <Button
               as={NextLink}
-              className="w-full font-semibold shadow-[0_25px_80px_rgba(37,99,235,0.35)]"
               color="primary"
               href="/pomoc"
-              onPress={() => handleNavigate("/pomoc")}
-              radius="lg"
+              radius="full"
               size="md"
+              onPress={() => handleNavigate("/pomoc")}
             >
               Potrzebuję pomocy
             </Button>
+          </NavbarItem>
+          <NavbarItem className="hidden md:flex">
             <Button
               as={NextLink}
-              className={"font-semibold text-primary border-2 border-primary/25 bg-primary/5 shadow-[0_18px_45px_rgba(37,99,235,0.18)] hover:bg-primary/10"}
-              color="default"
               href="/wolontariusz/login"
-              onPress={() => handleNavigate("/wolontariusz/login")}
-              radius="lg"
+              radius="full"
               size="md"
               variant="bordered"
+              className={"font-semibold text-primary border-2 border-primary/25 bg-primary/5 shadow-[0_18px_45px_rgba(37,99,235,0.18)] hover:bg-primary/10"}
+              onPress={() => handleNavigate("/wolontariusz/login")}
             >
               Chcę pomagać
             </Button>
+          </NavbarItem>
+        </NavbarContent>
+
+        <NavbarContent className="sm:hidden basis-1 justify-end gap-2" justify="end">
+          <NavbarMenuToggle
+            aria-label="Otwórz menu"
+            className="text-primary"
+            icon={renderToggleIcon}
+          />
+        </NavbarContent>
+
+        <NavbarMenu className="sm:hidden px-0 py-0 -mt-[2px]">
+          <div className="mx-5 my-4 rounded-[20px] bg-gradient-to-b from-white/95 to-white/80 p-5 shadow-[0_35px_100px_rgba(15,23,42,0.12)] ring-1 ring-white/50 backdrop-blur-lg">
+            <div className="flex flex-col gap-2">
+              {siteConfig.navMenuItems.map((item) => (
+                <NavbarMenuItem key={item.href}>
+                  {item.href.startsWith("mailto:") ? (
+                    <Link
+                      color="foreground"
+                      href={item.href}
+                      size="lg"
+                      onPress={handleMenuClose}
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <NextLink
+                      className="text-lg text-foreground"
+                      href={item.href}
+                      onClick={() => handleNavigate(item.href)}
+                    >
+                      {item.label}
+                    </NextLink>
+                  )}
+                </NavbarMenuItem>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-col gap-2">
+              <Button
+                as={NextLink}
+                className="w-full font-semibold shadow-[0_25px_80px_rgba(37,99,235,0.35)]"
+                color="primary"
+                href="/pomoc"
+                onPress={() => handleNavigate("/pomoc")}
+                radius="lg"
+                size="md"
+              >
+                Potrzebuję pomocy
+              </Button>
+              <Button
+                as={NextLink}
+                className={"font-semibold text-primary border-2 border-primary/25 bg-primary/5 shadow-[0_18px_45px_rgba(37,99,235,0.18)] hover:bg-primary/10"}
+                color="default"
+                href="/wolontariusz/login"
+                onPress={() => handleNavigate("/wolontariusz/login")}
+                radius="lg"
+                size="md"
+                variant="bordered"
+              >
+                Chcę pomagać
+              </Button>
+            </div>
           </div>
-        </div>
-      </NavbarMenu>
-    </HeroUINavbar>
+        </NavbarMenu>
+      </HeroUINavbar>
   );
 };
