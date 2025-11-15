@@ -20,19 +20,29 @@ interface NavigationLoaderContextValue {
 
 const MIN_VISIBLE_DURATION = 250;
 
-const NavigationLoaderContext = createContext<NavigationLoaderContextValue | null>(null);
+const NavigationLoaderContext =
+  createContext<NavigationLoaderContextValue | null>(null);
 
-export const NavigationLoaderProvider = ({ children }: { children: ReactNode }) => {
+export const NavigationLoaderProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const showRef = useRef<() => void>(() => Promise.resolve().then(() => setIsVisible(true)));
+  const showRef = useRef<() => void>(() =>
+    Promise.resolve().then(() => setIsVisible(true)),
+  );
   const lastLocationRef = useRef<string | null>(null);
   const showTimestampRef = useRef<number | null>(null);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const getNow = useCallback(() => {
-    if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    if (
+      typeof performance !== "undefined" &&
+      typeof performance.now === "function"
+    ) {
       return performance.now();
     }
 
@@ -67,6 +77,7 @@ export const NavigationLoaderProvider = ({ children }: { children: ReactNode }) 
 
         try {
           const url = new URL(target, window.location.href);
+
           return `${url.pathname}${url.search}`;
         } catch {
           return null;
@@ -250,7 +261,11 @@ export const NavigationLoaderProvider = ({ children }: { children: ReactNode }) 
   );
 };
 
-export const NavigationOverlay = ({ isVisible = true }: { isVisible?: boolean }) => {
+export const NavigationOverlay = ({
+  isVisible = true,
+}: {
+  isVisible?: boolean;
+}) => {
   if (!isVisible) {
     return null;
   }
@@ -266,7 +281,9 @@ export const useNavigationLoader = () => {
   const context = useContext(NavigationLoaderContext);
 
   if (!context) {
-    throw new Error("useNavigationLoader must be used within NavigationLoaderProvider");
+    throw new Error(
+      "useNavigationLoader must be used within NavigationLoaderProvider",
+    );
   }
 
   return context;

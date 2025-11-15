@@ -42,7 +42,10 @@ export default function VolunteerSettingsPage() {
     setAvailability((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handlePasswordChange = <K extends keyof typeof passwords>(field: K, value: (typeof passwords)[K]) => {
+  const handlePasswordChange = <K extends keyof typeof passwords>(
+    field: K,
+    value: (typeof passwords)[K],
+  ) => {
     setPasswords((prev) => ({ ...prev, [field]: value }));
     setPasswordError(null);
   };
@@ -52,18 +55,21 @@ export default function VolunteerSettingsPage() {
     setIsSaving(true);
     setPasswordError(null);
 
-    const isChangingPassword = passwords.current || passwords.next || passwords.confirm;
+    const isChangingPassword =
+      passwords.current || passwords.next || passwords.confirm;
 
     if (isChangingPassword) {
       if (!passwords.current || !passwords.next || !passwords.confirm) {
         setPasswordError("Uzupełnij wszystkie pola zmiany hasła.");
         setIsSaving(false);
+
         return;
       }
 
       if (passwords.next !== passwords.confirm) {
         setPasswordError("Nowe hasła muszą być identyczne.");
         setIsSaving(false);
+
         return;
       }
     }
@@ -79,13 +85,16 @@ export default function VolunteerSettingsPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="space-y-2">
-        <h1 className="text-3xl font-semibold text-default-900">Ustawienia konta</h1>
+        <h1 className="text-3xl font-semibold text-default-900">
+          Ustawienia konta
+        </h1>
         <p className="text-sm text-default-500">
-          Zaktualizuj dane profilowe i zdecyduj, kiedy koordynatorzy mogą przydzielać Ci zgłoszenia.
+          Zaktualizuj dane profilowe i zdecyduj, kiedy koordynatorzy mogą
+          przydzielać Ci zgłoszenia.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
         <Card className="border border-default-100">
           <CardHeader className="text-lg font-semibold text-default-900">
             Dane profilowe
@@ -97,22 +106,28 @@ export default function VolunteerSettingsPage() {
               label="Imię"
               placeholder="np. Anna"
               value={profile.firstName}
-              onValueChange={(value: string) => handleProfileChange("firstName", value)}
+              onValueChange={(value: string) =>
+                handleProfileChange("firstName", value)
+              }
             />
             <Input
               isRequired
               label="Nazwisko"
               placeholder="np. Kowalska"
               value={profile.lastName}
-              onValueChange={(value: string) => handleProfileChange("lastName", value)}
+              onValueChange={(value: string) =>
+                handleProfileChange("lastName", value)
+              }
             />
             <Input
-              className="md:col-span-2"
               isRequired
+              className="md:col-span-2"
               label="Adres e-mail"
               type="email"
               value={profile.email}
-              onValueChange={(value: string) => handleProfileChange("email", value)}
+              onValueChange={(value: string) =>
+                handleProfileChange("email", value)
+              }
             />
           </CardBody>
         </Card>
@@ -125,33 +140,39 @@ export default function VolunteerSettingsPage() {
           <CardBody className="grid gap-4 md:grid-cols-2">
             <Input
               className="md:col-span-2"
+              errorMessage={passwordError ?? undefined}
+              isInvalid={Boolean(passwordError) && !passwords.current}
               label="Aktualne hasło"
               placeholder="Wpisz obecne hasło"
               type="password"
               value={passwords.current}
-              isInvalid={Boolean(passwordError) && !passwords.current}
-              errorMessage={passwordError ?? undefined}
-              onValueChange={(value: string) => handlePasswordChange("current", value)}
+              onValueChange={(value: string) =>
+                handlePasswordChange("current", value)
+              }
             />
             <Input
+              errorMessage={passwordError ?? undefined}
+              isInvalid={Boolean(passwordError)}
               isRequired={Boolean(passwords.current || passwords.confirm)}
               label="Nowe hasło"
               placeholder="Ustal nowe hasło"
               type="password"
               value={passwords.next}
-              isInvalid={Boolean(passwordError)}
-              errorMessage={passwordError ?? undefined}
-              onValueChange={(value: string) => handlePasswordChange("next", value)}
+              onValueChange={(value: string) =>
+                handlePasswordChange("next", value)
+              }
             />
             <Input
+              errorMessage={passwordError ?? undefined}
+              isInvalid={Boolean(passwordError)}
               isRequired={Boolean(passwords.current || passwords.next)}
               label="Potwierdź nowe hasło"
               placeholder="Powtórz nowe hasło"
               type="password"
               value={passwords.confirm}
-              isInvalid={Boolean(passwordError)}
-              errorMessage={passwordError ?? undefined}
-              onValueChange={(value: string) => handlePasswordChange("confirm", value)}
+              onValueChange={(value: string) =>
+                handlePasswordChange("confirm", value)
+              }
             />
           </CardBody>
         </Card>
@@ -164,13 +185,17 @@ export default function VolunteerSettingsPage() {
           <CardBody className="flex flex-col gap-4">
             <Checkbox
               isSelected={availability.phone}
-              onValueChange={(value: boolean) => handleAvailabilityChange("phone", value)}
+              onValueChange={(value: boolean) =>
+                handleAvailabilityChange("phone", value)
+              }
             >
               Jestem dostępny do rozmów telefonicznych
             </Checkbox>
             <Checkbox
               isSelected={availability.onsite}
-              onValueChange={(value: boolean) => handleAvailabilityChange("onsite", value)}
+              onValueChange={(value: boolean) =>
+                handleAvailabilityChange("onsite", value)
+              }
             >
               Mogę pomagać lokalnie (wizyty na miejscu)
             </Checkbox>
@@ -179,7 +204,9 @@ export default function VolunteerSettingsPage() {
               minRows={3}
               placeholder="Opisz, w jakie dni i godziny zazwyczaj możesz pomagać."
               value={availability.hours}
-              onValueChange={(value: string) => handleAvailabilityChange("hours", value)}
+              onValueChange={(value: string) =>
+                handleAvailabilityChange("hours", value)
+              }
             />
           </CardBody>
         </Card>
@@ -190,8 +217,14 @@ export default function VolunteerSettingsPage() {
           </CardHeader>
           <Divider />
           <CardBody className="flex flex-col gap-3 text-sm text-default-500">
-            <p>Wkrótce wprowadzimy automatyczne przypominanie o nowych zgłoszeniach i przyznanych GenPoints.</p>
-            <p>Na razie powiadomienia otrzymasz mailowo od koordynatora, gdy tylko pojawi się zgłoszenie dopasowane do Twoich ustawień.</p>
+            <p>
+              Wkrótce wprowadzimy automatyczne przypominanie o nowych
+              zgłoszeniach i przyznanych GenPoints.
+            </p>
+            <p>
+              Na razie powiadomienia otrzymasz mailowo od koordynatora, gdy
+              tylko pojawi się zgłoszenie dopasowane do Twoich ustawień.
+            </p>
           </CardBody>
         </Card>
 
@@ -207,7 +240,12 @@ export default function VolunteerSettingsPage() {
           >
             Anuluj
           </Button>
-          <Button color="primary" isLoading={isSaving} radius="lg" type="submit">
+          <Button
+            color="primary"
+            isLoading={isSaving}
+            radius="lg"
+            type="submit"
+          >
             Zapisz zmiany
           </Button>
         </div>

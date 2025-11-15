@@ -22,8 +22,9 @@ declare module "@react-types/shared" {
 
 export function Providers({ children, themeProps }: ProvidersProps) {
   const router = useRouter();
+
   return (
-    <HeroUIProvider navigate={router.push} disableRipple={true}>
+    <HeroUIProvider disableRipple={true} navigate={router.push}>
       <NextThemesProvider {...themeProps}>{children}</NextThemesProvider>
     </HeroUIProvider>
   );

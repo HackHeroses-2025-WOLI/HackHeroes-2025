@@ -5,13 +5,8 @@ import { Divider } from "@heroui/divider";
 import { Link } from "@heroui/link";
 import { Chip } from "@heroui/chip";
 
-interface ConfirmationPageProps {
-  searchParams?: {
-    eta?: string;
-  };
-}
-
-export default function ConfirmationPage({ searchParams }: ConfirmationPageProps) {
+export default function ConfirmationPage(props: any) {
+  const { searchParams } = props as { searchParams?: { eta?: string } };
   const etaParam = searchParams?.eta ?? "15";
   const etaValue = Number.parseInt(etaParam, 10);
   const eta = Number.isNaN(etaValue) ? 15 : etaValue;
@@ -20,19 +15,29 @@ export default function ConfirmationPage({ searchParams }: ConfirmationPageProps
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 py-10">
       <Card className="border border-default-100 bg-default-50">
         <CardHeader className="flex flex-col gap-3 text-left">
-          <h1 className="text-3xl font-semibold text-success-600">Dziękujemy!</h1>
+          <h1 className="text-3xl font-semibold text-success-600">
+            Dziękujemy!
+          </h1>
           <p className="text-base text-default-600">
-            Przyjęliśmy Twoje zgłoszenie. Wolontariusz GenLink skontaktuje się z Tobą telefonicznie w ciągu najbliższych <span className="font-semibold text-default-800">{eta} minut </span>(jest to czas orientacyjny).
+            Przyjęliśmy Twoje zgłoszenie. Wolontariusz GenLink skontaktuje się z
+            Tobą telefonicznie w ciągu najbliższych{" "}
+            <span className="font-semibold text-default-800">{eta} minut </span>
+            (jest to czas orientacyjny).
           </p>
         </CardHeader>
         <CardBody className="flex flex-col gap-2 text-sm text-default-600">
           <div className="flex flex-col gap-3 rounded-lg p-1 text-sm">
-            <Chip color="warning" classNames={{ content: "font-medium" }} size="md">
+            <Chip
+              classNames={{ content: "font-medium" }}
+              color="warning"
+              size="md"
+            >
               Pamiętaj!
             </Chip>
             <p className="text-default-700 font-semibold">
-              Wolontariusze GenLink nigdy nie proszą o hasła, kody z SMS ani przelewy. Jeśli masz wątpliwości,
-              zakończ rozmowę i skontaktuj się z nami pod numerem <span className="font-semibold">XXXXXXX</span>.
+              Wolontariusze GenLink nigdy nie proszą o hasła, kody z SMS ani
+              przelewy. Jeśli masz wątpliwości, zakończ rozmowę i skontaktuj się
+              z nami pod numerem <span className="font-semibold">XXXXXXX</span>.
             </p>
           </div>
         </CardBody>
@@ -47,7 +52,8 @@ export default function ConfirmationPage({ searchParams }: ConfirmationPageProps
         </CardFooter>
       </Card>
       <p className="text-center text-xs text-default-400">
-        W razie pilnych pytań napisz do nas na adres <Link href="mailto:kontakt@genlink.pl">kontakt@genlink.pl</Link>.
+        W razie pilnych pytań napisz do nas na adres{" "}
+        <Link href="mailto:kontakt@genlink.pl">kontakt@genlink.pl</Link>.
       </p>
     </div>
   );

@@ -37,6 +37,7 @@ export default function VolunteerRegisterPage() {
     if (form.password !== form.confirmPassword) {
       setPasswordError("Hasła muszą być identyczne.");
       setIsSubmitting(false);
+
       return;
     }
 
@@ -50,9 +51,12 @@ export default function VolunteerRegisterPage() {
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <Card className="border border-default-100 shadow-medium">
         <CardHeader className="flex flex-col gap-2 text-left">
-          <h1 className="text-2xl font-semibold text-default-900">Załóż konto wolontariusza</h1>
+          <h1 className="text-2xl font-semibold text-default-900">
+            Załóż konto wolontariusza
+          </h1>
           <p className="text-sm text-default-500">
-            Wypełnij formularz rejestracyjny. Po zapisaniu od razu możesz się zalogować i pomagać seniorom.
+            Wypełnij formularz rejestracyjny. Po zapisaniu od razu możesz się
+            zalogować i pomagać seniorom.
           </p>
         </CardHeader>
         <Divider />
@@ -73,8 +77,8 @@ export default function VolunteerRegisterPage() {
               onValueChange={(value) => handleChange("lastName", value)}
             />
             <Input
-              className="md:col-span-2"
               isRequired
+              className="md:col-span-2"
               label="Adres e-mail"
               placeholder="np. anna@genlink.pl"
               type="email"
@@ -82,28 +86,28 @@ export default function VolunteerRegisterPage() {
               onValueChange={(value) => handleChange("email", value)}
             />
             <Input
-              className="md:col-span-2"
               isRequired
+              className="md:col-span-2"
+              errorMessage={passwordError ?? undefined}
+              isInvalid={Boolean(passwordError)}
               label="Hasło"
               placeholder="Ustal hasło"
               type="password"
               value={form.password}
-              isInvalid={Boolean(passwordError)}
-              errorMessage={passwordError ?? undefined}
               onValueChange={(value) => {
                 setPasswordError(null);
                 handleChange("password", value);
               }}
             />
             <Input
-              className="md:col-span-2"
               isRequired
+              className="md:col-span-2"
+              errorMessage={passwordError ?? undefined}
+              isInvalid={Boolean(passwordError)}
               label="Potwierdź hasło"
               placeholder="Powtórz hasło"
               type="password"
               value={form.confirmPassword}
-              isInvalid={Boolean(passwordError)}
-              errorMessage={passwordError ?? undefined}
               onValueChange={(value) => {
                 setPasswordError(null);
                 handleChange("confirmPassword", value);
@@ -127,9 +131,15 @@ export default function VolunteerRegisterPage() {
           <Divider />
           <CardFooter className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <p className="text-xs text-default-400">
-              Zakładając konto, potwierdzasz, że przeczytałeś(-aś) zasady wolontariatu GenLink.
+              Zakładając konto, potwierdzasz, że przeczytałeś(-aś) zasady
+              wolontariatu GenLink.
             </p>
-            <Button color="primary" isLoading={isSubmitting} size="lg" type="submit">
+            <Button
+              color="primary"
+              isLoading={isSubmitting}
+              size="lg"
+              type="submit"
+            >
               Zarejestruj się
             </Button>
           </CardFooter>

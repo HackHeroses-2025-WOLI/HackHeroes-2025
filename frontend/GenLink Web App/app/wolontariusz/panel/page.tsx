@@ -39,17 +39,30 @@ const hasActiveAssignment = Boolean(activeAssignment);
 
 export default function VolunteerPanelPage() {
   return (
-  <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
-        <h1 className="text-3xl font-semibold text-default-900">Witaj w panelu wolontariusza</h1>
+        <h1 className="text-3xl font-semibold text-default-900">
+          Witaj w panelu wolontariusza
+        </h1>
         <p className="text-sm text-default-500">
-          Śledź swoje statystyki, odbieraj zgłoszenia i utrzymuj kontakt z seniorami w jednym miejscu.
+          Śledź swoje statystyki, odbieraj zgłoszenia i utrzymuj kontakt z
+          seniorami w jednym miejscu.
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button as={NextLink} color="primary" href="/wolontariusz/zgloszenia" radius="lg">
+          <Button
+            as={NextLink}
+            color="primary"
+            href="/wolontariusz/zgloszenia"
+            radius="lg"
+          >
             Przeglądaj zgłoszenia
           </Button>
-          <Button as={NextLink} href="/wolontariusz/ustawienia" radius="lg" variant="bordered">
+          <Button
+            as={NextLink}
+            href="/wolontariusz/ustawienia"
+            radius="lg"
+            variant="bordered"
+          >
             Ustawienia konta
           </Button>
         </div>
@@ -58,6 +71,7 @@ export default function VolunteerPanelPage() {
       <section className="grid gap-4 sm:grid-cols-3">
         {stats.map((item) => {
           const Icon = item.icon;
+
           return (
             <Card key={item.label} className="border border-default-100">
               <CardHeader className="flex items-center gap-3 text-sm font-medium text-default-500">
@@ -82,9 +96,12 @@ export default function VolunteerPanelPage() {
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <Card className="border border-default-100">
           <CardHeader className="flex flex-col gap-1">
-            <h2 className="text-xl font-semibold text-default-900">Twoje aktywne zgłoszenie</h2>
+            <h2 className="text-xl font-semibold text-default-900">
+              Twoje aktywne zgłoszenie
+            </h2>
             <p className="text-sm text-default-500">
-              Pamiętaj, aby zadzwonić w ustalonym czasie i zanotować rezultat rozmowy.
+              Pamiętaj, aby zadzwonić w ustalonym czasie i zanotować rezultat
+              rozmowy.
             </p>
           </CardHeader>
           <Divider />
@@ -101,16 +118,22 @@ export default function VolunteerPanelPage() {
                   {activeAssignment.senior} ({activeAssignment.age} lat)
                 </span>
                 <span>Telefon: {activeAssignment.phone}</span>
-                <span>Preferowany kontakt: {activeAssignment.preferredContact}</span>
-                <p className="text-default-500">{activeAssignment.description}</p>
+                <span>
+                  Preferowany kontakt: {activeAssignment.preferredContact}
+                </span>
+                <p className="text-default-500">
+                  {activeAssignment.description}
+                </p>
               </div>
               <div className="rounded-2xl bg-default-50 p-4 text-xs text-default-500">
-                Zapisz, ile GenPoints zdobyłeś po rozmowie – koordynator przyzna punkty po oznaczeniu sprawy jako zakończonej.
+                Zapisz, ile GenPoints zdobyłeś po rozmowie – koordynator przyzna
+                punkty po oznaczeniu sprawy jako zakończonej.
               </div>
             </CardBody>
           ) : (
             <CardBody className="text-sm text-default-500">
-              Obecnie nie prowadzisz żadnego zgłoszenia. Przejrzyj listę nowych próśb i wybierz zadanie, które możesz podjąć.
+              Obecnie nie prowadzisz żadnego zgłoszenia. Przejrzyj listę nowych
+              próśb i wybierz zadanie, które możesz podjąć.
             </CardBody>
           )}
           <Divider />
@@ -135,7 +158,12 @@ export default function VolunteerPanelPage() {
                 </div>
               </>
             ) : (
-              <Button as={NextLink} href="/wolontariusz/zgloszenia" radius="lg" variant="bordered">
+              <Button
+                as={NextLink}
+                href="/wolontariusz/zgloszenia"
+                radius="lg"
+                variant="bordered"
+              >
                 Przeglądaj zgłoszenia
               </Button>
             )}
@@ -145,7 +173,9 @@ export default function VolunteerPanelPage() {
         <Card className="border border-default-100 bg-default-50">
           <CardHeader className="flex items-center justify-between">
             <div className="flex flex-col">
-              <h2 className="text-xl font-semibold text-default-900">Nowe zgłoszenia w okolicy</h2>
+              <h2 className="text-xl font-semibold text-default-900">
+                Nowe zgłoszenia w okolicy
+              </h2>
               <p className="text-sm text-default-500">
                 {hasActiveAssignment
                   ? "Najpierw zakończ aktywne zgłoszenie, aby przyjąć kolejne."
@@ -156,15 +186,24 @@ export default function VolunteerPanelPage() {
           <Divider />
           <CardBody className="flex flex-col gap-4">
             {pendingRequests.map((request) => (
-              <div key={request.id} className="rounded-2xl bg-background p-4 shadow-sm">
+              <div
+                key={request.id}
+                className="rounded-2xl bg-background p-4 shadow-sm"
+              >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-medium text-default-800">{request.senior}</span>
+                  <span className="font-medium text-default-800">
+                    {request.senior}
+                  </span>
                   <Chip size="sm" variant="flat">
                     {request.city}
                   </Chip>
                 </div>
-                <p className="mt-2 text-sm text-default-600">{request.summary}</p>
-                <p className="text-xs text-default-400">Zgłoszenie dodane: {request.submittedAgo}</p>
+                <p className="mt-2 text-sm text-default-600">
+                  {request.summary}
+                </p>
+                <p className="text-xs text-default-400">
+                  Zgłoszenie dodane: {request.submittedAgo}
+                </p>
                 <Button
                   as={NextLink}
                   className="mt-3"
@@ -186,7 +225,12 @@ export default function VolunteerPanelPage() {
           </CardBody>
           <Divider />
           <CardFooter>
-            <Button as={NextLink} href="/wolontariusz/zgloszenia" radius="lg" variant="bordered">
+            <Button
+              as={NextLink}
+              href="/wolontariusz/zgloszenia"
+              radius="lg"
+              variant="bordered"
+            >
               Przeglądaj wszystkie zgłoszenia
             </Button>
           </CardFooter>
@@ -196,21 +240,35 @@ export default function VolunteerPanelPage() {
       <section className="grid gap-6">
         <Card className="border border-default-100">
           <CardHeader className="flex flex-col gap-1">
-            <h2 className="text-xl font-semibold text-default-900">Zgłoszenia do kontaktu</h2>
+            <h2 className="text-xl font-semibold text-default-900">
+              Zgłoszenia do kontaktu
+            </h2>
             <p className="text-sm text-default-500">
-              Te zgłoszenia wymagają krótkiego telefonu, aby doprecyzować temat przed przydzieleniem wolontariusza.
+              Te zgłoszenia wymagają krótkiego telefonu, aby doprecyzować temat
+              przed przydzieleniem wolontariusza.
             </p>
           </CardHeader>
           <Divider />
           <CardBody className="grid gap-4 md:grid-cols-2">
             {contactRequestsPreview.map((request) => (
-              <div key={request.id} className="rounded-2xl border border-default-100 bg-default-50 p-5">
+              <div
+                key={request.id}
+                className="rounded-2xl border border-default-100 bg-default-50 p-5"
+              >
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm font-semibold text-default-700">{request.senior}</span>
-                  <span className="text-xs text-default-400">Dodano: {request.submittedAgo}</span>
+                  <span className="text-sm font-semibold text-default-700">
+                    {request.senior}
+                  </span>
+                  <span className="text-xs text-default-400">
+                    Dodano: {request.submittedAgo}
+                  </span>
                 </div>
-                <p className="mt-2 text-sm text-default-600">{request.summary}</p>
-                <p className="mt-2 text-xs text-default-500">Telefon: {request.phone}</p>
+                <p className="mt-2 text-sm text-default-600">
+                  {request.summary}
+                </p>
+                <p className="mt-2 text-xs text-default-500">
+                  Telefon: {request.phone}
+                </p>
                 <Button
                   as={NextLink}
                   className="mt-3"
@@ -231,7 +289,12 @@ export default function VolunteerPanelPage() {
           </CardBody>
           <Divider />
           <CardFooter className="flex justify-end">
-            <Button as={NextLink} href="/wolontariusz/zgloszenia#kontakt" radius="lg" variant="bordered">
+            <Button
+              as={NextLink}
+              href="/wolontariusz/zgloszenia#kontakt"
+              radius="lg"
+              variant="bordered"
+            >
               Wszystkie zgłoszenia do kontaktu
             </Button>
           </CardFooter>

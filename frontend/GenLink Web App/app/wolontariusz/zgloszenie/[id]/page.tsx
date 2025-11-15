@@ -6,15 +6,25 @@ import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Link } from "@heroui/link";
 
-import { findPanelRequestById, panelCategoryLabels } from "@/data/panelRequests";
+import {
+  findPanelRequestById,
+  panelCategoryLabels,
+} from "@/data/panelRequests";
 
-interface AssignmentPageProps {
-  params: {
-    id: string;
+export async function generateMetadata(props: any) {
+  const { params } = props as { params: { id: string } };
+  const request = findPanelRequestById(params.id);
+
+  return {
+    title: request
+      ? `${request.summary} - GenLink Wolontariusz`
+      : "Zgłoszenie - GenLink",
+    description: request ? request.description : "Szczegóły zgłoszenia",
   };
 }
 
-export default function AssignmentPage({ params }: AssignmentPageProps) {
+export default function AssignmentPage(props: any) {
+  const { params } = props as { params: { id: string } };
   const request = findPanelRequestById(params.id);
 
   if (!request) {
@@ -24,11 +34,19 @@ export default function AssignmentPage({ params }: AssignmentPageProps) {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Link as={NextLink} className="text-sm text-primary" href="/wolontariusz/zgloszenia">
+        <Link
+          as={NextLink}
+          className="text-sm text-primary"
+          href="/wolontariusz/zgloszenia"
+        >
           ← Wróć do listy zgłoszeń
         </Link>
-        <h1 className="text-3xl font-semibold text-default-900">{request.summary}</h1>
-        <p className="text-sm text-default-500">Numer zgłoszenia: {request.id}</p>
+        <h1 className="text-3xl font-semibold text-default-900">
+          {request.summary}
+        </h1>
+        <p className="text-sm text-default-500">
+          Numer zgłoszenia: {request.id}
+        </p>
       </div>
 
       <Card className="border border-default-100">
@@ -47,19 +65,28 @@ export default function AssignmentPage({ params }: AssignmentPageProps) {
                 {request.senior} ({request.age} lat)
               </p>
               <p>
-                Telefon: <span className="font-semibold text-default-900">{request.phone}</span>
+                Telefon:{" "}
+                <span className="font-semibold text-default-900">
+                  {request.phone}
+                </span>
               </p>
               <p>Preferowany kontakt: {request.preferredContact}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-default-800 font-medium">Notatki koordynatora</p>
+              <p className="text-default-800 font-medium">
+                Notatki koordynatora
+              </p>
               <p>{request.description}</p>
-              {request.address ? <p>Miejsce spotkania: {request.address}</p> : null}
+              {request.address ? (
+                <p>Miejsce spotkania: {request.address}</p>
+              ) : null}
             </div>
           </div>
           <Divider />
           <div className="space-y-3">
-            <p className="text-default-800 font-medium">Lista kroków do wykonania</p>
+            <p className="text-default-800 font-medium">
+              Lista kroków do wykonania
+            </p>
             <ul className="list-disc space-y-2 pl-5">
               {request.checklist.map((item) => (
                 <li key={item}>{item}</li>
@@ -77,7 +104,12 @@ export default function AssignmentPage({ params }: AssignmentPageProps) {
               Anuluj podjęcie
             </Button>
           </div>
-          <Button as={NextLink} href="/wolontariusz/panel" radius="lg" variant="bordered">
+          <Button
+            as={NextLink}
+            href="/wolontariusz/panel"
+            radius="lg"
+            variant="bordered"
+          >
             Wróć do panelu
           </Button>
         </CardFooter>

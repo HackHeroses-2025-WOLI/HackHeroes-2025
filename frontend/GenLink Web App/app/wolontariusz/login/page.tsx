@@ -31,16 +31,18 @@ export default function VolunteerLoginPage() {
     <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
       <Card className="border border-default-100 shadow-medium">
         <CardHeader className="flex flex-col gap-2 text-left">
-          <h1 className="text-2xl font-semibold text-default-900">Logowanie wolontariusza</h1>
+          <h1 className="text-2xl font-semibold text-default-900">
+            Logowanie wolontariusza
+          </h1>
           <p className="text-sm text-default-500">
-            Zaloguj się, aby odebrać nowe zgłoszenia i aktualizować status prowadzonych rozmów.
+            Zaloguj się, aby odebrać nowe zgłoszenia i aktualizować status
+            prowadzonych rozmów.
           </p>
         </CardHeader>
         <Divider />
         <form onSubmit={handleSubmit}>
           <CardBody className="flex flex-col gap-5">
             <Input
-              autoFocus
               isRequired
               label="Adres e-mail"
               placeholder="np. imie@genlink.pl"
@@ -62,7 +64,12 @@ export default function VolunteerLoginPage() {
           </CardBody>
           <Divider />
           <CardFooter className="flex flex-col gap-3">
-            <Button color="primary" isLoading={isLoading} size="lg" type="submit">
+            <Button
+              color="primary"
+              isLoading={isLoading}
+              size="lg"
+              type="submit"
+            >
               Zaloguj się
             </Button>
             <p className="text-center text-sm text-default-500">

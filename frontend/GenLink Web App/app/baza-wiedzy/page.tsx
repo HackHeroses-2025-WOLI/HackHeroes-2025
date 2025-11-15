@@ -21,16 +21,19 @@ const categories = [
 
 export default function KnowledgeBasePage() {
   const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number]["value"]>("all");
+  const [selectedCategory, setSelectedCategory] =
+    useState<(typeof categories)[number]["value"]>("all");
 
   const filteredGuides = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
     return guides.filter((guide) => {
-      const matchesCategory = selectedCategory === "all" || guide.category === selectedCategory;
-      const matchesQuery = !normalizedQuery
-        || guide.title.toLowerCase().includes(normalizedQuery)
-        || guide.description.toLowerCase().includes(normalizedQuery);
+      const matchesCategory =
+        selectedCategory === "all" || guide.category === selectedCategory;
+      const matchesQuery =
+        !normalizedQuery ||
+        guide.title.toLowerCase().includes(normalizedQuery) ||
+        guide.description.toLowerCase().includes(normalizedQuery);
 
       return matchesCategory && matchesQuery;
     });
@@ -41,7 +44,9 @@ export default function KnowledgeBasePage() {
       <div className="flex flex-col gap-4">
         <h1 className="text-4xl font-semibold">Baza wiedzy GenLink</h1>
         <p className="max-w-2xl text-sm text-default-500">
-          Proste poradniki krok po kroku przygotowane z myślą o seniorach. Możesz przeszukiwać materiały lub filtrować je według kategorii, aby szybko znaleźć potrzebną instrukcję.
+          Proste poradniki krok po kroku przygotowane z myślą o seniorach.
+          Możesz przeszukiwać materiały lub filtrować je według kategorii, aby
+          szybko znaleźć potrzebną instrukcję.
         </p>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <Input
@@ -54,7 +59,9 @@ export default function KnowledgeBasePage() {
             {categories.map((category) => (
               <Button
                 key={category.value}
-                color={selectedCategory === category.value ? "primary" : "default"}
+                color={
+                  selectedCategory === category.value ? "primary" : "default"
+                }
                 radius="full"
                 size="sm"
                 variant={selectedCategory === category.value ? "solid" : "flat"}
@@ -82,7 +89,9 @@ export default function KnowledgeBasePage() {
                   {guide.readTimeMinutes} min
                 </Chip>
               </div>
-              <h2 className="text-xl font-semibold text-default-800">{guide.title}</h2>
+              <h2 className="text-xl font-semibold text-default-800">
+                {guide.title}
+              </h2>
             </CardHeader>
             <Divider />
             <CardBody className="text-sm text-default-600">
@@ -105,7 +114,8 @@ export default function KnowledgeBasePage() {
         ))}
         {filteredGuides.length === 0 ? (
           <div className="col-span-full rounded-3xl border border-default-200 bg-default-50 p-10 text-center text-default-500">
-            Brak poradników spełniających kryteria wyszukiwania. Spróbuj zmienić kategorię lub wyszukiwane hasło.
+            Brak poradników spełniających kryteria wyszukiwania. Spróbuj zmienić
+            kategorię lub wyszukiwane hasło.
           </div>
         ) : null}
       </div>

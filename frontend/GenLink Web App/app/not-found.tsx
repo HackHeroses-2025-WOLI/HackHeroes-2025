@@ -9,8 +9,12 @@ export default function NotFoundPage() {
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 py-12">
       <Card className="w-full max-w-xl border border-default-100 text-center">
         <CardHeader className="flex flex-col gap-2">
-          <p className="text-2xl font-semibold uppercase tracking-wide text-primary">Ups!</p>
-          <h1 className="text-xl font-semibold text-default-900">Nie znaleźliśmy takiej strony</h1>
+          <p className="text-2xl font-semibold uppercase tracking-wide text-primary">
+            Ups!
+          </p>
+          <h1 className="text-xl font-semibold text-default-900">
+            Nie znaleźliśmy takiej strony
+          </h1>
           <p className="text-sm text-default-500">
             Upewnij się, że adres jest poprawny i spróbuj ponownie.
           </p>
@@ -18,12 +22,20 @@ export default function NotFoundPage() {
         <Divider />
         <CardBody className="flex flex-col gap-4 text-sm text-default-500">
           <p>
-            Jeśli próbujesz dotrzeć do panelu wolontariusza, upewnij się, że korzystasz z adresu
-            <span className="font-medium text-default-900"> wolontariusz.genlink.pl</span> lub kliknij przycisk poniżej.
+            Jeśli próbujesz dotrzeć do panelu wolontariusza, upewnij się, że
+            korzystasz z adresu
+            <span className="font-medium text-default-900">
+              {" "}
+              wolontariusz.genlink.pl
+            </span>{" "}
+            lub kliknij przycisk poniżej.
           </p>
           <p>
             W razie problemów napisz do nas na adres{" "}
-            <Link className="text-sm font-medium" href="mailto:kontakt@genlink.pl">
+            <Link
+              className="text-sm font-medium"
+              href="mailto:kontakt@genlink.pl"
+            >
               kontakt@genlink.pl
             </Link>
             .
@@ -37,7 +49,12 @@ export default function NotFoundPage() {
           <Button as={NextLink} href="/pomoc" radius="lg" variant="bordered">
             Zgłoś potrzebę
           </Button>
-          <Button as={NextLink} href="/wolontariusz/login" radius="lg" variant="flat">
+          <Button
+            as={NextLink}
+            href="/wolontariusz/login"
+            radius="lg"
+            variant="flat"
+          >
             Przejdź do panelu wolontariusza
           </Button>
         </CardFooter>

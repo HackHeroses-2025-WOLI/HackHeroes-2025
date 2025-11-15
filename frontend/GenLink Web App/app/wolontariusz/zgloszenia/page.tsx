@@ -31,7 +31,8 @@ export default function RequestsPage() {
   const searchParams = useSearchParams();
   const preselectId = searchParams.get("podejmij") ?? undefined;
   const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<(typeof categories)[number]["value"]>("all");
+  const [selectedCategory, setSelectedCategory] =
+    useState<(typeof categories)[number]["value"]>("all");
   const hasActiveAssignment = Boolean(panelActiveRequest);
   const assignableRequests = panelPendingRequests;
 
@@ -40,7 +41,8 @@ export default function RequestsPage() {
 
     return assignableRequests.filter((request) => {
       const matchesCategory =
-        selectedCategory === "all" || request.category === (selectedCategory as PanelRequestCategory);
+        selectedCategory === "all" ||
+        request.category === (selectedCategory as PanelRequestCategory);
       const matchesQuery =
         !normalizedQuery ||
         request.summary.toLowerCase().includes(normalizedQuery) ||
@@ -54,8 +56,13 @@ export default function RequestsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <h1 className="text-3xl font-semibold text-default-900">Wszystkie dostępne zgłoszenia</h1>
-        <p className="text-sm text-default-500">Filtrowanie pozwala odnaleźć prośby najlepiej pasujące do Twoich kompetencji.</p>
+        <h1 className="text-3xl font-semibold text-default-900">
+          Wszystkie dostępne zgłoszenia
+        </h1>
+        <p className="text-sm text-default-500">
+          Filtrowanie pozwala odnaleźć prośby najlepiej pasujące do Twoich
+          kompetencji.
+        </p>
       </div>
 
       {hasActiveAssignment ? (
@@ -80,6 +87,7 @@ export default function RequestsPage() {
               selectedKeys={[selectedCategory]}
               onSelectionChange={(keys) => {
                 const [value] = Array.from(keys);
+
                 setSelectedCategory((value as string) ?? "all");
               }}
             >
@@ -98,8 +106,12 @@ export default function RequestsPage() {
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm font-semibold text-default-700">{request.senior} ({request.age} lat)</span>
-                  <span className="text-xs text-default-400">Dodano: {request.submittedAgo}</span>
+                  <span className="text-sm font-semibold text-default-700">
+                    {request.senior} ({request.age} lat)
+                  </span>
+                  <span className="text-xs text-default-400">
+                    Dodano: {request.submittedAgo}
+                  </span>
                 </div>
                 <div className="flex gap-2">
                   <Chip size="sm" variant="flat">
@@ -110,17 +122,23 @@ export default function RequestsPage() {
                   </Chip>
                 </div>
               </div>
-              <h2 className="mt-3 text-lg font-semibold text-default-900">{request.summary}</h2>
-              <p className="mt-2 text-sm text-default-600">{request.description}</p>
+              <h2 className="mt-3 text-lg font-semibold text-default-900">
+                {request.summary}
+              </h2>
+              <p className="mt-2 text-sm text-default-600">
+                {request.description}
+              </p>
               <Button
                 as={NextLink}
                 className="mt-4"
                 color="primary"
                 href={`/wolontariusz/zgloszenie/${request.id}`}
-                radius="lg"
                 isDisabled={hasActiveAssignment}
+                radius="lg"
               >
-                {hasActiveAssignment ? "Zamknij bieżące zgłoszenie" : "Podejmij zgłoszenie"}
+                {hasActiveAssignment
+                  ? "Zamknij bieżące zgłoszenie"
+                  : "Podejmij zgłoszenie"}
               </Button>
             </div>
           ))}
@@ -134,18 +152,28 @@ export default function RequestsPage() {
 
       <Card className="border border-default-100" id="kontakt">
         <CardHeader className="flex flex-col gap-2">
-          <h2 className="text-xl font-semibold text-default-900">Zgłoszenia do kontaktu</h2>
+          <h2 className="text-xl font-semibold text-default-900">
+            Zgłoszenia do kontaktu
+          </h2>
           <p className="text-sm text-default-500">
-            Te sprawy wymagają telefonu, aby zebrać więcej informacji zanim przekażemy je dalej.
+            Te sprawy wymagają telefonu, aby zebrać więcej informacji zanim
+            przekażemy je dalej.
           </p>
         </CardHeader>
         <Divider />
         <CardBody className="grid gap-4 md:grid-cols-2">
           {panelContactRequests.map((request) => (
-            <div key={request.id} className="rounded-2xl border border-default-100 bg-default-50 p-5">
+            <div
+              key={request.id}
+              className="rounded-2xl border border-default-100 bg-default-50 p-5"
+            >
               <div className="flex flex-col gap-1">
-                <span className="text-sm font-semibold text-default-700">{request.senior}</span>
-                <span className="text-xs text-default-400">Dodano: {request.submittedAgo}</span>
+                <span className="text-sm font-semibold text-default-700">
+                  {request.senior}
+                </span>
+                <span className="text-xs text-default-400">
+                  Dodano: {request.submittedAgo}
+                </span>
               </div>
               <p className="mt-2 text-sm text-default-600">{request.summary}</p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-default-400">

@@ -1,9 +1,7 @@
 import NextLink from "next/link";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
-import { Link } from "@heroui/link";
 
 const benefits = [
   {
@@ -43,24 +41,28 @@ const steps = [
 
 export default function Home() {
   return (
-    <div className="flex flex-col gap-16 py-4 md:py-4"/*tu też można zmienić padding*/>
+    <div
+      className="flex flex-col gap-16 py-4 md:py-4" /*tu też można zmienić padding*/
+    >
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-400 to-primary-600 px-6 py-16 text-center shadow-lg md:px-12">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-primary-foreground">
           <h1 className="text-balance text-4xl font-extrabold leading-tight md:text-6xl">
             GenLink łączy seniorów z wolontariuszami technologicznymi
           </h1>
           <p className="text-pretty text-lg leading-relaxed md:text-xl">
-            Daj znać, z czym potrzebujesz wsparcia. Wolontariusz GenLink oddzwoni, aby dopytać o szczegóły i razem z Tobą przejść przez cały proces.
+            Daj znać, z czym potrzebujesz wsparcia. Wolontariusz GenLink
+            oddzwoni, aby dopytać o szczegóły i razem z Tobą przejść przez cały
+            proces.
           </p>
           <div className="flex w-full flex-col items-center sm:flex-row sm:justify-center">
             <Button
               as={NextLink}
+              className="w-full sm:w-auto text-lg font-semibold"
               color="secondary"
               href="/pomoc"
               radius="full"
               size="lg"
               variant="shadow"
-              className="w-full sm:w-auto text-lg font-semibold"
             >
               Potrzebuję Pomocy
             </Button>
@@ -71,7 +73,10 @@ export default function Home() {
       <section className="flex justify-center">
         <Card className="w-full max-w-2xl border border-default-100 bg-default-50">
           <CardBody className="flex flex-col items-center gap-3 text-center text-sm text-default-600">
-            <span>Wolisz spróbować samodzielnie? Przygotowaliśmy proste poradniki krok po kroku.</span>
+            <span>
+              Wolisz spróbować samodzielnie? Przygotowaliśmy proste poradniki
+              krok po kroku.
+            </span>
             <Button
               as={NextLink}
               color="primary"
@@ -88,7 +93,10 @@ export default function Home() {
 
       <section className="grid gap-6 md:grid-cols-3">
         {benefits.map((benefit) => (
-          <Card key={benefit.title} className="h-full border border-default-100">
+          <Card
+            key={benefit.title}
+            className="h-full border border-default-100"
+          >
             <CardHeader className="text-lg font-semibold text-primary">
               {benefit.title}
             </CardHeader>
@@ -153,22 +161,41 @@ export default function Home() {
       <section className="rounded-3xl border border-default-100 bg-default-50 p-8 md:p-12">
         <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div>
-            <h2 className="text-3xl font-semibold">Przygotuj się do rozmowy telefonicznej</h2>
+            <h2 className="text-3xl font-semibold">
+              Przygotuj się do rozmowy telefonicznej
+            </h2>
             <p className="mt-3 text-base text-default-600">
-              Zanim zadzwoni wolontariusz, możesz przygotować kilka rzeczy, aby wsparcie przebiegało szybciej i spokojniej.
+              Zanim zadzwoni wolontariusz, możesz przygotować kilka rzeczy, aby
+              wsparcie przebiegało szybciej i spokojniej.
             </p>
           </div>
           <ul className="space-y-3 rounded-2xl bg-background p-5 text-sm text-default-600">
             <li>Przygotuj telefon i upewnij się, że jest naładowany.</li>
-            <li>Usiądź w spokojnym miejscu, gdzie nikt nie będzie przeszkadzał.</li>
-            <li>Miej pod ręką dane logowania, jeśli będziemy je wspólnie wpisywać.</li>
+            <li>
+              Usiądź w spokojnym miejscu, gdzie nikt nie będzie przeszkadzał.
+            </li>
+            <li>
+              Miej pod ręką dane logowania, jeśli będziemy je wspólnie wpisywać.
+            </li>
           </ul>
         </div>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Button as={NextLink} color="primary" href="/pomoc" radius="full" size="lg">
+          <Button
+            as={NextLink}
+            color="primary"
+            href="/pomoc"
+            radius="full"
+            size="lg"
+          >
             Wypełnij formularz pomocy
           </Button>
-          <Button as={NextLink} href="/baza-wiedzy" radius="full" size="lg" variant="bordered">
+          <Button
+            as={NextLink}
+            href="/baza-wiedzy"
+            radius="full"
+            size="lg"
+            variant="bordered"
+          >
             Zobacz poradniki krok po kroku
           </Button>
         </div>

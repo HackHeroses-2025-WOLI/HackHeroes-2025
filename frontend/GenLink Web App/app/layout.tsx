@@ -40,20 +40,30 @@ export default function RootLayout({
         )}
       >
         <Providers
-          themeProps={{ attribute: "class", defaultTheme: "light", forcedTheme: "light" }}
+          themeProps={{
+            attribute: "class",
+            defaultTheme: "light",
+            forcedTheme: "light",
+          }}
         >
           <NavigationLoaderProvider>
             <div className="relative flex min-h-screen flex-col pt-16">
               <Navbar />
-              <main className="container mx-auto max-w-7xl flex-grow px-6 pt-1 md:pt-1"/*można zmniejszyć padding top i coś */>
+              <main
+                className="container mx-auto max-w-7xl flex-grow px-6 pt-1 md:pt-1" /*można zmniejszyć padding top i coś */
+              >
                 {children}
               </main>
               <footer className="border-t border-default-100 bg-default-50 py-8">
                 <div className="container mx-auto flex max-w-7xl flex-col gap-6 px-6 text-sm text-default-500 md:flex-row md:items-start md:justify-between">
                   <div className="max-w-sm space-y-2">
-                    <p className="text-base font-semibold text-default-700">GenLink</p>
+                    <p className="text-base font-semibold text-default-700">
+                      GenLink
+                    </p>
                     <p>
-                      Łączymy seniorów z cierpliwymi wolontariuszami technologicznymi. Wspieramy przez telefon oraz zdalnie, zawsze krok po kroku.
+                      Łączymy seniorów z cierpliwymi wolontariuszami
+                      technologicznymi. Wspieramy przez telefon oraz zdalnie,
+                      zawsze krok po kroku.
                     </p>
                     <p>© {new Date().getFullYear()} GenLink</p>
                   </div>
@@ -69,7 +79,9 @@ export default function RootLayout({
                     <span className="text-sm font-semibold uppercase tracking-wide text-default-700">
                       Kontakt
                     </span>
-                    <Link href="mailto:kontakt@genlink.pl">kontakt@genlink.pl</Link>
+                    <Link href="mailto:kontakt@genlink.pl">
+                      kontakt@genlink.pl
+                    </Link>
                     <span>Infolinia: 22 000 00 00</span>
                     <span>Codziennie 9:00 – 19:00</span>
                   </div>

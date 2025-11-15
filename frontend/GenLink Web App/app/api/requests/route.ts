@@ -18,6 +18,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as Partial<HelpRequestBody>;
 
   const missingField = requiredFields.find((field) => !body[field]);
+
   if (missingField) {
     return NextResponse.json(
       { message: `Missing field: ${missingField}` },

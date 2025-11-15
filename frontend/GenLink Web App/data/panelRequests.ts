@@ -1,4 +1,9 @@
-export type PanelRequestCategory = "zdrowie" | "platnosci" | "polaczenia" | "bezpieczenstwo" | "inne";
+export type PanelRequestCategory =
+  | "zdrowie"
+  | "platnosci"
+  | "polaczenia"
+  | "bezpieczenstwo"
+  | "inne";
 export type PanelRequestStatus = "active" | "pending" | "contact";
 
 export const panelCategoryLabels: Record<PanelRequestCategory, string> = {
@@ -110,7 +115,7 @@ export const panelRequests: PanelRequest[] = [
     category: "inne",
     summary: "Formularz bez szczegółów – prośba o telefon",
     description:
-      "Zgłoszenie trafiło z formularza \"Potrzebuję pomocy\". Brak opisu problemu, należy zadzwonić i ustalić potrzeby.",
+      'Zgłoszenie trafiło z formularza "Potrzebuję pomocy". Brak opisu problemu, należy zadzwonić i ustalić potrzeby.',
     submittedAgo: "25 min temu",
     phone: "+48 602 410 880",
     preferredContact: "Dowolnie dziś do 20:00",
@@ -142,10 +147,16 @@ export const panelRequests: PanelRequest[] = [
   },
 ];
 
-export const panelActiveRequest = panelRequests.find((request) => request.status === "active") ?? null;
+export const panelActiveRequest =
+  panelRequests.find((request) => request.status === "active") ?? null;
 
-export const panelPendingRequests = panelRequests.filter((request) => request.status === "pending");
+export const panelPendingRequests = panelRequests.filter(
+  (request) => request.status === "pending",
+);
 
-export const panelContactRequests = panelRequests.filter((request) => request.status === "contact");
+export const panelContactRequests = panelRequests.filter(
+  (request) => request.status === "contact",
+);
 
-export const findPanelRequestById = (id: string) => panelRequests.find((request) => request.id === id);
+export const findPanelRequestById = (id: string) =>
+  panelRequests.find((request) => request.id === id);

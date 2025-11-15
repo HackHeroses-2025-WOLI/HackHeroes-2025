@@ -1,13 +1,8 @@
 import { redirect } from "next/navigation";
 
-interface LegacyPanelCatchAllPageProps {
-  params: {
-    slug?: string[];
-  };
-}
-
-export default function LegacyPanelCatchAllPage({ params }: LegacyPanelCatchAllPageProps) {
-  const segments = params.slug ?? [];
+export default function LegacyPanelCatchAllPage(props: any) {
+  const { params } = props as { params?: { slug?: string[] } };
+  const segments = params?.slug ?? [];
 
   if (segments.length === 0) {
     redirect("/wolontariusz");
