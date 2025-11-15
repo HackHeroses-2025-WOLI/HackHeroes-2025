@@ -230,7 +230,7 @@ export default function HelpPage() {
   }, [isLoadingStats, stats]);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 py-8">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 py-8 overflow-x-hidden">
       <Card className="border border-default-100">
         <CardHeader className="flex flex-col gap-3 text-left">
           <Chip color="success" variant="flat">
