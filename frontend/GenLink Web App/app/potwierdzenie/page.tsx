@@ -22,12 +22,12 @@ export default function ConfirmationPage({ searchParams }: ConfirmationPageProps
         <CardHeader className="flex flex-col gap-3 text-left">
           <h1 className="text-3xl font-semibold text-success-600">Dziękujemy!</h1>
           <p className="text-base text-default-600">
-            Przyjęliśmy Twoje zgłoszenie. Wolontariusz GenLink skontaktuje się z Tobą telefonicznie w ciągu najbliższych <span className="font-semibold text-default-800">{eta} minut</span>.
+            Przyjęliśmy Twoje zgłoszenie. Wolontariusz GenLink skontaktuje się z Tobą telefonicznie w ciągu najbliższych <span className="font-semibold text-default-800">{eta} minut </span>(jest to czas orientacyjny).
           </p>
         </CardHeader>
         <CardBody className="flex flex-col gap-2 text-sm text-default-600">
           <div className="flex flex-col gap-3 rounded-lg p-1 text-sm">
-            <Chip className="bg-[#CCE3FD] text-black" size="md">
+            <Chip color="warning" classNames={{ content: "font-medium" }} size="md">
               Pamiętaj!
             </Chip>
             <p className="text-default-700 font-semibold">

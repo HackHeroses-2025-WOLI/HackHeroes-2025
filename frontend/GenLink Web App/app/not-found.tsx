@@ -9,10 +9,10 @@ export default function NotFoundPage() {
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 py-12">
       <Card className="w-full max-w-xl border border-default-100 text-center">
         <CardHeader className="flex flex-col gap-2">
-          <p className="text-sm font-semibold uppercase tracking-wide text-primary">Ups!</p>
-          <h1 className="text-3xl font-semibold text-default-900">Nie znaleźliśmy takiej strony</h1>
+          <p className="text-2xl font-semibold uppercase tracking-wide text-primary">Ups!</p>
+          <h1 className="text-xl font-semibold text-default-900">Nie znaleźliśmy takiej strony</h1>
           <p className="text-sm text-default-500">
-            Link mógł się przedawnić albo został wpisany z literówką. Skorzystaj z przycisków poniżej, aby wrócić do działania.
+            Upewnij się, że adres jest poprawny i spróbuj ponownie.
           </p>
         </CardHeader>
         <Divider />
@@ -23,7 +23,7 @@ export default function NotFoundPage() {
           </p>
           <p>
             W razie problemów napisz do nas na adres{" "}
-            <Link className="font-medium" href="mailto:kontakt@genlink.pl">
+            <Link className="text-sm font-medium" href="mailto:kontakt@genlink.pl">
               kontakt@genlink.pl
             </Link>
             .

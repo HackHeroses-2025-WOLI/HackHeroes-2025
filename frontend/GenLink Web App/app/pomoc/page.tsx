@@ -125,6 +125,69 @@ export default function HelpPage() {
     });
   };
 
+  const validateField = (field: FormField) => {
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+
+      switch (field) {
+        case "name": {
+          if (!formData.name.trim()) {
+            next.name = "Podaj imię i nazwisko";
+          } else {
+            delete next.name;
+          }
+          break;
+        }
+        case "phone": {
+          const phoneDigits = formData.phone.replace(/\D/g, "");
+          if (phoneDigits.length !== PHONE_DIGIT_LIMIT) {
+            next.phone = "Podaj poprawny numer telefonu (XXX-XXX-XXX)";
+          } else {
+            delete next.phone;
+          }
+          break;
+        }
+        case "address": {
+          if (!formData.address.trim()) {
+            next.address = "Podaj adres zamieszkania";
+          } else {
+            delete next.address;
+          }
+          break;
+        }
+        case "city": {
+          if (!formData.city.trim()) {
+            next.city = "Podaj miejscowość";
+          } else {
+            delete next.city;
+          }
+          break;
+        }
+        case "age": {
+          const parsedAge = Number.parseInt(formData.age.trim(), 10);
+          if (Number.isNaN(parsedAge) || parsedAge < 1) {
+            next.age = "Podaj poprawny wiek";
+          } else {
+            delete next.age;
+          }
+          break;
+        }
+        case "problem": {
+          if (!formData.problem) {
+            next.problem = "Wybierz rodzaj problemu";
+          } else {
+            delete next.problem;
+          }
+          break;
+        }
+        default:
+          break;
+      }
+
+      return next;
+    });
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -259,6 +322,7 @@ export default function HelpPage() {
                 }));
                 clearFieldError("name");
               }}
+              onBlur={() => validateField("name")}
             />
             <Input
               isRequired
@@ -279,6 +343,7 @@ export default function HelpPage() {
                 }));
                 clearFieldError("phone");
               }}
+              onBlur={() => validateField("phone")}
             />
             <Input
               isRequired
@@ -295,6 +360,7 @@ export default function HelpPage() {
                 }));
                 clearFieldError("address");
               }}
+              onBlur={() => validateField("address")}
             />
             <Input
               isRequired
@@ -311,6 +377,7 @@ export default function HelpPage() {
                 }));
                 clearFieldError("city");
               }}
+              onBlur={() => validateField("city")}
             />
             <Input
               isRequired
@@ -331,6 +398,7 @@ export default function HelpPage() {
                 }));
                 clearFieldError("age");
               }}
+              onBlur={() => validateField("age")}
             />
             <Select
               isRequired
@@ -347,6 +415,7 @@ export default function HelpPage() {
                 }));
                 clearFieldError("problem");
               }}
+              onBlur={() => validateField("problem")}
             >
               {problemOptions.map((option) => (
                 <SelectItem key={option.value}>{option.label}</SelectItem>
