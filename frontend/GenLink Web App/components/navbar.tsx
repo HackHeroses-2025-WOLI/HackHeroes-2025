@@ -15,7 +15,7 @@ import { Link } from "@heroui/link";
 import { link as linkStyles } from "@heroui/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { siteConfig } from "@/config/site";
@@ -26,8 +26,6 @@ export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const { show: showLoader } = useNavigationLoader();
-  const scrollPositionRef = useRef<number | null>(null);
-
   useEffect(() => {
     setIsMenuOpen(false);
   }, [pathname]);
@@ -78,39 +76,30 @@ export const Navbar = () => {
       return;
     }
 
-    const body = document.body;
+    const root = document.documentElement;
 
     if (isMenuOpen) {
-      scrollPositionRef.current = window.scrollY;
-      body.style.position = "fixed";
-      body.style.width = "100%";
-      body.style.top = `-${scrollPositionRef.current}px`;
-      body.style.overflow = "hidden";
-    } else if (scrollPositionRef.current !== null) {
-      body.style.position = "";
-      body.style.width = "";
-      body.style.top = "";
-      body.style.overflow = "";
-      window.scrollTo({ top: scrollPositionRef.current });
-      scrollPositionRef.current = null;
+      root.classList.add("overflow-hidden");
+    } else {
+      root.classList.remove("overflow-hidden");
     }
 
     return () => {
-      body.style.position = "";
-      body.style.width = "";
-      body.style.top = "";
-      body.style.overflow = "";
+      root.classList.remove("overflow-hidden");
     };
   }, [isMenuOpen]);
 
   return (
     <HeroUINavbar
-      className="w-full"
+      className={clsx(
+        "w-full z-50 left-0 right-0 top-0",
+        isMenuOpen ? "fixed" : "sticky",
+      )}
       isBlurred
       isMenuOpen={isMenuOpen}
       maxWidth="xl"
       onMenuOpenChange={setIsMenuOpen}
-      position="sticky"
+      position="static"
     >
       <NavbarContent className="basis-1/2 sm:basis-full" justify="start">
         <NavbarBrand as="li" className="gap-3 max-w-fit">
