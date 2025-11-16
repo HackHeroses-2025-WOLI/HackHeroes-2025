@@ -30,7 +30,7 @@ export const Navbar = () => {
     [pathname, showLoader],
   );
   return (
-    <HeroUINavbar isBlurred className={clsx("fixed w-full z-50 left-0 right-0 top-0 border-b border-default-100")} maxWidth="xl" position="static">
+    <HeroUINavbar isBlurred className={clsx("fixed w-full z-50 left-0 right-0 top-0 border-b-2 border-default-100")} maxWidth="xl" position="static">
       <NavbarContent className="w-full" justify="center">
         <div className="w-full flex items-center justify-center gap-6">
           <NavbarBrand as="li" className="gap-3 max-w-fit">
