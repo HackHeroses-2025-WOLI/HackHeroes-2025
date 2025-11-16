@@ -11,7 +11,7 @@ import { Link } from "@heroui/link";
 
 export default function VolunteerLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("wolontariusz@genlink.pl");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
