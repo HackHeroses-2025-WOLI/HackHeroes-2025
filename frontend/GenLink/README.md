@@ -35,6 +35,19 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
       expo install expo-navigation-bar
       ```
 
+   If you truly want to force white system bars regardless of the device theme or
+   edge-to-edge settings, set the toggles in `constants/config.ts`:
+
+   ```ts
+   // constants/config.ts
+   export const FORCE_LIGHT_SYSTEM_UI = true;
+   export const FORCE_NAVIGATION_BAR_WHITE = true;
+   ```
+
+   This will attempt to force status and navigation bars to white on Android. Note
+   that some OEMs may still override this; you might need to re-open the app after
+   changing the config.
+
    Note: On some Android devices "edge-to-edge" is enabled (often set in `app.json` under `android.edgeToEdgeEnabled`). When edge-to-edge is enabled the OS may overlay the navigation bar and `expo-navigation-bar.setBackgroundColorAsync` will not work — it logs a warning. If you want to force the navigation bar background you can disable edge-to-edge in `app.json` (not recommended for all apps):
 
    ```jsonc

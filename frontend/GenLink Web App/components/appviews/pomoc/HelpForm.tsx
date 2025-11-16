@@ -322,12 +322,12 @@ export function HelpForm({
   return (
     <div
       className={clsx(
-        "mx-auto flex w-full max-w-3xl flex-col gap-6 py-8 overflow-x-hidden",
+        "mx-auto flex w-full max-w-3xl flex-col gap-6 py-8 px-4 sm:px-0 overflow-x-hidden",
         wrapperClassName,
       )}
     >
-      <Card className={clsx("border border-default-100", cardClassName)}>
-        <CardHeader className="flex flex-col gap-3 text-left">
+      <Card className={clsx("w-full min-w-0 border border-default-100 overflow-hidden", cardClassName)}>
+        <CardHeader className="flex w-full flex-col gap-3 text-left">
           <Chip color="success" variant="flat">
             {volunteerInfo}
           </Chip>
@@ -335,9 +335,10 @@ export function HelpForm({
           {description}
         </CardHeader>
         <Divider />
-        <form onSubmit={handleSubmit}>
-          <CardBody className="flex flex-col gap-5">
+        <form className="w-full" onSubmit={handleSubmit}>
+          <CardBody className="flex w-full flex-col gap-5">
             <Input
+              className="w-full"
               isRequired
               errorMessage={fieldErrors.name}
               isInvalid={Boolean(fieldErrors.name)}
@@ -352,6 +353,7 @@ export function HelpForm({
               }}
             />
             <Input
+              className="w-full"
               isRequired
               errorMessage={fieldErrors.phone}
               inputMode="numeric"
@@ -370,6 +372,7 @@ export function HelpForm({
               }}
             />
             <Input
+              className="w-full"
               isRequired
               errorMessage={fieldErrors.address}
               isInvalid={Boolean(fieldErrors.address)}
@@ -384,6 +387,7 @@ export function HelpForm({
               }}
             />
             <Input
+              className="w-full"
               isRequired
               errorMessage={fieldErrors.city}
               isInvalid={Boolean(fieldErrors.city)}
@@ -398,6 +402,7 @@ export function HelpForm({
               }}
             />
             <Input
+              className="w-full"
               isRequired
               errorMessage={fieldErrors.age}
               inputMode="numeric"
@@ -416,6 +421,7 @@ export function HelpForm({
               }}
             />
             <Select
+              className="w-full"
               isRequired
               errorMessage={fieldErrors.problem}
               isInvalid={Boolean(fieldErrors.problem)}
@@ -434,6 +440,7 @@ export function HelpForm({
               ))}
             </Select>
             <Checkbox
+              className="w-full"
               isSelected={formData.remember}
               onValueChange={(value) => setFormData((prev) => ({ ...prev, remember: value }))}
             >
@@ -446,12 +453,18 @@ export function HelpForm({
             ) : null}
           </CardBody>
           <Divider />
-          <CardFooter className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <CardFooter className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-xs text-default-500">
               Przesyłając zgłoszenie potwierdzasz, że możemy zadzwonić na podany
               numer i wspólnie ustalić kolejne kroki.
             </div>
-            <Button color="primary" isLoading={isSubmitting} size="lg" type="submit">
+            <Button
+              className="w-full sm:w-auto"
+              color="primary"
+              isLoading={isSubmitting}
+              size="lg"
+              type="submit"
+            >
               {submitLabel}
             </Button>
           </CardFooter>

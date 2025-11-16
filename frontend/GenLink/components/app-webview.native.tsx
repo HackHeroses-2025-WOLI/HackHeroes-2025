@@ -47,6 +47,12 @@ export default function AppWebView({ uri }: Props) {
     content = (
       <RNWebView
         source={{ uri }}
+        // iOS: disable bounce
+        bounces={false}
+        // Android: disable the overscroll glow/stretch
+        overScrollMode="never"
+        // Disable built-in pull-to-refresh on Android
+        pullToRefreshEnabled={false}
         startInLoadingState
         renderLoading={() => (
           <View style={styles.loadingContainer}>
