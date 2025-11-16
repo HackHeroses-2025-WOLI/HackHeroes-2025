@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - main
-      - develop
+      - b-frontend
     paths:
       - 'frontend/GenLink Web App/**'
       - '.github/workflows/genlink-web-app.yml'
   pull_request:
     branches:
       - main
-      - develop
+      - b-frontend
     paths:
       - 'frontend/GenLink Web App/**'
       - '.github/workflows/genlink-web-app.yml'

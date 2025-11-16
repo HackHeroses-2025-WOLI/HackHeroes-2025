@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - main
-      - develop
+      - b-frontend
     paths:
       - 'frontend/GenLink/**'
       - '.github/workflows/genlink-expo-app.yml'
   pull_request:
     branches:
       - main
-      - develop
+      - b-frontend
     paths:
       - 'frontend/GenLink/**'
       - '.github/workflows/genlink-expo-app.yml'
@@ -47,6 +47,10 @@ jobs:
       
       - name: Check TypeScript
         run: npx tsc --noEmit
+        continue-on-error: true
+      
+      - name: Check project health
+        run: npx expo doctor
         continue-on-error: true
       
       - name: Validate Expo configuration
