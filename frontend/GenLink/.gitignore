@@ -1,5 +1,29 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
+node_modules/
+.expo/
+.expo-shared/
+dist/
+build/
+android/
+ios/
+**/*.log
+*.local
+.vscode/
+.DS_Store
+.env
+/.pnp
+/.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+/.idea/
+*.iml
+coverage/
+/.turbo
+/.next
+
 # dependencies
 node_modules/
 

@@ -8,7 +8,7 @@ type Props = {
   uri: string;
 };
 
-export function AppWebView({ uri }: Props) {
+export default function AppWebView({ uri }: Props) {
   // On web we use an iframe fallback for better performance and compatibility
   if (Platform.OS === 'web') {
     return (

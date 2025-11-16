@@ -14,20 +14,19 @@ export default function AppWebView({ uri }: Props) {
   const backgroundColor = useThemeColor({}, 'background');
 
   useEffect(() => {
-    // try to require the native webview. If it's not installed, handle gracefully.
-    try {
-      // dynamic require avoids static bundler import which fails when not installed
-      // but Metro still may attempt to resolve — installing the package is still recommended.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const mod = require('react-native-webview');
-      setWebViewModule(mod?.WebView ?? mod?.default ?? mod);
-    } catch (e) {
+    (async () => {
+      try {
+        // dynamic import avoids static bundler import which fails when not installed.
+        const mod = await import('react-native-webview');
+        setWebViewModule(mod?.WebView ?? mod?.default ?? mod);
+      } catch {
       setWebViewModule(null);
       // keep a console warning so it's easy to see in logs
-      // eslint-disable-next-line no-console
-      console.warn('react-native-webview not installed. Run `expo install react-native-webview`.');
+       
+        console.warn('react-native-webview not installed. Run `expo install react-native-webview`.');
     }
-  }, []);
+      })();
+      }, []);
 
   let content: React.ReactNode;
 
