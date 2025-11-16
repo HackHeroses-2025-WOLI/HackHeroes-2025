@@ -298,7 +298,7 @@ export function HelpForm({
         }
       }
 
-      router.push(`/potwierdzenie`);
+      router.push(`./potwierdzenie`);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Nieoczekiwany błąd";
       setSubmitError(message);
