@@ -21,6 +21,9 @@ jobs:
     name: Lint and Build Web App
     runs-on: ubuntu-latest
     
+    permissions:
+      contents: read
+    
     defaults:
       run:
         working-directory: frontend/GenLink Web App
