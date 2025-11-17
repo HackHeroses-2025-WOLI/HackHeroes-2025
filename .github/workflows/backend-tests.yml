@@ -34,15 +34,6 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
       
-      - name: Create .env file for testing
-        run: |
-          cat > .env << 'EOF'
-          SECRET_KEY=test-secret-key-for-github-actions-testing-12345678901234567890
-          DATABASE_URL=sqlite:///./test_users.db
-          CORS_ORIGINS=http://localhost:3000,http://localhost:8080
-          DEBUG=True
-          EOF
-      
       - name: Run pytest
         run: |
           source venv/bin/activate
