@@ -12,13 +12,21 @@ import {
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
 import { link as linkStyles } from "@heroui/theme";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  DropdownSection,
+} from "@heroui/dropdown";
 import NextLink from "next/link";
 import clsx from "clsx";
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { siteConfig } from "@/config/site";
-import { Logo } from "@/components/icons";
+import { Logo, SettingsIcon } from "@/components/icons";
+import { Avatar, AvatarGroup, AvatarIcon } from "@heroui/avatar";
 import { useNavigationLoader } from "@/components/navigation-loader";
 
 export const Navbar = () => {
@@ -89,6 +97,14 @@ export const Navbar = () => {
     };
   }, [isMenuOpen]);
 
+  const isInVolunteerSettingsOrPanel = (pathname ?? "").startsWith(
+    "/wolontariusz/ustawienia",
+  ) || (pathname ?? "").startsWith("/wolontariusz/panel") || (pathname ?? "").startsWith("/wolontariusz/login");
+  
+  const isInVolunteerPanel = (pathname ?? "").startsWith(
+    "/wolontariusz/panel",
+  );
+
   return (
     <HeroUINavbar
       isBlurred
@@ -131,19 +147,22 @@ export const Navbar = () => {
         className="hidden sm:flex basis-1/2 sm:basis-full"
         justify="end"
       >
-        <NavbarItem className="hidden md:flex">
-          <Button
-            as={NextLink}
-            color="primary"
-            href="/pomoc"
-            radius="full"
-            size="md"
-            onPress={() => handleNavigate("/pomoc")}
-          >
-            Potrzebuję pomocy
-          </Button>
-        </NavbarItem>
-        <NavbarItem className="hidden md:flex">
+        {!isInVolunteerSettingsOrPanel && (
+          <NavbarItem className="hidden md:flex">
+            <Button
+              as={NextLink}
+              color="primary"
+              href="/pomoc"
+              radius="full"
+              size="md"
+              onPress={() => handleNavigate("/pomoc")}
+            >
+              Potrzebuję pomocy
+            </Button>
+          </NavbarItem>
+        )}
+        {!isInVolunteerSettingsOrPanel && (
+          <NavbarItem className="hidden md:flex">
           <Button
             as={NextLink}
             className={
@@ -157,7 +176,63 @@ export const Navbar = () => {
           >
             Chcę pomagać
           </Button>
-        </NavbarItem>
+          </NavbarItem>
+        )}
+        {isInVolunteerPanel && (
+          <NavbarItem className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-3">
+              <Avatar 
+                size="sm"
+                name="Anna Kowalska" 
+                className="shadow-sm bg-primary text-white text-sm font-medium w-8 h-8" 
+                showFallback
+                getInitials={(name) => name.split(' ').map(n => n[0]).join('')}
+              />
+              <span className="hidden sm:inline text-base font-medium text-default-800">
+                Anna Kowalska
+              </span>
+            </div>
+
+            <Dropdown placement="bottom-end">
+              <DropdownTrigger>
+                <button
+                  className="p-3 rounded-full text-default-700 hover:bg-default-100 focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                  aria-label="Menu konta"
+                >
+                  <SettingsIcon size={28} />
+                </button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Menu konta" variant="faded">
+                <DropdownItem
+                  key="settings"
+                  href="/wolontariusz/ustawienia"
+                  startContent={<SettingsIcon size={16} />}
+                  onPress={() => handleNavigate("/wolontariusz/ustawienia")}
+                >
+                  Ustawienia konta
+                </DropdownItem>
+                <DropdownItem
+                  key="help"
+                  href="/pomoc"
+                  onPress={() => handleNavigate("/pomoc")}
+                >
+                  Pomoc i wsparcie
+                </DropdownItem>
+                <DropdownItem
+                  key="logout"
+                  href="/wolontariusz/login"
+                  className="text-danger"
+                  color="danger"
+                  onPress={() => handleNavigate("/wolontariusz/login")}
+                >
+                  Wyloguj się
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </NavbarItem>
+        )}
+        
       </NavbarContent>
 
       <NavbarContent
@@ -198,7 +273,8 @@ export const Navbar = () => {
             ))}
           </div>
           <div className="mt-6 flex flex-col gap-2">
-            <Button
+            {!isInVolunteerSettingsOrPanel && (
+              <Button
               as={NextLink}
               className="w-full font-semibold shadow-[0_25px_80px_rgba(37,99,235,0.35)]"
               color="primary"
@@ -209,7 +285,10 @@ export const Navbar = () => {
             >
               Potrzebuję pomocy
             </Button>
-            <Button
+            )}
+            
+            {!isInVolunteerSettingsOrPanel && (
+              <Button
               as={NextLink}
               className={
                 "font-semibold text-primary border-2 border-primary/25 bg-primary/5 shadow-[0_18px_45px_rgba(37,99,235,0.18)] hover:bg-primary/10"
@@ -223,6 +302,59 @@ export const Navbar = () => {
             >
               Chcę pomagać
             </Button>
+            )}
+            
+            
+            {isInVolunteerPanel && (
+              <div className="flex items-center gap-3">
+                <Avatar 
+                  size="sm"
+                  name="Anna Kowalska" 
+                  className="shadow-sm bg-primary text-white text-xs font-medium w-7 h-7" 
+                  showFallback
+                  getInitials={(name) => name.split(' ').map(n => n[0]).join('')}
+                />
+                <span className="text-base font-medium">Anna Kowalska</span>
+                <Dropdown placement="bottom-end">
+                  <DropdownTrigger>
+                    <button
+                      className="p-3 rounded-lg flex items-center justify-center text-default-700 hover:bg-default-100 focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+                      style={{ WebkitTapHighlightColor: "transparent" }}
+                      aria-label="Menu konta"
+                    >
+                      <SettingsIcon size={26} />
+                    </button>
+                  </DropdownTrigger>
+                  <DropdownMenu aria-label="Menu konta" variant="faded">
+                    <DropdownItem
+                      key="settings"
+                      href="/wolontariusz/ustawienia"
+                      startContent={<SettingsIcon size={16} />}
+                      onPress={() => handleNavigate("/wolontariusz/ustawienia")}
+                    >
+                      Ustawienia konta
+                    </DropdownItem>
+                    <DropdownItem
+                      key="help"
+                      href="/pomoc"
+                      onPress={() => handleNavigate("/pomoc")}
+                    >
+                      Pomoc i wsparcie
+                    </DropdownItem>
+                    <DropdownItem
+                      key="logout"
+                      href="/wolontariusz/login"
+                      className="text-danger"
+                      color="danger"
+                      onPress={() => handleNavigate("/wolontariusz/login")}
+                    >
+                      Wyloguj się
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
+              </div>
+            )}
+            
           </div>
         </div>
       </NavbarMenu>

@@ -40,7 +40,7 @@ const hasActiveAssignment = Boolean(activeAssignment);
 export default function VolunteerPanelPage() {
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-4">
+      <div className="relative flex flex-col gap-4">
         <h1 className="text-3xl font-semibold text-default-900">
           Witaj w panelu wolontariusza
         </h1>
@@ -48,24 +48,9 @@ export default function VolunteerPanelPage() {
           Śledź swoje statystyki, odbieraj zgłoszenia i utrzymuj kontakt z
           seniorami w jednym miejscu.
         </p>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            as={NextLink}
-            color="primary"
-            href="/wolontariusz/zgloszenia"
-            radius="lg"
-          >
-            Przeglądaj zgłoszenia
-          </Button>
-          <Button
-            as={NextLink}
-            href="/wolontariusz/ustawienia"
-            radius="lg"
-            variant="bordered"
-          >
-            Ustawienia konta
-          </Button>
-        </div>
+        {/* Main CTA for browsing submissions has been removed per request. */}
+
+        {/* Settings icon moved to global navbar */}
       </div>
 
       <section className="grid gap-4 sm:grid-cols-3">
