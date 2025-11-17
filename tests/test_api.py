@@ -1,5 +1,5 @@
 """Comprehensive API tests for public API endpoints."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -100,7 +100,7 @@ def _create_zgloszenie(**overrides):
 def _backdate_zgloszenie(zgloszenie_id: int, days: int) -> None:
     with TestingSessionLocal() as db:
         entry = db.get(models.Zgloszenie, zgloszenie_id)
-        entry.data_zgloszenia = datetime.utcnow() - timedelta(days=days)
+        entry.data_zgloszenia = datetime.now(timezone.utc) - timedelta(days=days)
         db.commit()
 
 
@@ -282,7 +282,7 @@ def test_get_all_zgloszenia_supports_filters():
     assert items[0]["typ_zgloszenia_id"] == 2
 
     # date range filter
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     response = client.get(f"/api/v1/zgloszenia/?data_od={(today - timedelta(days=1)).isoformat()}")
     assert response.status_code == 200
     assert len(response.json()) == 2

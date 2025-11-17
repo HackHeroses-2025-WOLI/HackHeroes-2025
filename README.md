@@ -268,9 +268,6 @@ Required variables in `.env`:
 
 ```env
 SECRET_KEY=your-super-secret-key-min-32-chars
-DATABASE_URL=sqlite:///./users.db
-CORS_ORIGINS=http://localhost:3000
-DEBUG=True
 ```
 
 ## 🔒 Security Notes

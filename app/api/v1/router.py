@@ -30,7 +30,7 @@ api_router.include_router(
 )
 api_router.include_router(
     users.router,
-    prefix="users",
+    prefix="/users",
     tags=["👤 Users"]
     
 )
