@@ -7,11 +7,13 @@ import bcrypt
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
+from app.config import get_secret_key, settings
+
 # ---------------------
-# Ustawienia JWT
-SECRET_KEY = "SUPERSECRETKEY"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+# Ustawienia JWT (sekret pobierany z ENV)
+SECRET_KEY = get_secret_key()
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 # ---------------------
 
 # Tworzenie tabel w SQLite
