@@ -105,6 +105,46 @@ export const Navbar = () => {
     "/wolontariusz/panel",
   );
 
+  const getInitials = (name?: string) => {
+    if (!name) return "";
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    const first = parts.length > 0 ? parts[0][0].toUpperCase() : "";
+    const last = parts.length > 1 ? parts[parts.length - 1][0].toUpperCase() : "";
+    return `${first}${last}`;
+  };
+
+  const colorFromString = (str?: string) => {
+    const s = (str || "").toString();
+    let hash = 0;
+    for (let i = 0; i < s.length; i++) {
+      // simple hash
+      // eslint-disable-next-line no-bitwise
+      hash = s.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    // convert int hash to RGB
+    // eslint-disable-next-line no-bitwise
+    const r = (hash >> 24) & 0xff;
+    // eslint-disable-next-line no-bitwise
+    const g = (hash >> 16) & 0xff;
+    // eslint-disable-next-line no-bitwise
+    const b = (hash >> 8) & 0xff;
+    const toHex = (v: number) => v.toString(16).padStart(2, "0");
+    const hex = `#${toHex((r + 256) % 256)}${toHex((g + 256) % 256)}${toHex((b + 256) % 256)}`;
+    return hex;
+  };
+
+  const getTextColorForBg = (bgHex?: string) => {
+    const bg = (bgHex || "#ffffff").replace('#', '');
+    const r = parseInt(bg.substring(0, 2), 16);
+    const g = parseInt(bg.substring(2, 4), 16);
+    const b = parseInt(bg.substring(4, 6), 16);
+    // relative luminance formula (perceived brightness)
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? "#111827" : "#ffffff"; // dark text for light backgrounds, else white
+  };
+
+  const userName = "Marig Howak";
+
   return (
     <HeroUINavbar
       isBlurred
@@ -180,16 +220,17 @@ export const Navbar = () => {
         )}
         {isInVolunteerPanel && (
           <NavbarItem className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
               <Avatar 
                 size="sm"
-                name="Anna Kowalska" 
-                className="shadow-sm bg-primary text-white text-sm font-medium w-8 h-8" 
+                name={userName}
+                className="shadow-sm text-sm font-medium w-8 h-8" 
                 showFallback
-                getInitials={(name) => name.split(' ').map(n => n[0]).join('')}
+                getInitials={getInitials}
+                style={{ backgroundColor: colorFromString(userName), color: getTextColorForBg(colorFromString(userName)) }}
               />
               <span className="hidden sm:inline text-base font-medium text-default-800">
-                Anna Kowalska
+                {userName}
               </span>
             </div>
 
@@ -307,14 +348,15 @@ export const Navbar = () => {
             
             {isInVolunteerPanel && (
               <div className="flex items-center gap-3">
-                <Avatar 
+                  <Avatar 
                   size="sm"
-                  name="Anna Kowalska" 
-                  className="shadow-sm bg-primary text-white text-xs font-medium w-7 h-7" 
+                  name={userName}
+                  className="shadow-sm text-xs font-medium w-7 h-7" 
                   showFallback
-                  getInitials={(name) => name.split(' ').map(n => n[0]).join('')}
+                  getInitials={getInitials}
+                  style={{ backgroundColor: colorFromString(userName), color: getTextColorForBg(colorFromString(userName)) }}
                 />
-                <span className="text-base font-medium">Anna Kowalska</span>
+                <span className="text-base font-medium">{userName}</span>
                 <Dropdown placement="bottom-end">
                   <DropdownTrigger>
                     <button
