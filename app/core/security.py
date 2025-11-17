@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings, get_secret_key
 from app.db.database import get_db
-from app.db.models import Konto, User
+from app.db.models import Account, User
 
 # Bcrypt accepts up to 72 bytes; longer passwords are pre-hashed to stay compatible
 _BCRYPT_MAX_BYTES = 72
@@ -99,11 +99,11 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     return current_user
 
 
-async def get_current_konto(
+async def get_current_account(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
-) -> Konto:
-    """Retrieve Konto based on the bearer token."""
+)-> Account:
+    """Retrieve Account based on the bearer token."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -114,8 +114,8 @@ async def get_current_konto(
     if email is None:
         raise credentials_exception
 
-    konto = db.query(Konto).filter(Konto.login_email == email).first()
-    if konto is None:
+    account = db.query(Account).filter(Account.email == email).first()
+    if account is None:
         raise credentials_exception
 
-    return konto
+    return account

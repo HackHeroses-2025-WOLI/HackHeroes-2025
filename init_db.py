@@ -1,6 +1,6 @@
 """Initialize database tables."""
 from app.db.database import engine, Base
-from app.db.models import User, Konto, Zgloszenie, TypDostepnosci, TypZgloszenia
+from app.db.models import User, Account, Report, AvailabilityType, ReportType
 
 
 def init_db():
@@ -10,10 +10,10 @@ def init_db():
     print("✓ Database tables created successfully!")
     print("\nTables created:")
     print("  - users (legacy)")
-    print("  - konta")
-    print("  - zgloszenia")
-    print("  - typ_dostepnosci")
-    print("  - typ_zgloszenia")
+    print("  - accounts")
+    print("  - reports")
+    print("  - availability types")
+    print("  - report types")
 
 
 if __name__ == "__main__":

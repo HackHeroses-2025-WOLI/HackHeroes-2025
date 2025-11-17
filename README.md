@@ -124,105 +124,105 @@ Once running, visit:
 
 ---
 
-### 👥 **KONTA (Accounts)** - `/api/v1/konta`
+### 👥 **ACCOUNTS** - `/api/v1/accounts`
 
-#### Rejestracja i Logowanie
-- `POST /api/v1/konta/register` - Rejestracja nowego konta
+#### Registration & Login
+- `POST /api/v1/accounts/register` - Register a new account
   ```json
   {
-    "login_email": "user@example.com",
-    "haslo": "SecurePass123",
-    "imie_nazwisko": "Jan Kowalski",
-    "nr_tel": "123456789",
-    "miejscowosc": "Warszawa",
-    "typ_dostepnosci": 1,
-    "dostepnosc_json": "{\"high_contrast\": true}"
+    "email": "user@example.com",
+    "password": "SecurePass123",
+    "full_name": "Jan Kowalski",
+    "phone": "123456789",
+    "city": "Warsaw",
+    "availability_type": 1,
+    "availability_json": "{\"high_contrast\": true}"
   }
   ```
 
-- `POST /api/v1/konta/login` - Logowanie
+- `POST /api/v1/accounts/login` - Login
   ```json
   {
-    "login_email": "user@example.com",
-    "haslo": "SecurePass123"
+    "email": "user@example.com",
+    "password": "SecurePass123"
   }
   ```
 
-#### Zarządzanie Kontami
-- `GET /api/v1/konta/me` - Pobierz swoje konto (wymaga auth)
-- `GET /api/v1/konta/{email}` - Pobierz konto po emailu
-- `GET /api/v1/konta/?skip=0&limit=100` - Pobierz wszystkie konta (paginacja)
-- `PUT /api/v1/konta/{email}` - Aktualizuj konto
-- `DELETE /api/v1/konta/{email}` - Usuń konto
+#### Account Management
+- `GET /api/v1/accounts/me` - Get your account (requires auth)
+- `GET /api/v1/accounts/{email}` - Get account by email
+- `GET /api/v1/accounts/?skip=0&limit=100` - Get all accounts (pagination)
+- `PUT /api/v1/accounts/{email}` - Update account
+- `DELETE /api/v1/accounts/{email}` - Delete account
 
 ---
 
-### 📋 **ZGŁOSZENIA (Reports)** - `/api/v1/zgloszenia`
+### 📋 **REPORTS** - `/api/v1/reports`
 
-#### Tworzenie i Zarządzanie
-- `POST /api/v1/zgloszenia/` - Utwórz nowe zgłoszenie
+#### Create and Manage
+- `POST /api/v1/reports/` - Create a new report
   ```json
   {
-    "imie_nazwisko": "Anna Nowak",
-    "nr_tel": "987654321",
-    "wiek": 45,
-    "adres": "ul. Przykładowa 10",
-    "miejscowosc": "Kraków",
-    "problem": "Brak podjazdu dla wózków inwalidzkich przy wejściu do urzędu",
-    "czy_do_kontaktu": true,
-    "typ_zgloszenia_id": 1,
-    "zgloszenie_szczegoly": "Dodatkowe informacje..."
+    "full_name": "Anna Nowak",
+    "phone": "987654321",
+    "age": 45,
+    "address": "ul. Przykładowa 10",
+    "city": "Krakow",
+    "problem": "No wheelchair ramp at the government office entrance",
+    "contact_ok": true,
+    "report_type_id": 1,
+    "report_details": "Dodatkowe informacje..."
   }
   ```
 
-#### Przeglądanie Zgłoszeń
-- `GET /api/v1/zgloszenia/` - Pobierz wszystkie zgłoszenia
-  - Query params: `skip`, `limit`, `typ_zgloszenia_id`, `miejscowosc`
-  - Przykład: `/api/v1/zgloszenia/?miejscowosc=Warszawa&limit=50`
+#### Browse Reports
+- `GET /api/v1/reports/` - Get all reports
+  - Query params: `skip`, `limit`, `report_type_id`, `city`
+  - Example: `/api/v1/reports/?city=Warsaw&limit=50`
 
-- `GET /api/v1/zgloszenia/{id}` - Pobierz zgłoszenie po ID
-- `GET /api/v1/zgloszenia/stats` - Statystyki zgłoszeń
-- `GET /api/v1/zgloszenia/reporter/{email}` - Zgłoszenia użytkownika
+- `GET /api/v1/reports/{id}` - Get a report by ID
+- `GET /api/v1/reports/stats` - Reports statistics
+- `GET /api/v1/reports/reporter/{email}` - User's reports
 
-#### Edycja i Usuwanie
-- `PUT /api/v1/zgloszenia/{id}` - Aktualizuj zgłoszenie
-- `DELETE /api/v1/zgloszenia/{id}` - Usuń zgłoszenie
+#### Edit & Delete
+- `PUT /api/v1/reports/{id}` - Update a report
+- `DELETE /api/v1/reports/{id}` - Delete a report
 
 ---
 
-### 🏷️ **TYPY (Types)** - `/api/v1/typy`
+### 🏷️ **TYPES** - `/api/v1/types`
 
-#### Typ Dostępności
-- `GET /api/v1/typy/dostepnosci` - Pobierz wszystkie typy dostępności
-- `GET /api/v1/typy/dostepnosci/{id}` - Pobierz typ po ID
-- `POST /api/v1/typy/dostepnosci` - Utwórz nowy typ
+#### Availability Type
+- `GET /api/v1/types/availability` - Get all availability types
+- `GET /api/v1/types/availability/{id}` - Get type by ID
+- `POST /api/v1/types/availability` - Create a new type
   ```json
   {
-    "nazwa": "Niewidomy",
-    "opis": "Użytkownik niewidomy korzystający z czytnika ekranu"
+    "name": "Blind",
+    "description": "Blind user using a screen reader"
   }
   ```
 
-#### Typ Zgłoszenia
-- `GET /api/v1/typy/zgloszen` - Pobierz wszystkie typy zgłoszeń
-- `GET /api/v1/typy/zgloszen/{id}` - Pobierz typ po ID
-- `POST /api/v1/typy/zgloszen` - Utwórz nowy typ
+#### Report Type
+- `GET /api/v1/types/report_types` - Get all report types
+- `GET /api/v1/types/report_types/{id}` - Get type by ID
+- `POST /api/v1/types/report_types` - Create a new type
   ```json
   {
-    "nazwa": "Bariery architektoniczne",
-    "opis": "Problemy z dostępnością budynków"
+    "name": "Architectural barriers",
+    "description": "Issues with building accessibility"
   }
   ```
 
 ---
 
 ### 🔐 **Authentication (Legacy)** - `/api/v1/auth`
-- `POST /api/v1/auth/register` - Rejestracja (stary system)
-- `POST /api/v1/auth/login` - Logowanie (stary system)
+- `POST /api/v1/auth/register` - Registration (legacy system)
+- `POST /api/v1/auth/login` - Login (legacy system)
 
 ### 👤 **Users (Legacy)** - `/api/v1/users`
-- `GET /api/v1/users/me` - Pobierz profil (stary system)
-- `GET /api/v1/users/{user_id}` - Pobierz użytkownika po ID
+- `GET /api/v1/users/me` - Get profile (legacy system)
+- `GET /api/v1/users/{user_id}` - Get user by ID
 
 ## 🔐 Authentication Flow
 

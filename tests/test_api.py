@@ -37,9 +37,9 @@ def setup_database():
     with TestingSessionLocal() as db:
         db.add_all(
             [
-                models.TypDostepnosci(id=1, nazwa="Standard", opis="Default accessibility type"),
-                models.TypZgloszenia(id=1, nazwa="Infrastruktura", opis="Problemy infrastrukturalne"),
-                models.TypZgloszenia(id=2, nazwa="Komunikacja", opis="Problemy komunikacyjne"),
+                models.AvailabilityType(id=1, name="Standard", description="Default accessibility type"),
+                models.ReportType(id=1, name="Infrastructure", description="Infrastructure issues"),
+                models.ReportType(id=2, name="Transport", description="Transport issues"),
             ]
         )
         db.commit()
@@ -47,60 +47,60 @@ def setup_database():
     Base.metadata.drop_all(bind=engine)
 
 
-def _konto_payload(**overrides):
+def _account_payload(**overrides):
     payload = {
-        "login_email": "jan.kowalski@example.com",
-        "haslo": "SecurePass123",
-        "imie_nazwisko": "Jan Kowalski",
-        "nr_tel": "123456789",
-        "miejscowosc": "Warszawa",
-        "typ_dostepnosci": 1,
-        "dostepnosc_json": "{\"status\": \"available\"}"
+        "email": "jan.kowalski@example.com",
+        "password": "SecurePass123",
+        "full_name": "Jan Kowalski",
+        "phone": "123456789",
+        "city": "Warsaw",
+        "availability_type": 1,
+        "availability_json": "{\"status\": \"available\"}"
     }
     payload.update(overrides)
     return payload
 
 
-def _register_konto(**overrides):
-    return client.post("/api/v1/konta/register", json=_konto_payload(**overrides))
+def _register_account(**overrides):
+    return client.post("/api/v1/accounts/register", json=_account_payload(**overrides))
 
 
-def _login_konto(email="jan.kowalski@example.com", password="SecurePass123"):
+def _login_account(email="jan.kowalski@example.com", password="SecurePass123"):
     return client.post(
-        "/api/v1/konta/login",
-        json={"login_email": email, "haslo": password}
+        "/api/v1/accounts/login",
+        json={"email": email, "password": password}
     )
 
 
-def _fetch_konto_from_db(email):
+def _fetch_account_from_db(email):
     with TestingSessionLocal() as db:
-        return db.query(models.Konto).filter(models.Konto.login_email == email.lower()).first()
+        return db.query(models.Account).filter(models.Account.email == email.lower()).first()
 
 
-def _zgloszenie_payload(**overrides):
+def _report_payload(**overrides):
     payload = {
-        "imie_nazwisko": "Anna Nowak",
-        "nr_tel": "987654321",
-        "wiek": 30,
-        "adres": "ul. Testowa 5",
-        "miejscowosc": "Warszawa",
+        "full_name": "Anna Nowak",
+        "phone": "987654321",
+        "age": 30,
+        "address": "ul. Testowa 5",
+            "city": "Warsaw",
         "problem": "Brak podjazdu dla wózków inwalidzkich przy wejściu",
-        "czy_do_kontaktu": True,
-        "typ_zgloszenia_id": 1,
-        "zgloszenie_szczegoly": "Dodatkowe szczegóły"
+        "contact_ok": True,
+        "report_type_id": 1,
+        "report_details": "Additional details"
     }
     payload.update(overrides)
     return payload
 
 
-def _create_zgloszenie(**overrides):
-    return client.post("/api/v1/zgloszenia/", json=_zgloszenie_payload(**overrides))
+def _create_report(**overrides):
+    return client.post("/api/v1/reports/", json=_report_payload(**overrides))
 
 
-def _backdate_zgloszenie(zgloszenie_id: int, days: int) -> None:
+def _backdate_report(report_id: int, days: int) -> None:
     with TestingSessionLocal() as db:
-        entry = db.get(models.Zgloszenie, zgloszenie_id)
-        entry.data_zgloszenia = datetime.now(timezone.utc) - timedelta(days=days)
+        entry = db.get(models.Report, report_id)
+        entry.reported_at = datetime.now(timezone.utc) - timedelta(days=days)
         db.commit()
 
 
@@ -110,207 +110,207 @@ def test_health_check():
     assert response.json()["status"] == "OK"
 
 
-def test_register_konto_success():
-    response = _register_konto()
+def test_register_account_success():
+    response = _register_account()
     assert response.status_code == 201
     data = response.json()
-    assert data["login_email"] == "jan.kowalski@example.com"
-    assert "hash_hasla" not in data
+    assert data["email"] == "jan.kowalski@example.com"
+    assert "password_hash" not in data
 
-    konto = _fetch_konto_from_db("jan.kowalski@example.com")
-    assert konto is not None
-    assert konto.hash_hasla != "SecurePass123"
-    assert konto.hash_hasla.startswith("$2")
+    account = _fetch_account_from_db("jan.kowalski@example.com")
+    assert account is not None
+    assert account.password_hash != "SecurePass123"
+    assert account.password_hash.startswith("$2")
 
 
-def test_register_konto_duplicate_email_case_insensitive():
-    first_response = _register_konto()
+def test_register_account_duplicate_email_case_insensitive():
+    first_response = _register_account()
     assert first_response.status_code == 201
 
-    duplicate_response = _register_konto(login_email="JAN.KOWALSKI@EXAMPLE.COM")
+    duplicate_response = _register_account(email="JAN.KOWALSKI@EXAMPLE.COM")
     assert duplicate_response.status_code == 400
     assert "already exists" in duplicate_response.json()["detail"]
 
 
-def test_register_konto_invalid_email_rejected():
-    response = _register_konto(login_email="invalid-email")
+def test_register_account_invalid_email_rejected():
+    response = _register_account(email="invalid-email")
     assert response.status_code == 422
-    assert response.json()["detail"][0]["loc"][-1] == "login_email"
+    assert response.json()["detail"][0]["loc"][-1] == "email"
 
 
-def test_register_konto_requires_strong_password():
-    response = _register_konto(haslo="password")
+def test_register_account_requires_strong_password():
+    response = _register_account(password="password")
     assert response.status_code == 422
-    assert "Hasło" in response.json()["detail"][0]["msg"]
+    assert "Password" in response.json()["detail"][0]["msg"]
 
 
-def test_register_konto_rejects_bad_json_payload():
-    response = _register_konto(dostepnosc_json="{bad json}")
+def test_register_account_rejects_bad_json_payload():
+    response = _register_account(availability_json="{bad json}")
     assert response.status_code == 422
-    assert "dostepnosc_json" in response.json()["detail"][0]["loc"]
+    assert "availability_json" in response.json()["detail"][0]["loc"]
 
 
-def test_register_konto_rejects_invalid_phone_number():
-    response = _register_konto(nr_tel="12345abc")
+def test_register_account_rejects_invalid_phone_number():
+    response = _register_account(phone="12345abc")
     assert response.status_code == 422
-    assert "Numer telefonu" in response.json()["detail"][0]["msg"]
+    assert "Phone number" in response.json()["detail"][0]["msg"]
 
 
-def test_register_konto_handles_long_passwords():
+def test_register_account_handles_long_passwords():
     long_password = "A1" * 40  # 80 characters (>72 bytes) exercises hashing fallback
-    response = _register_konto(haslo=long_password)
+    response = _register_account(password=long_password)
     assert response.status_code == 201
 
-    konto = _fetch_konto_from_db("jan.kowalski@example.com")
-    assert konto is not None
-    assert konto.hash_hasla.startswith("$2")
+    account = _fetch_account_from_db("jan.kowalski@example.com")
+    assert account is not None
+    assert account.password_hash.startswith("$2")
 
 
-def test_login_konto_success():
-    _register_konto()
-    response = _login_konto()
+def test_login_account_success():
+    _register_account()
+    response = _login_account()
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
 
 
-def test_login_konto_invalid_password():
-    _register_konto()
-    response = _login_konto(password="WrongPass123")
+def test_login_account_invalid_password():
+    _register_account()
+    response = _login_account(password="WrongPass123")
     assert response.status_code == 401
     assert "Invalid" in response.json()["detail"]
 
 
-def test_login_konto_unknown_email():
-    response = _login_konto(email="no.user@example.com")
+def test_login_account_unknown_email():
+    response = _login_account(email="no.user@example.com")
     assert response.status_code == 401
 
 
-def test_get_my_konto_requires_token():
-    response = client.get("/api/v1/konta/me")
+def test_get_my_account_requires_token():
+    response = client.get("/api/v1/accounts/me")
     assert response.status_code == 401
 
 
-def test_get_my_konto_rejects_invalid_token():
+def test_get_my_account_rejects_invalid_token():
     response = client.get(
-        "/api/v1/konta/me",
+        "/api/v1/accounts/me",
         headers={"Authorization": "Bearer invalid.token.value"}
     )
     assert response.status_code == 401
 
 
-def test_get_my_konto_returns_current_account():
-    _register_konto()
-    login_response = _login_konto()
+def test_get_my_account_returns_current_account():
+    _register_account()
+    login_response = _login_account()
     token = login_response.json()["access_token"]
 
     response = client.get(
-        "/api/v1/konta/me",
+        "/api/v1/accounts/me",
         headers={"Authorization": f"Bearer {token}"}
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["login_email"] == "jan.kowalski@example.com"
-    assert "hash_hasla" not in data
+    assert data["email"] == "jan.kowalski@example.com"
+    assert "password_hash" not in data
 
 
-def test_get_konto_by_email_public_endpoint():
-    _register_konto()
-    response = client.get("/api/v1/konta/jan.kowalski@example.com")
+def test_get_account_by_email_public_endpoint():
+    _register_account()
+    response = client.get("/api/v1/accounts/jan.kowalski@example.com")
     assert response.status_code == 200
-    assert response.json()["login_email"] == "jan.kowalski@example.com"
-    assert "hash_hasla" not in response.json()
+    assert response.json()["email"] == "jan.kowalski@example.com"
+    assert "password_hash" not in response.json()
 
 
-def test_get_konto_by_email_returns_404_for_missing():
-    response = client.get("/api/v1/konta/missing@example.com")
+def test_get_account_by_email_returns_404_for_missing():
+    response = client.get("/api/v1/accounts/missing@example.com")
     assert response.status_code == 404
 
 
-def test_get_all_konta_masks_sensitive_fields():
-    _register_konto()
-    response = client.get("/api/v1/konta/")
+def test_get_all_accounts_masks_sensitive_fields():
+    _register_account()
+    response = client.get("/api/v1/accounts/")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
-    assert "hash_hasla" not in data[0]
+    assert "password_hash" not in data[0]
 
 
-def test_create_zgloszenie_success():
-    response = _create_zgloszenie()
+def test_create_report_success():
+    response = _create_report()
     assert response.status_code == 201
     data = response.json()
-    assert data["miejscowosc"] == "Warszawa"
-    assert data["typ_zgloszenia_id"] == 1
+    assert data["city"] == "Warsaw"
+    assert data["report_type_id"] == 1
 
 
-def test_get_all_zgloszenia_supports_filters():
-    first = _create_zgloszenie()
+def test_get_all_reports_supports_filters():
+    first = _create_report()
     assert first.status_code == 201
 
-    second = _create_zgloszenie(
-        imie_nazwisko="Ewa Kowal",
-        nr_tel="123456789",
-        miejscowosc="Gdańsk",
-        typ_zgloszenia_id=2,
+    second = _create_report(
+        full_name="Ewa Kowal",
+        phone="123456789",
+        city="Gdansk",
+        report_type_id=2,
         problem="Niedziałająca winda na dworcu",
-        adres="ul. Dworcowa 1",
+        address="ul. Dworcowa 1",
     )
     assert second.status_code == 201
 
-    third = _create_zgloszenie(
-        imie_nazwisko="Piotr Zieliński",
-        nr_tel="111222333",
-        miejscowosc="Poznań",
+    third = _create_report(
+        full_name="Piotr Zieliński",
+        phone="111222333",
+        city="Poznan",
         problem="Zablokowane wejście do urzędu",
-        adres="ul. Stara 2",
+        address="ul. Stara 2",
     )
     assert third.status_code == 201
-    _backdate_zgloszenie(third.json()["id"], days=10)
+    _backdate_report(third.json()["id"], days=10)
 
-    # miejscowosc filter (case-insensitive substring)
-    response = client.get("/api/v1/zgloszenia/?miejscowosc=da")
+    # city filter (case-insensitive substring)
+    response = client.get("/api/v1/reports/?city=da")
     assert response.status_code == 200
     assert len(response.json()) == 1
 
     # search filter
-    response = client.get("/api/v1/zgloszenia/?search=winda")
+    response = client.get("/api/v1/reports/?search=winda")
     assert response.status_code == 200
     items = response.json()
     assert len(items) == 1
-    assert items[0]["typ_zgloszenia_id"] == 2
+    assert items[0]["report_type_id"] == 2
 
     # date range filter
     today = datetime.now(timezone.utc).date()
-    response = client.get(f"/api/v1/zgloszenia/?data_od={(today - timedelta(days=1)).isoformat()}")
+    response = client.get(f"/api/v1/reports/?date_from={(today - timedelta(days=1)).isoformat()}")
     assert response.status_code == 200
     assert len(response.json()) == 2
 
-    response = client.get(f"/api/v1/zgloszenia/?data_do={(today - timedelta(days=5)).isoformat()}")
+    response = client.get(f"/api/v1/reports/?date_to={(today - timedelta(days=5)).isoformat()}")
     assert response.status_code == 200
     assert len(response.json()) == 1
 
     # type filter
-    response = client.get("/api/v1/zgloszenia/?typ_zgloszenia_id=2")
+    response = client.get("/api/v1/reports/?report_type_id=2")
     assert response.status_code == 200
     assert len(response.json()) == 1
 
 
-def test_get_zgloszenia_stats():
-    _create_zgloszenie()
-    _create_zgloszenie(
-        imie_nazwisko="Ewa Kowal",
-        nr_tel="123456789",
-        miejscowosc="Gdańsk",
-        typ_zgloszenia_id=2,
+def test_get_reports_stats():
+    _create_report()
+    _create_report(
+        full_name="Ewa Kowal",
+        phone="123456789",
+        city="Gdansk",
+        report_type_id=2,
         problem="Niedziałająca winda na dworcu",
-        adres="ul. Dworcowa 1",
+        address="ul. Dworcowa 1",
     )
 
-    response = client.get("/api/v1/zgloszenia/stats")
+    response = client.get("/api/v1/reports/stats")
     assert response.status_code == 200
     data = response.json()
-    assert data["total_zgloszenia"] == 2
+    assert data["total_reports"] == 2
     assert data["by_type"]["1"] == 1
     assert data["by_type"]["2"] == 1

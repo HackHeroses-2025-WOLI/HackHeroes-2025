@@ -16,7 +16,7 @@ ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 # ---------------------
 
-# Tworzenie tabel w SQLite
+# Create tables in SQLite
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -31,7 +31,7 @@ def get_db():
         db.close()
 
 # ---------------------
-# Funkcje pomocnicze
+# Helper functions
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     if expires_delta:
@@ -48,7 +48,7 @@ def get_password_hash(password):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
 # ---------------------
-# Rejestracja użytkownika
+# User registration
 @app.post("/register", response_model=UserOut)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.username == user.username).first()
@@ -62,7 +62,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 # ---------------------
-# Logowanie użytkownika
+# User login
 @app.post("/login", response_model=Token)
 def login(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.username == user.username).first()
@@ -72,7 +72,7 @@ def login(user: UserCreate, db: Session = Depends(get_db)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 # ---------------------
-# Endpoint chroniony (przykład)
+# Protected endpoint (example)
 from fastapi.security import OAuth2PasswordBearer
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")

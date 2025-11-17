@@ -1,4 +1,4 @@
-# 📋 API Endpoints - Kompletna Lista
+# 📋 API Endpoints - Complete List
 
 ## Base URL: `http://localhost:8000`
 
@@ -7,129 +7,129 @@
 ## 🏥 HEALTH CHECK
 
 ### GET /health
-Sprawdź status API
+Check API status
 ```bash
 curl http://localhost:8000/health
 ```
 
 ---
 
-## 👥 KONTA (Accounts) - /api/v1/konta
+## 👥 ACCOUNTS - /api/v1/accounts
 
-### POST /api/v1/konta/register
-Rejestracja nowego konta
+### POST /api/v1/accounts/register
+Register a new account
 ```bash
-curl -X POST http://localhost:8000/api/v1/konta/register \
+curl -X POST http://localhost:8000/api/v1/accounts/register \
   -H "Content-Type: application/json" \
   -d '{
-    "login_email": "jan.kowalski@example.com",
-    "haslo": "SecurePass123",
-    "imie_nazwisko": "Jan Kowalski",
-    "nr_tel": "123456789",
-    "miejscowosc": "Warszawa",
-    "typ_dostepnosci": 1
+    "email": "jan.kowalski@example.com",
+    "password": "SecurePass123",
+    "full_name": "Jan Kowalski",
+    "phone": "123456789",
+    "city": "Warsaw",
+    "availability_type": 1
   }'
 ```
 
-### POST /api/v1/konta/login
-Logowanie i otrzymanie tokenu JWT
+### POST /api/v1/accounts/login
+Login and receive a JWT
 ```bash
-curl -X POST http://localhost:8000/api/v1/konta/login \
+curl -X POST http://localhost:8000/api/v1/accounts/login \
   -H "Content-Type: application/json" \
   -d '{
-    "login_email": "jan.kowalski@example.com",
-    "haslo": "SecurePass123"
+    "email": "jan.kowalski@example.com",
+    "password": "SecurePass123"
   }'
 ```
 
-### GET /api/v1/konta/me
-Pobierz swoje konto (wymaga autoryzacji)
+### GET /api/v1/accounts/me
+Get your account (requires auth)
 ```bash
-curl http://localhost:8000/api/v1/konta/me \
+curl http://localhost:8000/api/v1/accounts/me \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### GET /api/v1/konta/{email}
-Pobierz konto po emailu
+### GET /api/v1/accounts/{email}
+Get an account by email
 ```bash
-curl http://localhost:8000/api/v1/konta/jan.kowalski@example.com
+curl http://localhost:8000/api/v1/accounts/jan.kowalski@example.com
 ```
 
-### GET /api/v1/konta/?skip=0&limit=100
-Pobierz wszystkie konta (paginacja)
+### GET /api/v1/accounts/?skip=0&limit=100
+Get all accounts (pagination)
 ```bash
-curl "http://localhost:8000/api/v1/konta/?skip=0&limit=20"
+curl "http://localhost:8000/api/v1/accounts/?skip=0&limit=20"
 ```
 
-### PUT /api/v1/konta/{email}
-Aktualizuj dane konta
+### PUT /api/v1/accounts/{email}
+Update account data
 ```bash
-curl -X PUT http://localhost:8000/api/v1/konta/jan.kowalski@example.com \
+curl -X PUT http://localhost:8000/api/v1/accounts/jan.kowalski@example.com \
   -H "Content-Type: application/json" \
   -d '{
-    "miejscowosc": "Kraków"
+    "city": "Krakow"
   }'
 ```
 
-### DELETE /api/v1/konta/{email}
-Usuń konto
+### DELETE /api/v1/accounts/{email}
+Delete account
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/konta/jan.kowalski@example.com
+curl -X DELETE http://localhost:8000/api/v1/accounts/jan.kowalski@example.com
 ```
 
 ---
 
-## 📋 ZGŁOSZENIA (Reports) - /api/v1/zgloszenia
+## 📋 REPORTS - /api/v1/reports
 
-### POST /api/v1/zgloszenia/
-Utwórz nowe zgłoszenie
+### POST /api/v1/reports/
+Create a new report
 ```bash
-curl -X POST http://localhost:8000/api/v1/zgloszenia/ \
+curl -X POST http://localhost:8000/api/v1/reports/ \
   -H "Content-Type: application/json" \
   -d '{
-    "imie_nazwisko": "Anna Nowak",
-    "nr_tel": "987654321",
-    "wiek": 45,
-    "adres": "ul. Przykładowa 10",
-    "miejscowosc": "Kraków",
-    "problem": "Brak podjazdu dla wózków inwalidzkich",
-    "czy_do_kontaktu": true,
-    "typ_zgloszenia_id": 1,
-    "zgloszenie_szczegoly": "Wejście główne do budynku..."
+    "full_name": "Anna Nowak",
+    "phone": "987654321",
+    "age": 45,
+    "address": "ul. Przykładowa 10",
+    "city": "Krakow",
+    "problem": "No wheelchair ramp at the main entrance",
+    "contact_ok": true,
+    "report_type_id": 1,
+    "report_details": "Main entrance accessibility issue..."
   }'
 ```
 
-### GET /api/v1/zgloszenia/
-Pobierz wszystkie zgłoszenia (paginacja + filtry)
+### GET /api/v1/reports/
+Get all reports (pagination + filters)
 ```bash
-# Wszystkie zgłoszenia
-curl http://localhost:8000/api/v1/zgloszenia/
+# All reports
+curl http://localhost:8000/api/v1/reports/
 
-# Z filtrem miejscowości
-curl "http://localhost:8000/api/v1/zgloszenia/?miejscowosc=Warszawa"
+# With city filter
+curl "http://localhost:8000/api/v1/reports/?city=Warsaw"
 
-# Z filtrem typu i limitem
-curl "http://localhost:8000/api/v1/zgloszenia/?typ_zgloszenia_id=1&limit=50"
+# With type filter and a limit
+curl "http://localhost:8000/api/v1/reports/?report_type_id=1&limit=50"
 
-# Z wyszukiwaniem pełnotekstowym i zakresem dat
-curl "http://localhost:8000/api/v1/zgloszenia/?search=winda&data_od=2025-01-01&data_do=2025-12-31"
+# With full-text search and date range
+curl "http://localhost:8000/api/v1/reports/?search=winda&date_from=2025-01-01&date_to=2025-12-31"
 ```
-**Dostępne filtry:**
-- `skip`, `limit` – paginacja
-- `typ_zgloszenia_id` – filtr po typie zgłoszenia
-- `miejscowosc` – częściowe dopasowanie miejscowości (bez rozróżniania wielkości liter)
-- `search` – wyszukiwanie frazy w adresie i opisie problemu
-- `data_od`, `data_do` – zakres dat zgłoszeń (format `YYYY-MM-DD`)
+**Available filters:**
+- `skip`, `limit` – pagination
+- `report_type_id` – filter by report type
+- `city` – case-insensitive substring match for city
+- `search` – full-text search in address and problem description
+- `date_from`, `date_to` – report date range (format `YYYY-MM-DD`)
 
-### GET /api/v1/zgloszenia/stats
-Statystyki zgłoszeń
+### GET /api/v1/reports/stats
+Reports statistics
 ```bash
-curl http://localhost:8000/api/v1/zgloszenia/stats
+curl http://localhost:8000/api/v1/reports/stats
 ```
 Przykładowa odpowiedź:
 ```json
 {
-  "total_zgloszenia": 42,
+  "total_reports": 42,
   "by_type": {
     "1": 30,
     "2": 12
@@ -137,85 +137,85 @@ Przykładowa odpowiedź:
 }
 ```
 
-### GET /api/v1/zgloszenia/{id}
-Pobierz zgłoszenie po ID
+### GET /api/v1/reports/{id}
+Get a report by ID
 ```bash
-curl http://localhost:8000/api/v1/zgloszenia/1
+curl http://localhost:8000/api/v1/reports/1
 ```
 
-### GET /api/v1/zgloszenia/reporter/{email}
-Pobierz zgłoszenia użytkownika
+### GET /api/v1/reports/reporter/{email}
+Get a user's reports
 ```bash
-curl http://localhost:8000/api/v1/zgloszenia/reporter/jan.kowalski@example.com
+curl http://localhost:8000/api/v1/reports/reporter/jan.kowalski@example.com
 ```
 
-### PUT /api/v1/zgloszenia/{id}
-Aktualizuj zgłoszenie
+### PUT /api/v1/reports/{id}
+Update a report
 ```bash
-curl -X PUT http://localhost:8000/api/v1/zgloszenia/1 \
+curl -X PUT http://localhost:8000/api/v1/reports/1 \
   -H "Content-Type: application/json" \
   -d '{
     "problem": "Zaktualizowany opis problemu"
   }'
 ```
 
-### DELETE /api/v1/zgloszenia/{id}
-Usuń zgłoszenie
+### DELETE /api/v1/reports/{id}
+Delete a report
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/zgloszenia/1
+curl -X DELETE http://localhost:8000/api/v1/reports/1
 ```
 
 ---
 
-## 🏷️ TYPY - /api/v1/typy
+## 🏷️ TYPES - /api/v1/types
 
 ### Typ Dostępności
 
-#### GET /api/v1/typy/dostepnosci
-Pobierz wszystkie typy dostępności
+#### GET /api/v1/types/availability
+Get all availability types
 ```bash
-curl http://localhost:8000/api/v1/typy/dostepnosci
+curl http://localhost:8000/api/v1/types/availability
 ```
 
-#### GET /api/v1/typy/dostepnosci/{id}
-Pobierz typ dostępności po ID
+#### GET /api/v1/types/availability/{id}
+Get availability type by ID
 ```bash
-curl http://localhost:8000/api/v1/typy/dostepnosci/1
+curl http://localhost:8000/api/v1/types/availability/1
 ```
 
-#### POST /api/v1/typy/dostepnosci
-Utwórz nowy typ dostępności
+#### POST /api/v1/types/availability
+Create a new availability type
 ```bash
-curl -X POST http://localhost:8000/api/v1/typy/dostepnosci \
+curl -X POST http://localhost:8000/api/v1/types/availability \
   -H "Content-Type: application/json" \
   -d '{
-    "nazwa": "Niewidomy",
-    "opis": "Użytkownik niewidomy korzystający z czytnika ekranu"
+    "name": "Blind",
+    "description": "Blind user using a screen reader"
   }'
 ```
 
-### Typ Zgłoszenia
+### Report Type
 
-#### GET /api/v1/typy/zgloszen
-Pobierz wszystkie typy zgłoszeń
+#### GET /api/v1/types/report_types
+Get all report types
 ```bash
-curl http://localhost:8000/api/v1/typy/zgloszen
+curl http://localhost:8000/api/v1/types/report_types
 ```
 
-#### GET /api/v1/typy/zgloszen/{id}
-Pobierz typ zgłoszenia po ID
+#### GET /api/v1/types/report_types/{id}
+Get report type by ID
 ```bash
-curl http://localhost:8000/api/v1/typy/zgloszen/1
+curl http://localhost:8000/api/v1/types/report_types/1
 ```
 
-#### POST /api/v1/typy/zgloszen
-Utwórz nowy typ zgłoszenia
+#### POST /api/v1/types/report_types
+Create a new report type
 ```bash
-curl -X POST http://localhost:8000/api/v1/typy/zgloszen \
+curl -X POST http://localhost:8000/api/v1/types/report_types \
   -H "Content-Type: application/json" \
   -d '{
-    "nazwa": "Bariery architektoniczne",
-    "opis": "Problemy z dostępnością budynków"
+    "name": "Architectural barriers",
+    "description": "Issues with building accessibility"
   }'
 ```
 
@@ -223,14 +223,14 @@ curl -X POST http://localhost:8000/api/v1/typy/zgloszen \
 
 ##  Podsumowanie
 
-**Łącznie:** 21 endpointów
+**Total:** 21 endpoints
 
-| Kategoria | Liczba endpointów |
+| Category | Endpoint count |
 |-----------|-------------------|
-| Konta | 7 |
-| Zgłoszenia | 7 |
-| Typy Dostępności | 3 |
-| Typy Zgłoszeń | 3 |
+| Accounts | 7 |
+| Reports | 7 |
+| Availability Types | 3 |
+| Report Types | 3 |
 | Health | 1 |
 | **TOTAL** | **21** |
 

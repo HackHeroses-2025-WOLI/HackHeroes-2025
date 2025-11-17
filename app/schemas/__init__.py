@@ -1,27 +1,31 @@
 """Pydantic schemas for request/response validation."""
 from app.schemas.user import UserCreate, UserOut, UserUpdate
 from app.schemas.token import Token, TokenPayload
-from app.schemas.konto import KontoCreate, KontoOut, KontoUpdate, KontoLogin
-from app.schemas.zgloszenie import (
-    ZgloszenieCreate, 
-    ZgloszenieOut, 
-    ZgloszenieUpdate, 
-    ZgloszenieWithDetails
+from app.schemas.account import (
+    AccountCreate,
+    AccountOut,
+    AccountUpdate,
+    AccountLogin,
 )
-from app.schemas.typ_dostepnosci import (
-    TypDostepnosciCreate,
-    TypDostepnosciOut
+from app.schemas.report import (
+    ReportCreate,
+    ReportOut,
+    ReportUpdate,
 )
-from app.schemas.typ_zgloszenia import (
-    TypZgloszeniaCreate,
-    TypZgloszeniaOut
+from app.schemas.availability_type import (
+    AvailabilityTypeCreate,
+    AvailabilityTypeOut
+)
+from app.schemas.report_type import (
+    ReportTypeCreate,
+    ReportTypeOut
 )
 
 __all__ = [
     "UserCreate", "UserOut", "UserUpdate",
     "Token", "TokenPayload",
-    "KontoCreate", "KontoOut", "KontoUpdate", "KontoLogin",
-    "ZgloszenieCreate", "ZgloszenieOut", "ZgloszenieUpdate", "ZgloszenieWithDetails",
-    "TypDostepnosciCreate", "TypDostepnosciOut",
-    "TypZgloszeniaCreate", "TypZgloszeniaOut"
+    "AccountCreate", "AccountOut", "AccountUpdate", "AccountLogin",
+    "ReportCreate", "ReportOut", "ReportUpdate",
+    "AvailabilityTypeCreate", "AvailabilityTypeOut",
+    "ReportTypeCreate", "ReportTypeOut"
 ]

@@ -7,7 +7,7 @@ from app.db.database import Base
 
 
 class User(Base):
-    """User model for authentication (deprecated - migrating to Konta)."""
+    """User model for authentication (deprecated - migrating to Accounts)."""
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
@@ -21,123 +21,123 @@ class User(Base):
         return f"<User(id={self.id}, username='{self.username}')>"
 
 
-class TypDostepnosci(Base):
-    """Typ dostępności (accessibility type)."""
+class AvailabilityType(Base):
+    """Availability type (accessibility type)."""
     __tablename__ = "typ_dostepnosci"
     
     id = Column(Integer, primary_key=True, index=True)
-    nazwa = Column(String, unique=True, nullable=False)
-    opis = Column(String)
+    name = Column("nazwa", String, unique=True, nullable=False)
+    description = Column("opis", String)
     
     # Relationships
-    konta = relationship("Konto", back_populates="typ_dostepnosci_rel")
+    accounts = relationship("Account", back_populates="availability_type_rel")
     
     def __repr__(self):
-        return f"<TypDostepnosci(id={self.id}, nazwa='{self.nazwa}')>"
+        return f"<AvailabilityType(id={self.id}, name='{self.name}')>"
 
 
-class TypZgloszenia(Base):
-    """Typ zgłoszenia (report type)."""
+class ReportType(Base):
+    """Report type."""
     __tablename__ = "typ_zgloszenia"
     
     id = Column(Integer, primary_key=True, index=True)
-    nazwa = Column(String, unique=True, nullable=False)
-    opis = Column(String)
+    name = Column("nazwa", String, unique=True, nullable=False)
+    description = Column("opis", String)
     
     # Relationships
-    zgloszenia = relationship("Zgloszenie", back_populates="typ_zgloszenia_rel")
+    reports = relationship("Report", back_populates="report_type_rel")
     
     def __repr__(self):
-        return f"<TypZgloszenia(id={self.id}, nazwa='{self.nazwa}')>"
+        return f"<ReportType(id={self.id}, name='{self.name}')>"
 
 
-class Konto(Base):
-    """Konto użytkownika (user account)."""
+class Account(Base):
+    """User account."""
     __tablename__ = "konta"
     
     # Primary Key
-    login_email = Column(String, primary_key=True, index=True)
+    email = Column("login_email", String, primary_key=True, index=True)
     
     # User Information
-    imie_nazwisko = Column(String, nullable=False)
-    nr_tel = Column(String(9), nullable=True)
-    hash_hasla = Column(String, nullable=False)
+    full_name = Column("imie_nazwisko", String, nullable=False)
+    phone = Column("nr_tel", String(9), nullable=True)
+    password_hash = Column("hash_hasla", String, nullable=False)
     
     # Location
-    miejscowosc = Column(String, nullable=True)
+    city = Column("miejscowosc", String, nullable=True)
     
     # Statistics
-    rozwiazane_sprawy = Column(Integer, default=0, nullable=False)
-    rozwiazane_sprawy_ten_rok = Column(Integer, default=0, nullable=False)
+    resolved_cases = Column("rozwiazane_sprawy", Integer, default=0, nullable=False)
+    resolved_cases_this_year = Column("rozwiazane_sprawy_ten_rok", Integer, default=0, nullable=False)
     
     # Foreign Keys
-    aktywne_zgloszenie = Column(
+    active_report = Column(
         Integer,
         ForeignKey("zgloszenia.id", use_alter=True, name="fk_konta_zgloszenia", ondelete="SET NULL"),
         nullable=True,
     )
-    typ_dostepnosci = Column(Integer, ForeignKey("typ_dostepnosci.id"), nullable=False)
+    availability_type = Column(Integer, ForeignKey("typ_dostepnosci.id"), nullable=False)
     
     # JSON field for additional accessibility settings
-    dostepnosc_json = Column(Text, nullable=True)  # JSON string
+    availability_json = Column("dostepnosc_json", Text, nullable=True)  # JSON string
     
     # Relationships
-    typ_dostepnosci_rel = relationship("TypDostepnosci", back_populates="konta")
-    aktywne_zgloszenie_rel = relationship(
-        "Zgloszenie",
-        foreign_keys=[aktywne_zgloszenie],
+    availability_type_rel = relationship("AvailabilityType", back_populates="accounts")
+    active_report_rel = relationship(
+        "Report",
+        foreign_keys=[active_report],
         post_update=True,
         passive_deletes=True,
     )
-    zgloszenia_created = relationship(
-        "Zgloszenie",
+    reports_created = relationship(
+        "Report",
         back_populates="reporter",
-        foreign_keys="Zgloszenie.login_email_reporter",
+        foreign_keys="Report.reporter_email",
         passive_deletes=True,
     )
     
     def __repr__(self):
-        return f"<Konto(login_email='{self.login_email}', imie_nazwisko='{self.imie_nazwisko}')>"
+        return f"<Account(email='{self.email}', full_name='{self.full_name}')>"
 
 
-class Zgloszenie(Base):
-    """Zgłoszenie problemu (problem report)."""
+class Report(Base):
+    """Problem report."""
     __tablename__ = "zgloszenia"
     
     # Primary Key
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     
     # Basic Information
-    imie_nazwisko = Column(String, nullable=False)
-    nr_tel = Column(String(9), nullable=False)
-    wiek = Column(Integer, nullable=False)
-    adres = Column(String, nullable=False)
-    miejscowosc = Column(String, nullable=False)
+    full_name = Column("imie_nazwisko", String, nullable=False)
+    phone = Column("nr_tel", String(9), nullable=False)
+    age = Column("wiek", Integer, nullable=False)
+    address = Column("adres", String, nullable=False)
+    city = Column("miejscowosc", String, nullable=False)
     problem = Column(Text, nullable=False)
     
     # Contact & Status
-    czy_do_kontaktu = Column(Boolean, default=True, nullable=False)
+    contact_ok = Column("czy_do_kontaktu", Boolean, default=True, nullable=False)
     
     # Foreign Keys
-    typ_zgloszenia_id = Column(Integer, ForeignKey("typ_zgloszenia.id"), nullable=False)
-    login_email_reporter = Column(
+    report_type_id = Column("typ_zgloszenia_id", Integer, ForeignKey("typ_zgloszenia.id"), nullable=False)
+    reporter_email = Column(
         String,
         ForeignKey("konta.login_email", use_alter=True, name="fk_zgloszenia_konta", ondelete="SET NULL"),
         nullable=True,
     )
     
     # Details
-    zgloszenie_szczegoly = Column(Text, nullable=True)  # JSON or detailed text
-    data_zgloszenia = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    report_details = Column("zgloszenie_szczegoly", Text, nullable=True)  # JSON or detailed text
+    reported_at = Column("data_zgloszenia", DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     # Relationships
-    typ_zgloszenia_rel = relationship("TypZgloszenia", back_populates="zgloszenia")
+    report_type_rel = relationship("ReportType", back_populates="reports")
     reporter = relationship(
-        "Konto",
-        back_populates="zgloszenia_created",
-        foreign_keys=[login_email_reporter],
+        "Account",
+        back_populates="reports_created",
+        foreign_keys=[reporter_email],
         passive_deletes=True,
     )
     
     def __repr__(self):
-        return f"<Zgloszenie(id={self.id}, problem='{self.problem[:30]}...')>"
+        return f"<Report(id={self.id}, problem='{self.problem[:30]}...')>"
