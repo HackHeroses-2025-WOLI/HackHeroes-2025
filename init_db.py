@@ -8,12 +8,6 @@ def init_db():
     print("Creating database tables...")
     Base.metadata.create_all(bind=engine)
     print("✓ Database tables created successfully!")
-    print("\nTables created:")
-    print("  - users (legacy)")
-    print("  - accounts")
-    print("  - reports")
-    print("  - availability types")
-    print("  - report types")
 
 
 if __name__ == "__main__":

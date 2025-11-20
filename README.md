@@ -136,7 +136,14 @@ Once running, visit:
     "phone": "123456789",
     "city": "Warsaw",
     "availability_type": 1,
-    "availability_json": "{\"high_contrast\": true}"
+    "availability": [
+      {
+        "day_of_week": 1,
+        "start_time": "08:00",
+        "end_time": "16:00",
+        "is_active": true
+      }
+    ]
   }
   ```
 
@@ -150,14 +157,18 @@ Once running, visit:
 
 #### Account Management
 - `GET /api/v1/accounts/me` - Get your account (requires auth)
-- `GET /api/v1/accounts/{email}` - Get account by email
-- `GET /api/v1/accounts/?skip=0&limit=100` - Get all accounts (pagination)
-- `PUT /api/v1/accounts/{email}` - Update account
-- `DELETE /api/v1/accounts/{email}` - Delete account
+- `GET /api/v1/accounts/{email}` - REMOVED
+- `GET /api/v1/accounts/volunteers/active` - Public list of active volunteers
+- `PUT /api/v1/accounts/me` - Update your account (requires auth)
+- `DELETE /api/v1/accounts/me` - Delete your account (requires auth)
 
 ---
 
 ### 📋 **REPORTS** - `/api/v1/reports`
+
+> **All report endpoints require** `Authorization: Bearer <token>` obtained from
+> `/api/v1/accounts/login`.
+> Note: Reports are submitted publicly (no token required) and `reporter_email` will be empty for anonymous reports.
 
 #### Create and Manage
 - `POST /api/v1/reports/` - Create a new report
@@ -182,37 +193,16 @@ Once running, visit:
 
 - `GET /api/v1/reports/{id}` - Get a report by ID
 - `GET /api/v1/reports/stats` - Reports statistics
-- `GET /api/v1/reports/reporter/{email}` - User's reports
+- `GET /api/v1/reports/reporter/{email}` - REMOVED
 
 #### Edit & Delete
-- `PUT /api/v1/reports/{id}` - Update a report
 - `DELETE /api/v1/reports/{id}` - Delete a report
 
 ---
 
 ### 🏷️ **TYPES** - `/api/v1/types`
 
-#### Availability Type
-- `GET /api/v1/types/availability` - Get all availability types
-- `GET /api/v1/types/availability/{id}` - Get type by ID
-- `POST /api/v1/types/availability` - Create a new type
-  ```json
-  {
-    "name": "Blind",
-    "description": "Blind user using a screen reader"
-  }
-  ```
-
-#### Report Type
-- `GET /api/v1/types/report_types` - Get all report types
-- `GET /api/v1/types/report_types/{id}` - Get type by ID
-- `POST /api/v1/types/report_types` - Create a new type
-  ```json
-  {
-    "name": "Architectural barriers",
-    "description": "Issues with building accessibility"
-  }
-  ```
+- `GET /api/v1/types/report_types` - Get all predefined report categories
 
 ---
 

@@ -27,7 +27,15 @@ curl -X POST http://localhost:8000/api/v1/accounts/register \
     "full_name": "Jan Kowalski",
     "phone": "123456789",
     "city": "Warsaw",
-    "availability_type": 1
+    "availability_type": 1,
+    "availability": [
+      {
+        "day_of_week": 1,
+        "start_time": "08:00",
+        "end_time": "16:00",
+        "is_active": true
+      }
+    ]
   }'
 ```
 
@@ -49,37 +57,38 @@ curl http://localhost:8000/api/v1/accounts/me \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### GET /api/v1/accounts/{email}
-Get an account by email
+### GET /api/v1/accounts/volunteers/active
+Get currently active volunteers (public)
 ```bash
-curl http://localhost:8000/api/v1/accounts/jan.kowalski@example.com
+curl http://localhost:8000/api/v1/accounts/volunteers/active
 ```
 
-### GET /api/v1/accounts/?skip=0&limit=100
-Get all accounts (pagination)
-```bash
-curl "http://localhost:8000/api/v1/accounts/?skip=0&limit=20"
-```
+Returns non-sensitive volunteer data, including their declared availability
+slots and a computed `is_active_now` flag.
 
-### PUT /api/v1/accounts/{email}
+### PUT /api/v1/accounts/me
 Update account data
 ```bash
-curl -X PUT http://localhost:8000/api/v1/accounts/jan.kowalski@example.com \
+curl -X PUT http://localhost:8000/api/v1/accounts/me \
   -H "Content-Type: application/json" \
   -d '{
     "city": "Krakow"
   }'
 ```
 
-### DELETE /api/v1/accounts/{email}
-Delete account
+### DELETE /api/v1/accounts/me
+Delete the authenticated account
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/accounts/jan.kowalski@example.com
+curl -X DELETE http://localhost:8000/api/v1/accounts/me \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ---
 
 ## 📋 REPORTS - /api/v1/reports
+
+> **All endpoints under `/api/v1/reports` require** `Authorization: Bearer <token>`
+> with a valid account token issued via `/api/v1/accounts/login`.
 
 ### POST /api/v1/reports/
 Create a new report
@@ -98,21 +107,26 @@ curl -X POST http://localhost:8000/api/v1/reports/ \
     "report_details": "Main entrance accessibility issue..."
   }'
 ```
+`reporter_email` is NOT set when reports are submitted anonymously; this field will be null.
 
 ### GET /api/v1/reports/
 Get all reports (pagination + filters)
 ```bash
 # All reports
-curl http://localhost:8000/api/v1/reports/
+curl http://localhost:8000/api/v1/reports/ \
+  -H "Authorization: Bearer YOUR_TOKEN"
 
 # With city filter
-curl "http://localhost:8000/api/v1/reports/?city=Warsaw"
+curl "http://localhost:8000/api/v1/reports/?city=Warsaw" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 
 # With type filter and a limit
-curl "http://localhost:8000/api/v1/reports/?report_type_id=1&limit=50"
+curl "http://localhost:8000/api/v1/reports/?report_type_id=1&limit=50" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 
 # With full-text search and date range
-curl "http://localhost:8000/api/v1/reports/?search=winda&date_from=2025-01-01&date_to=2025-12-31"
+curl "http://localhost:8000/api/v1/reports/?search=winda&date_from=2025-01-01&date_to=2025-12-31" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 **Available filters:**
 - `skip`, `limit` – pagination
@@ -124,7 +138,8 @@ curl "http://localhost:8000/api/v1/reports/?search=winda&date_from=2025-01-01&da
 ### GET /api/v1/reports/stats
 Reports statistics
 ```bash
-curl http://localhost:8000/api/v1/reports/stats
+curl http://localhost:8000/api/v1/reports/stats \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 Przykładowa odpowiedź:
 ```json
@@ -140,83 +155,41 @@ Przykładowa odpowiedź:
 ### GET /api/v1/reports/{id}
 Get a report by ID
 ```bash
-curl http://localhost:8000/api/v1/reports/1
+curl http://localhost:8000/api/v1/reports/1 \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ### GET /api/v1/reports/reporter/{email}
-Get a user's reports
-```bash
-curl http://localhost:8000/api/v1/reports/reporter/jan.kowalski@example.com
-```
-
-### PUT /api/v1/reports/{id}
-Update a report
-```bash
-curl -X PUT http://localhost:8000/api/v1/reports/1 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "problem": "Zaktualizowany opis problemu"
-  }'
-```
+Removed
 
 ### DELETE /api/v1/reports/{id}
 Delete a report
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/reports/1
+curl -X DELETE http://localhost:8000/api/v1/reports/1 \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ---
 
 ## 🏷️ TYPES - /api/v1/types
 
-### Typ Dostępności
-
-#### GET /api/v1/types/availability
-Get all availability types
-```bash
-curl http://localhost:8000/api/v1/types/availability
-```
-
-#### GET /api/v1/types/availability/{id}
-Get availability type by ID
-```bash
-curl http://localhost:8000/api/v1/types/availability/1
-```
-
-#### POST /api/v1/types/availability
-Create a new availability type
-```bash
-curl -X POST http://localhost:8000/api/v1/types/availability \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Blind",
-    "description": "Blind user using a screen reader"
-  }'
-```
-
 ### Report Type
 
 #### GET /api/v1/types/report_types
-Get all report types
+Get all predefined report categories (read-only)
 ```bash
 curl http://localhost:8000/api/v1/types/report_types
 ```
 
-#### GET /api/v1/types/report_types/{id}
-Get report type by ID
-```bash
-curl http://localhost:8000/api/v1/types/report_types/1
-```
-
-#### POST /api/v1/types/report_types
-Create a new report type
-```bash
-curl -X POST http://localhost:8000/api/v1/types/report_types \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Architectural barriers",
-    "description": "Issues with building accessibility"
-  }'
+Example response:
+```json
+[
+  {"id": 1, "name": "Aplikacje", "description": "Problemy z aplikacjami"},
+  {"id": 2, "name": "Bezpieczeństwo", "description": "Zgłoszenia bezpieczeństwa"},
+  {"id": 3, "name": "Kontakt i połączenia", "description": "Trudności komunikacyjne"},
+  {"id": 4, "name": "Płatności i bankowość", "description": "Problemy finansowe"},
+  {"id": 5, "name": "Inne", "description": "Inne zgłoszenia"}
+]
 ```
 
 ---
@@ -228,11 +201,10 @@ curl -X POST http://localhost:8000/api/v1/types/report_types \
 | Category | Endpoint count |
 |-----------|-------------------|
 | Accounts | 7 |
-| Reports | 7 |
-| Availability Types | 3 |
-| Report Types | 3 |
+| Reports | 6 |
+| Report Types | 1 |
 | Health | 1 |
-| **TOTAL** | **21** |
+| **TOTAL** | **15** |
 
 ---
 

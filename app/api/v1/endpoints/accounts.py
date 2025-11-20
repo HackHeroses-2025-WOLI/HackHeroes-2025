@@ -4,7 +4,15 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
-from app.schemas import AccountCreate, AccountOut, AccountUpdate, AccountLogin, Token
+from app.schemas import (
+    AccountCreate,
+    AccountOut,
+    AccountUpdate,
+    AccountLogin,
+    ActiveVolunteerOut,
+    Token,
+)
+from app.schemas.account import deserialize_availability
 from app.services.account_service import AccountService
 from app.core.security import create_access_token, get_current_account
 from app.db.models import Account
@@ -78,78 +86,75 @@ def get_my_account(
     return current_account
 
 
+# Endpoint removed: direct account lookup by email no longer exists
+
+
 @router.get(
-    "/{email}",
-    response_model=AccountOut,
-    summary="Get account by email",
-    description="Get account data by email address"
+    "/volunteers/active",
+    response_model=List[ActiveVolunteerOut],
+    summary="Public: active volunteers",
+    description="List volunteers that are currently active based on their availability"
 )
-def get_account_by_email(
-    email: str,
-    db: Session = Depends(get_db)
-):
-    """Get account by email."""
-    account = AccountService.get_account_by_email(db, email)
-    if not account:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Account '{email}' not found"
+def list_active_volunteers(db: Session = Depends(get_db)):
+    """Return non-sensitive data for currently active volunteers."""
+
+    volunteers = AccountService.get_active_volunteers(db)
+    public_payload: List[ActiveVolunteerOut] = []
+    for volunteer in volunteers:
+        try:
+            slots = deserialize_availability(volunteer.availability_json)
+        except ValueError:
+            slots = []
+        public_payload.append(
+            ActiveVolunteerOut(
+                email=volunteer.email,
+                full_name=volunteer.full_name,
+                phone=volunteer.phone,
+                city=volunteer.city,
+                availability=slots,
+                is_active_now=True,
+            )
         )
-    return account
-
-
-@router.get(
-    "/",
-    response_model=List[AccountOut],
-    summary="Get all accounts",
-    description="Get a list of all accounts (with pagination)"
-)
-def get_all_accounts(
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db)
-):
-    """Get all accounts with pagination."""
-    accounts = AccountService.get_all_accounts(db, skip=skip, limit=limit)
-    return accounts
+    return public_payload
 
 
 @router.put(
-    "/{email}",
+    "/me",
     response_model=AccountOut,
     summary="Update account",
     description="Update account data"
 )
 def update_account(
-    email: str,
     account_data: AccountUpdate,
+    current_account: Account = Depends(get_current_account),
     db: Session = Depends(get_db)
 ):
     """Update account data."""
-    account = AccountService.update_account(db, email, account_data)
+    account = AccountService.update_account(db, current_account.email, account_data)
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Account '{email}' not found"
+            detail=f"Account '{current_account.email}' not found"
         )
     return account
 
 
 @router.delete(
-    "/{email}",
+    "/me",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete account",
-    description="Delete user account"
+    summary="Delete my account",
+    description="Delete the account associated with the provided token"
 )
-def delete_account(
-    email: str,
+def delete_my_account(
+    current_account: Account = Depends(get_current_account),
     db: Session = Depends(get_db)
 ):
-    """Delete account."""
-    success = AccountService.delete_account(db, email)
+    """Delete the account identified by the access token."""
+
+    success = AccountService.delete_account(db, current_account.email)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Account '{email}' not found"
+            detail=f"Account '{current_account.email}' not found"
         )
     return None

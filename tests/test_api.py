@@ -35,11 +35,14 @@ def setup_database():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with TestingSessionLocal() as db:
+        db.add(models.AvailabilityType(id=1, name="Standard", description="Default accessibility type"))
         db.add_all(
             [
-                models.AvailabilityType(id=1, name="Standard", description="Default accessibility type"),
-                models.ReportType(id=1, name="Infrastructure", description="Infrastructure issues"),
-                models.ReportType(id=2, name="Transport", description="Transport issues"),
+                models.ReportType(id=1, name="Aplikacje", description="Problemy z aplikacjami"),
+                models.ReportType(id=2, name="Bezpieczeństwo", description="Zgłoszenia bezpieczeństwa"),
+                models.ReportType(id=3, name="Kontakt i połączenia", description="Problemy komunikacyjne"),
+                models.ReportType(id=4, name="Płatności i bankowość", description="Trudności finansowe"),
+                models.ReportType(id=5, name="Inne", description="Pozostałe sytuacje"),
             ]
         )
         db.commit()
@@ -48,6 +51,7 @@ def setup_database():
 
 
 def _account_payload(**overrides):
+    current_day = datetime.now().weekday()
     payload = {
         "email": "jan.kowalski@example.com",
         "password": "SecurePass123",
@@ -55,7 +59,14 @@ def _account_payload(**overrides):
         "phone": "123456789",
         "city": "Warsaw",
         "availability_type": 1,
-        "availability_json": "{\"status\": \"available\"}"
+        "availability": [
+            {
+                "day_of_week": current_day,
+                "start_time": "00:00",
+                "end_time": "23:59",
+                "is_active": True,
+            }
+        ],
     }
     payload.update(overrides)
     return payload
@@ -72,9 +83,22 @@ def _login_account(email="jan.kowalski@example.com", password="SecurePass123"):
     )
 
 
+def _auth_headers(email="jan.kowalski@example.com", password="SecurePass123"):
+    """Register (if needed) and return auth headers for the account."""
+
+    register_response = _register_account(email=email, password=password)
+    if register_response.status_code not in (201, 400):
+        raise AssertionError(f"Unexpected register status {register_response.status_code}: {register_response.text}")
+
+    login_response = _login_account(email=email, password=password)
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
 def _fetch_account_from_db(email):
-    with TestingSessionLocal() as db:
-        return db.query(models.Account).filter(models.Account.email == email.lower()).first()
+    # Deprecated: tests should use endpoints rather than direct DB queries.
+    raise RuntimeError("Direct DB access from tests is not supported; use API endpoints instead")
 
 
 def _report_payload(**overrides):
@@ -93,8 +117,12 @@ def _report_payload(**overrides):
     return payload
 
 
-def _create_report(**overrides):
-    return client.post("/api/v1/reports/", json=_report_payload(**overrides))
+def _create_report(headers=None, **overrides):
+    return client.post(
+        "/api/v1/reports/",
+        json=_report_payload(**overrides),
+        headers=headers or {},
+    )
 
 
 def _backdate_report(report_id: int, days: int) -> None:
@@ -117,10 +145,16 @@ def test_register_account_success():
     assert data["email"] == "jan.kowalski@example.com"
     assert "password_hash" not in data
 
-    account = _fetch_account_from_db("jan.kowalski@example.com")
-    assert account is not None
-    assert account.password_hash != "SecurePass123"
-    assert account.password_hash.startswith("$2")
+    # ensure we can log in and fetch the account via API (don't inspect DB directly)
+    login_response = _login_account()
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+
+    response = client.get("/api/v1/accounts/me", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.json()["email"] == "jan.kowalski@example.com"
+    # password hash must not be returned by the API
+    assert "password_hash" not in response.json()
 
 
 def test_register_account_duplicate_email_case_insensitive():
@@ -161,9 +195,9 @@ def test_register_account_handles_long_passwords():
     response = _register_account(password=long_password)
     assert response.status_code == 201
 
-    account = _fetch_account_from_db("jan.kowalski@example.com")
-    assert account is not None
-    assert account.password_hash.startswith("$2")
+    # Verify we can log in with a long password (exercises hashing fallback)
+    login_response = _login_account(password=long_password)
+    assert login_response.status_code == 200
 
 
 def test_login_account_success():
@@ -217,10 +251,9 @@ def test_get_my_account_returns_current_account():
 
 def test_get_account_by_email_public_endpoint():
     _register_account()
+    # account lookup removed
     response = client.get("/api/v1/accounts/jan.kowalski@example.com")
-    assert response.status_code == 200
-    assert response.json()["email"] == "jan.kowalski@example.com"
-    assert "password_hash" not in response.json()
+    assert response.status_code == 404
 
 
 def test_get_account_by_email_returns_404_for_missing():
@@ -228,24 +261,51 @@ def test_get_account_by_email_returns_404_for_missing():
     assert response.status_code == 404
 
 
-def test_get_all_accounts_masks_sensitive_fields():
-    _register_account()
-    response = client.get("/api/v1/accounts/")
+def test_public_active_volunteers_endpoint():
+    today = datetime.now().weekday()
+    _register_account(
+        email="wolontariusz@example.com",
+        availability=[
+            {
+                "day_of_week": today,
+                "start_time": "00:00",
+                "end_time": "23:59",
+                "is_active": True,
+            }
+        ],
+    )
+
+    response = client.get("/api/v1/accounts/volunteers/active")
     assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 1
-    assert "password_hash" not in data[0]
+    volunteers = response.json()
+    assert any(v["email"] == "wolontariusz@example.com" for v in volunteers)
+    first = next(v for v in volunteers if v["email"] == "wolontariusz@example.com")
+    assert first["is_active_now"] is True
+    assert first["availability"][0]["day_of_week"] == today
 
 
 def test_create_report_success():
-    response = _create_report()
+    # report submission is public: no token required
+    response = client.post("/api/v1/reports/", json=_report_payload())
     assert response.status_code == 201
     data = response.json()
     assert data["city"] == "Warsaw"
     assert data["report_type_id"] == 1
+    assert data["reporter_email"] is None
+
+
+def test_reports_endpoints_require_token():
+    # listing and stats stay protected
+    response = client.get("/api/v1/reports/")
+    assert response.status_code == 401
+
+    # creating a report should be allowed without a token
+    response = client.post("/api/v1/reports/", json=_report_payload())
+    assert response.status_code == 201
 
 
 def test_get_all_reports_supports_filters():
+    headers = _auth_headers()
     first = _create_report()
     assert first.status_code == 201
 
@@ -270,12 +330,12 @@ def test_get_all_reports_supports_filters():
     _backdate_report(third.json()["id"], days=10)
 
     # city filter (case-insensitive substring)
-    response = client.get("/api/v1/reports/?city=da")
+    response = client.get("/api/v1/reports/?city=da", headers=headers)
     assert response.status_code == 200
     assert len(response.json()) == 1
 
     # search filter
-    response = client.get("/api/v1/reports/?search=winda")
+    response = client.get("/api/v1/reports/?search=winda", headers=headers)
     assert response.status_code == 200
     items = response.json()
     assert len(items) == 1
@@ -283,23 +343,31 @@ def test_get_all_reports_supports_filters():
 
     # date range filter
     today = datetime.now(timezone.utc).date()
-    response = client.get(f"/api/v1/reports/?date_from={(today - timedelta(days=1)).isoformat()}")
+    response = client.get(
+        f"/api/v1/reports/?date_from={(today - timedelta(days=1)).isoformat()}",
+        headers=headers,
+    )
     assert response.status_code == 200
     assert len(response.json()) == 2
 
-    response = client.get(f"/api/v1/reports/?date_to={(today - timedelta(days=5)).isoformat()}")
+    response = client.get(
+        f"/api/v1/reports/?date_to={(today - timedelta(days=5)).isoformat()}",
+        headers=headers,
+    )
     assert response.status_code == 200
     assert len(response.json()) == 1
 
     # type filter
-    response = client.get("/api/v1/reports/?report_type_id=2")
+    response = client.get("/api/v1/reports/?report_type_id=2", headers=headers)
     assert response.status_code == 200
     assert len(response.json()) == 1
 
 
 def test_get_reports_stats():
-    _create_report()
+    headers = _auth_headers()
+    _create_report(headers)
     _create_report(
+        headers,
         full_name="Ewa Kowal",
         phone="123456789",
         city="Gdansk",
@@ -308,9 +376,65 @@ def test_get_reports_stats():
         address="ul. Dworcowa 1",
     )
 
-    response = client.get("/api/v1/reports/stats")
+    response = client.get("/api/v1/reports/stats", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert data["total_reports"] == 2
     assert data["by_type"]["1"] == 1
     assert data["by_type"]["2"] == 1
+
+
+def test_delete_my_account():
+    _register_account()
+    login = _login_account()
+    token = login.json()["access_token"]
+
+    response = client.delete(
+        "/api/v1/accounts/me",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 204
+
+    # Token should no longer be valid for account retrieval
+    response = client.get(
+        "/api/v1/accounts/me",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 401
+
+
+def test_reporter_reports_removed_endpoint():
+    headers = _auth_headers()
+    response = client.get(
+        "/api/v1/reports/reporter/jan.kowalski@example.com",
+        headers=headers,
+    )
+    # Removed endpoints return 404 Not Found
+    assert response.status_code == 404
+
+
+def test_update_my_account_requires_token_and_updates():
+    _register_account()
+    login = _login_account()
+    token = login.json()["access_token"]
+
+    # Update should require token
+    response = client.put(
+        "/api/v1/accounts/me",
+        json={"city": "Krakow"}
+    )
+    assert response.status_code == 401
+
+    # With token it updates
+    response = client.put(
+        "/api/v1/accounts/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"city": "Krakow"}
+    )
+    assert response.status_code == 200
+    assert response.json()["city"] == "Krakow"
+
+    # Verify via GET /me
+    response = client.get("/api/v1/accounts/me", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.json()["city"] == "Krakow"

@@ -5,8 +5,10 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.core.security import get_current_account
 from app.db.database import get_db
-from app.schemas import ReportCreate, ReportOut, ReportUpdate
+from app.db.models import Account
+from app.schemas import ReportCreate, ReportOut
 from app.services.report_service import ReportService
 
 router = APIRouter()
@@ -22,7 +24,6 @@ router = APIRouter()
 def create_report(
     report_data: ReportCreate,
     db: Session = Depends(get_db),
-    # current_user: str = Depends(get_current_user)  # Uncomment when auth is ready
 ):
     """Create a new report.
 
@@ -36,14 +37,7 @@ def create_report(
     - **report_type_id**: ID of report type
     - **report_details**: additional details
     """
-    # reporter_email = current_user if current_user else None
-    reporter_email = None  # Temporarily disabled
-    
-    report = ReportService.create_report(
-        db, 
-        report_data,
-        reporter_email=reporter_email
-    )
+    report = ReportService.create_report(db, report_data, reporter_email=None)
     return report
 
 
@@ -61,7 +55,8 @@ def get_all_reports(
     search: Optional[str] = Query(None, min_length=2, description="Szukaj po adresie lub opisie"),
     date_from: Optional[date] = Query(None, description="Filter reports from date (YYYY-MM-DD)"),
     date_to: Optional[date] = Query(None, description="Filter reports to date (YYYY-MM-DD)"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: Account = Depends(get_current_account),
 ):
     """
     Get all reports with optional filters.
@@ -91,7 +86,10 @@ def get_all_reports(
     summary="Reports statistics",
     description="Get basic statistics for reports"
 )
-def get_reports_statistics(db: Session = Depends(get_db)):
+def get_reports_statistics(
+    db: Session = Depends(get_db),
+    _: Account = Depends(get_current_account),
+):
     """Get reports statistics."""
     stats = ReportService.get_statistics(db)
     return stats
@@ -105,31 +103,11 @@ def get_reports_statistics(db: Session = Depends(get_db)):
 )
 def get_report_by_id(
     report_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: Account = Depends(get_current_account),
 ):
     """Get report by id."""
     report = ReportService.get_report_by_id(db, report_id)
-    if not report:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Report with ID {report_id} not found"
-        )
-    return report
-
-
-@router.put(
-    "/{report_id}",
-    response_model=ReportOut,
-    summary="Update report",
-    description="Update report fields"
-)
-def update_report(
-    report_id: int,
-    report_data: ReportUpdate,
-    db: Session = Depends(get_db)
-):
-    """Update a report."""
-    report = ReportService.update_report(db, report_id, report_data)
     if not report:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -146,7 +124,8 @@ def update_report(
 )
 def delete_report(
     report_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: Account = Depends(get_current_account),
 ):
     """Delete a report."""
     success = ReportService.delete_report(db, report_id)
@@ -158,23 +137,4 @@ def delete_report(
     return None
 
 
-@router.get(
-    "/reporter/{email}",
-    response_model=List[ReportOut],
-    summary="Get reports by reporter",
-    description="Get all reports created by a specific user"
-)
-def get_reports_by_reporter(
-    email: str,
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db)
-):
-    """Get reports created by a user."""
-    reports = ReportService.get_reports_by_reporter(
-        db, 
-        email, 
-        skip=skip, 
-        limit=limit
-    )
-    return reports
+# Deprecated: reporter-linked reports removed

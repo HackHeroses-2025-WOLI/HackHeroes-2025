@@ -17,7 +17,7 @@ from app.db.models import Account, User
 _BCRYPT_MAX_BYTES = 72
 
 # OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/accounts/login")
 
 
 def _prepare_password(password: str) -> bytes:

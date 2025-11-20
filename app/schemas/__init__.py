@@ -6,6 +6,7 @@ from app.schemas.account import (
     AccountOut,
     AccountUpdate,
     AccountLogin,
+    ActiveVolunteerOut,
 )
 from app.schemas.report import (
     ReportCreate,
@@ -24,7 +25,7 @@ from app.schemas.report_type import (
 __all__ = [
     "UserCreate", "UserOut", "UserUpdate",
     "Token", "TokenPayload",
-    "AccountCreate", "AccountOut", "AccountUpdate", "AccountLogin",
+    "AccountCreate", "AccountOut", "AccountUpdate", "AccountLogin", "ActiveVolunteerOut",
     "ReportCreate", "ReportOut", "ReportUpdate",
     "AvailabilityTypeCreate", "AvailabilityTypeOut",
     "ReportTypeCreate", "ReportTypeOut"
