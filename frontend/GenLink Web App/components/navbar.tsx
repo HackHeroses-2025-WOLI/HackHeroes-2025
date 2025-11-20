@@ -277,7 +277,7 @@ export const Navbar = () => {
       </NavbarContent>
 
       <NavbarContent
-        className="sm:hidden basis-1 justify-end gap-2"
+        className="basis-1 justify-end gap-2 lg:hidden"
         justify="end"
       >
         <NavbarMenuToggle
@@ -287,7 +287,7 @@ export const Navbar = () => {
         />
       </NavbarContent>
 
-      <NavbarMenu className="sm:hidden px-0 py-0 -mt-[2px]">
+      <NavbarMenu className="px-0 py-0 -mt-[2px] lg:hidden">
         <div className="mx-5 my-4 rounded-[20px] bg-gradient-to-b from-white/95 to-white/80 p-5 shadow-[0_35px_100px_rgba(15,23,42,0.12)] ring-1 ring-white/50 backdrop-blur-lg">
           <div className="flex flex-col gap-2">
             {siteConfig.navMenuItems.map((item) => (
