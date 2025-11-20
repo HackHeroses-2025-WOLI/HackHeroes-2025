@@ -12,6 +12,7 @@ import { Input, Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import { Chip } from "@heroui/chip";
 
+import { getReportGroupMeta } from "@/config/report-groups";
 import { api } from "@/lib/api";
 import { ReportType, ReportStats } from "@/types";
 
@@ -86,16 +87,19 @@ export function HelpForm({
   const [stats, setStats] = useState<ReportStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [reportTypes, setReportTypes] = useState<ReportType[]>([]);
+  const [activeVolunteers, setActiveVolunteers] = useState<number | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [statsData, typesData] = await Promise.all([
+        const [statsData, typesData, volunteers] = await Promise.all([
           api.reports.stats(),
           api.types.reportTypes(),
+          api.accounts.activeVolunteers(),
         ]);
         setStats(statsData);
         setReportTypes(typesData);
+        setActiveVolunteers(volunteers.length);
       } catch (error) {
         console.error("Failed to load initial data", error);
       } finally {
@@ -322,12 +326,22 @@ export function HelpForm({
       return "Trwa pobieranie...";
     }
 
-    if (!stats) {
+    const infoParts: string[] = [];
+
+    if (stats) {
+      infoParts.push(`${stats.total_reports} zgłoszeń w systemie`);
+    }
+
+    if (activeVolunteers !== null) {
+      infoParts.push(`${activeVolunteers} aktywnych wolontariuszy`);
+    }
+
+    if (!infoParts.length) {
       return "Dane chwilowo niedostępne";
     }
 
-    return `${stats.total_reports} zgłoszeń w systemie`;
-  }, [isLoadingStats, stats]);
+    return infoParts.join(" • ");
+  }, [isLoadingStats, stats, activeVolunteers]);
 
   return (
     <div
@@ -448,11 +462,18 @@ export function HelpForm({
                 clearFieldError("problem");
               }}
             >
-              {reportTypes.map((option) => (
-                <SelectItem key={String(option.id)}>
-                  {option.name}
-                </SelectItem>
-              ))}
+              {reportTypes.map((option) => {
+                const groupMeta = getReportGroupMeta(option.id);
+
+                return (
+                  <SelectItem
+                    key={String(option.id)}
+                    description={groupMeta?.label}
+                  >
+                    {option.name}
+                  </SelectItem>
+                );
+              })}
             </Select>
             <Textarea
               className="w-full"

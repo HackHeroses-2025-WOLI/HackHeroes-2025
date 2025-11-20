@@ -12,6 +12,13 @@ export interface AvailabilityType {
   description: string;
 }
 
+export interface AvailabilitySlot {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_active: boolean;
+}
+
 export interface ReportType {
   id: number;
   name: string;
@@ -28,6 +35,8 @@ export interface Account {
   resolved_cases_this_year: number;
   active_report?: number | null;
   availability_json?: string | null;
+  availability?: AvailabilitySlot[];
+  is_active_now?: boolean;
 }
 
 export interface Report {
@@ -44,6 +53,7 @@ export interface Report {
   reporter_email?: string | null;
   status?: string;
   reported_at: string;
+  report_group?: string | null;
 }
 
 export interface ReportStats {
@@ -67,4 +77,31 @@ export interface ReportCreatePayload {
 export interface LoginResponse {
   access_token: string;
   token_type: string;
+}
+
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  full_name: string;
+  phone?: string;
+  city?: string;
+  availability_type: number;
+  availability?: AvailabilitySlot[];
+}
+
+export interface AccountUpdatePayload {
+  full_name?: string;
+  phone?: string | null;
+  city?: string | null;
+  availability_type?: number;
+  availability?: AvailabilitySlot[];
+  is_active_now?: boolean;
+}
+
+export interface ActiveVolunteerProfile {
+  email: string;
+  full_name: string;
+  city?: string | null;
+  availability?: AvailabilitySlot[];
+  is_active_now: boolean;
 }

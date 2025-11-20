@@ -10,12 +10,14 @@ export const useRequireAuth = (redirectTo = "/wolontariusz/login", enabled = tru
   const router = useRouter();
 
   useEffect(() => {
-    if (!enabled) return; 
+    if (!enabled) {
+      return;
+    }
 
     if (!isLoading && !isAuthenticated) {
       router.replace(redirectTo);
     }
-  }, [isLoading, isAuthenticated, redirectTo, router]);
+  }, [isLoading, isAuthenticated, redirectTo, router, enabled]);
 
   return { isAuthenticated, isLoading };
 };

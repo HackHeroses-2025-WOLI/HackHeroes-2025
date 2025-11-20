@@ -9,9 +9,24 @@ import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Link } from "@heroui/link";
 
+import { getReportGroupMeta } from "@/config/report-groups";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { Report, ReportType } from "@/types";
+
+const formatPhoneNumber = (phone?: string | null) => {
+  if (!phone) {
+    return "";
+  }
+
+  const digits = phone.replace(/\D/g, "").slice(0, 9);
+  if (!digits) {
+    return phone;
+  }
+
+  const parts = digits.match(/.{1,3}/g);
+  return parts ? parts.join("-") : digits;
+};
 
 export default function AssignmentPage() {
   const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
@@ -101,6 +116,8 @@ export default function AssignmentPage() {
     );
   }
 
+  const reportGroup = getReportGroupMeta(report.report_type_id);
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -124,6 +141,11 @@ export default function AssignmentPage() {
           <Chip color="primary" variant="flat">
             {reportTypes[report.report_type_id]?.name ?? "Typ"}
           </Chip>
+          {reportGroup ? (
+            <Chip color={reportGroup.color} variant="flat">
+              {reportGroup.label}
+            </Chip>
+          ) : null}
           <Chip variant="flat">{report.city}</Chip>
           <Chip variant="flat">
             {new Date(report.reported_at).toLocaleDateString("pl-PL", {
@@ -143,7 +165,7 @@ export default function AssignmentPage() {
             <Chip variant="flat">Zgłoszono</Chip>
           )}
         </CardHeader>
-        <Divider />
+        <Divider className="h-px bg-default-100" />
         <CardBody className="flex flex-col gap-4 text-sm text-default-600">
           <div className="grid gap-2 md:grid-cols-2">
             <div className="space-y-1">
@@ -153,20 +175,19 @@ export default function AssignmentPage() {
               <p>
                 Telefon: {" "}
                 <span className="font-semibold text-default-900">
-                  {report.phone}
+                  {formatPhoneNumber(report.phone)}
                 </span>
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-default-800 font-medium">Szczegóły</p>
+              <p className="text-default-800 font-medium">Opis:</p>
               <p>{report.report_details ?? "Brak dodatkowych informacji."}</p>
             </div>
           </div>
         </CardBody>
-        <Divider />
         <CardFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-2">
-            {/* Placeholder buttons for future functionality */}
+            {/* Placeholder buttons dla dalszego rozwoju */}
             <Button isDisabled radius="lg" variant="flat">
               Podejmij zgłoszenie (Wkrótce)
             </Button>

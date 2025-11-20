@@ -11,9 +11,15 @@ import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import { Alert } from "@heroui/alert";
 
+import { getReportGroupMeta } from "@/config/report-groups";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { Report, ReportType } from "@/types";
+
+const FILTER_LAYOUT = {
+  // Adjust these values (in px) to control the category box width.
+  categoryWidth: 280,
+};
 
 export default function RequestsPage() {
   const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
@@ -122,28 +128,38 @@ export default function RequestsPage() {
 
       <Card className="border border-default-100">
         <CardHeader className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <Input
-              className="w-full md:max-w-lg"
-              placeholder="Szukaj po imieniu seniora, mieście lub opisie"
-              value={query}
-              onValueChange={setQuery}
-            />
-            <Select
-              className="md:max-w-xs"
-              label="Kategoria"
-              placeholder="Wybierz kategorię"
-              selectedKeys={[selectedCategory]}
-              onSelectionChange={(keys) => {
-                const [value] = Array.from(keys);
-
-                setSelectedCategory((value as string) ?? "all");
-              }}
+          <div className="flex w-full flex-col gap-3 md:flex-row md:items-end md:gap-6 md:justify-between">
+            <div
+              className="w-full md:flex-1 md:min-w-0"
+              style={{ maxWidth: "500px" }}
             >
-              {categories.map((category) => (
-                <SelectItem key={category.value}>{category.label}</SelectItem>
-              ))}
-            </Select>
+              <Input
+                className="w-full"
+                placeholder="Szukaj po imieniu seniora, mieście lub opisie"
+                value={query}
+                style={{ maxWidth: "500px" }}
+                onValueChange={setQuery}
+              />
+            </div>
+            <div className="w-full md:ml-auto md:flex md:w-auto md:justify-end md:flex-none">
+              <Select
+                className="w-full md:w-auto"
+                label="Kategoria"
+                placeholder="Wybierz kategorię"
+                labelPlacement="outside-left"
+                selectedKeys={[selectedCategory]}
+                style={{ width: `${FILTER_LAYOUT.categoryWidth}px` }}
+                onSelectionChange={(keys) => {
+                  const [value] = Array.from(keys);
+
+                  setSelectedCategory((value as string) ?? "all");
+                }}
+              >
+                {categories.map((category) => (
+                  <SelectItem key={category.value}>{category.label}</SelectItem>
+                ))}
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <Divider />
@@ -153,50 +169,71 @@ export default function RequestsPage() {
               Ładowanie zgłoszeń...
             </div>
           ) : (
-            filteredRequests.map((request) => (
-              <div
-                key={request.id}
-                className={`rounded-2xl border ${
-                  String(preselectId) === String(request.id)
-                    ? "border-primary-200"
-                    : "border-default-100"
-                } bg-default-50 p-5`}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold text-default-700">
-                      {request.full_name} ({request.age} lat)
-                    </span>
-                    <span className="text-xs text-default-400">
-                      Miasto: {request.city}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Chip size="sm" variant="flat">
-                      {request.city}
-                    </Chip>
-                    <Chip color="primary" size="sm" variant="flat">
-                      {getCategoryLabel(request.report_type_id)}
-                    </Chip>
-                  </div>
-                </div>
-                <h2 className="mt-3 text-lg font-semibold text-default-900">
-                  {request.problem}
-                </h2>
-                <p className="mt-2 text-sm text-default-600">
-                  {request.report_details ?? "Brak dodatkowych informacji."}
-                </p>
-                <Button
-                  as={NextLink}
-                  className="mt-4"
-                  color="primary"
-                  href={`/wolontariusz/zgloszenie/${request.id}`}
-                  radius="lg"
+            filteredRequests.map((request) => {
+              const groupMeta = getReportGroupMeta(request.report_type_id);
+
+              return (
+                <div
+                  key={request.id}
+                  className={`rounded-2xl border ${
+                    String(preselectId) === String(request.id)
+                      ? "border-primary-200"
+                      : "border-default-100"
+                  } bg-default-50 p-5`}
                 >
-                  Podejmij zgłoszenie
-                </Button>
-              </div>
-            ))
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-semibold text-default-700">
+                        {request.full_name} ({request.age} lat)
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:items-end">
+                      <div className="flex flex-wrap gap-2 sm:justify-end">
+                        <Chip size="sm" variant="flat">
+                          {request.city}
+                        </Chip>
+                        {groupMeta ? (
+                          <Chip color={groupMeta.color} size="sm" variant="flat">
+                            {groupMeta.label}
+                          </Chip>
+                        ) : null}
+                        <Chip color="primary" size="sm" variant="flat">
+                          {getCategoryLabel(request.report_type_id)}
+                        </Chip>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-2 sm:max-w-2xl">
+                      <h2 className="text-lg font-semibold text-default-900">
+                        {request.problem}
+                      </h2>
+                      <p className="text-sm text-default-600">
+                        {request.report_details ?? "Brak dodatkowych informacji."}
+                      </p>
+                    </div>
+                    <Button
+                      as={NextLink}
+                      className="hidden self-center sm:inline-flex"
+                      color="primary"
+                      href={`/wolontariusz/zgloszenie/${request.id}`}
+                      radius="lg"
+                    >
+                      Podejmij zgłoszenie
+                    </Button>
+                  </div>
+                  <Button
+                    as={NextLink}
+                    className="mt-4 sm:hidden"
+                    color="primary"
+                    href={`/wolontariusz/zgloszenie/${request.id}`}
+                    radius="lg"
+                  >
+                    Podejmij zgłoszenie
+                  </Button>
+                </div>
+              );
+            })
           )}
           {!isLoading && filteredRequests.length === 0 ? (
             <div className="rounded-3xl border border-default-100 bg-default-50 p-10 text-center text-default-500">

@@ -1,12 +1,15 @@
 import { API_CONFIG } from "@/config/api";
 import {
   Account,
+  ActiveVolunteerProfile,
   AvailabilityType,
   LoginResponse,
+  RegisterPayload,
   Report,
   ReportCreatePayload,
   ReportStats,
   ReportType,
+  AccountUpdatePayload,
 } from "@/types";
 
 import { authStorage } from "./auth-storage";
@@ -31,6 +34,42 @@ const getHeaders = (token?: string) => {
 };
 
 export const api = {
+  accounts: {
+    update: async (payload: AccountUpdatePayload) => {
+      const response = await fetch(withBase("/api/v1/accounts/me"), {
+        method: "PUT",
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update account");
+      }
+
+      return (await response.json()) as Account;
+    },
+    activeVolunteers: async () => {
+      const response = await fetch(
+        withBase("/api/v1/accounts/volunteers/active"),
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to load active volunteers");
+      }
+
+      return (await response.json()) as ActiveVolunteerProfile[];
+    },
+    deleteMe: async () => {
+      const response = await fetch(withBase("/api/v1/accounts/me"), {
+        method: "DELETE",
+        headers: getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete account");
+      }
+    },
+  },
   auth: {
     login: async (credentials: { email: string; password: string }) => {
       const response = await fetch(withBase("/api/v1/accounts/login"), {
@@ -45,7 +84,7 @@ export const api = {
 
       return (await response.json()) as LoginResponse;
     },
-    register: async (data: any) => {
+    register: async (data: RegisterPayload) => {
       const response = await fetch(withBase("/api/v1/accounts/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },

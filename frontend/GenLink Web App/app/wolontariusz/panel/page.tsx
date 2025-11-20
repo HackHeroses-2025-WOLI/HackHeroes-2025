@@ -8,6 +8,7 @@ import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 
 import { GenPointIcon, PhoneCheckIcon } from "@/components/icons";
+import { getReportGroupMeta } from "@/config/report-groups";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { Report, ReportStats } from "@/types";
@@ -140,37 +141,46 @@ export default function VolunteerPanelPage() {
             <div>Ładowanie...</div>
           ) : (
             <div className="flex flex-col gap-4">
-              {recentReports.map((request) => (
-                <Card
-                  key={request.id}
-                  className="border border-default-100 shadow-sm"
-                >
-                  <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-default-900">
-                          {request.full_name}
-                        </span>
-                        <Chip size="sm" variant="flat">
-                          {request.city}
-                        </Chip>
+              {recentReports.map((request) => {
+                const groupMeta = getReportGroupMeta(request.report_type_id);
+
+                return (
+                  <Card
+                    key={request.id}
+                    className="border border-default-100 shadow-sm"
+                  >
+                    <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-semibold text-default-900">
+                            {request.full_name}
+                          </span>
+                          <Chip size="sm" variant="flat">
+                            {request.city}
+                          </Chip>
+                          {groupMeta ? (
+                            <Chip color={groupMeta.color} size="sm" variant="flat">
+                              {groupMeta.label}
+                            </Chip>
+                          ) : null}
+                        </div>
+                        <p className="text-sm text-default-500">
+                          {request.problem}
+                        </p>
                       </div>
-                      <p className="text-sm text-default-500">
-                        {request.problem}
-                      </p>
-                    </div>
-                    <Button
-                      as={NextLink}
-                      color="primary"
-                      href={`/wolontariusz/zgloszenie/${request.id}`}
-                      radius="full"
-                      size="sm"
-                    >
-                      Szczegóły
-                    </Button>
-                  </CardBody>
-                </Card>
-              ))}
+                      <Button
+                        as={NextLink}
+                        color="primary"
+                        href={`/wolontariusz/zgloszenie/${request.id}`}
+                        radius="full"
+                        size="sm"
+                      >
+                        Szczegóły
+                      </Button>
+                    </CardBody>
+                  </Card>
+                );
+              })}
               {recentReports.length === 0 && (
                 <div className="text-center text-default-500">
                   Brak nowych zgłoszeń.

@@ -193,7 +193,7 @@ export const Navbar = () => {
       </NavbarContent>
 
       <NavbarContent
-        className="hidden sm:flex basis-1/2 sm:basis-full"
+        className="hidden lg:flex basis-1/2 lg:basis-full"
         justify="end"
       >
         {!isInVolunteerPage && (
@@ -246,7 +246,7 @@ export const Navbar = () => {
             <Dropdown placement="bottom-end">
               <DropdownTrigger>
                 <button
-                  className="p-3 rounded-full text-default-700 hover:bg-default-100 focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+                  className="p-3 rounded-full text-default-700 hover:bg-default-100 focus:outline-none focus-visible:outline-none focus-visible:ring-0 cursor-pointer"
                   style={{ WebkitTapHighlightColor: "transparent" }}
                   aria-label="Menu konta"
                 >
@@ -368,7 +368,7 @@ export const Navbar = () => {
                 <Dropdown placement="bottom-end">
                   <DropdownTrigger>
                     <button
-                      className="p-3 rounded-lg flex items-center justify-center text-default-700 hover:bg-default-100 focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+                      className="p-3 rounded-lg flex items-center justify-center text-default-700 hover:bg-default-100 focus:outline-none focus-visible:outline-none focus-visible:ring-0 cursor-pointer"
                       style={{ WebkitTapHighlightColor: "transparent" }}
                       aria-label="Menu konta"
                     >
