@@ -11,6 +11,19 @@ import { api } from "@/lib/api";
 import { AvailabilityType } from "@/types";
 import { Alert } from "@heroui/alert";
 
+const PHONE_DIGIT_LIMIT = 9;
+
+const formatPhoneNumber = (value: string) => {
+  const digitsOnly = value.replace(/\D/g, "").slice(0, PHONE_DIGIT_LIMIT);
+  const parts: string[] = [];
+
+  for (let index = 0; index < digitsOnly.length; index += 3) {
+    parts.push(digitsOnly.slice(index, index + 3));
+  }
+
+  return parts.join("-");
+};
+
 export default function VolunteerRegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -154,8 +167,11 @@ export default function VolunteerRegisterPage() {
               isRequired
               label="Numer telefonu"
               placeholder="np. 600 600 600"
+              inputMode="numeric"
+              maxLength={11}
+              type="tel"
               value={form.phone}
-              onValueChange={(value) => handleChange("phone", value)}
+              onValueChange={(value) => handleChange("phone", formatPhoneNumber(value))}
             />
             <Input
               isRequired
