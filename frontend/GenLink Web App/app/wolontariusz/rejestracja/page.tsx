@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import { api } from "@/lib/api";
+import { AvailabilityType } from "@/types";
+import { Alert } from "@heroui/alert";
 
 export default function VolunteerRegisterPage() {
   const router = useRouter();
@@ -18,8 +22,22 @@ export default function VolunteerRegisterPage() {
     phone: "",
     city: "",
   });
+  const [availabilityTypes, setAvailabilityTypes] = useState<AvailabilityType[]>(
+    []
+  );
+  const [selectedAvailabilityType, setSelectedAvailabilityType] = useState<
+    string | undefined
+  >(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.types
+      .availability()
+      .then(setAvailabilityTypes)
+      .catch((err) => console.error("Failed to fetch availability types", err));
+  }, []);
 
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({
@@ -32,8 +50,8 @@ export default function VolunteerRegisterPage() {
     event.preventDefault();
     setIsSubmitting(true);
     setPasswordError(null);
+    setError(null);
 
-    // Miejsce na integrację z API rejestracji. Konto aktywne od razu.
     if (form.password !== form.confirmPassword) {
       setPasswordError("Hasła muszą być identyczne.");
       setIsSubmitting(false);
@@ -41,14 +59,33 @@ export default function VolunteerRegisterPage() {
       return;
     }
 
-    setTimeout(() => {
+    if (!selectedAvailabilityType) {
+      setError("Wybierz typ dostępności.");
       setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await api.auth.register({
+        email: form.email,
+        password: form.password,
+        full_name: `${form.firstName} ${form.lastName}`,
+        phone: form.phone,
+        city: form.city,
+        availability_type: Number(selectedAvailabilityType),
+      });
       router.push("/wolontariusz/rejestracja/sukces");
-    }, 600);
+    } catch (err) {
+      console.error(err);
+      setError("Rejestracja nie powiodła się. Spróbuj ponownie.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      {error && <Alert color="danger">{error}</Alert>}
       <Card className="border border-default-100 shadow-medium">
         <CardHeader className="flex flex-col gap-2 text-left">
           <h1 className="text-2xl font-semibold text-default-900">
@@ -127,6 +164,25 @@ export default function VolunteerRegisterPage() {
               value={form.city}
               onValueChange={(value) => handleChange("city", value)}
             />
+            <Select
+              isRequired
+              className="md:col-span-2"
+              label="Typ dostępności"
+              placeholder="Wybierz typ dostępności"
+              selectedKeys={
+                selectedAvailabilityType ? [selectedAvailabilityType] : []
+              }
+              onSelectionChange={(keys) => {
+                const [value] = Array.from(keys);
+                setSelectedAvailabilityType((value as string) ?? undefined);
+              }}
+            >
+              {availabilityTypes.map((type) => (
+                <SelectItem key={String(type.id)}>
+                  {type.name}
+                </SelectItem>
+              ))}
+            </Select>
           </CardBody>
           <Divider />
           <CardFooter className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

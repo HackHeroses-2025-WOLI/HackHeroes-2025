@@ -8,18 +8,15 @@ import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
 import { Checkbox } from "@heroui/checkbox";
 import { Divider } from "@heroui/divider";
-import { Input } from "@heroui/input";
+import { Input, Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import { Chip } from "@heroui/chip";
 
-import { problemOptions } from "@/data/problems";
+import { api } from "@/lib/api";
+import { ReportType, ReportStats } from "@/types";
 
 const FORM_STORAGE_KEY = "genlink-help-form-v1";
 const PHONE_DIGIT_LIMIT = 9;
-
-interface VolunteerStats {
-  volunteers: number;
-}
 
 interface StoredForm {
   name: string;
@@ -27,6 +24,7 @@ interface StoredForm {
   address: string;
   city: string;
   problem: string;
+  details: string;
   age: string;
 }
 
@@ -77,26 +75,44 @@ export function HelpForm({
     city: "",
     age: "",
     problem: "",
+    details: "",
     remember: false,
   });
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<FormField, string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<FormField, string>>>({});
-  const [stats, setStats] = useState<VolunteerStats | null>(null);
+  const [stats, setStats] = useState<ReportStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [reportTypes, setReportTypes] = useState<ReportType[]>([]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
+    const loadData = async () => {
+      try {
+        const [statsData, typesData] = await Promise.all([
+          api.reports.stats(),
+          api.types.reportTypes(),
+        ]);
+        setStats(statsData);
+        setReportTypes(typesData);
+      } catch (error) {
+        console.error("Failed to load initial data", error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+    loadData();
+  }, []);
 
-    const stored = window.localStorage.getItem(FORM_STORAGE_KEY);
-
-    if (!stored) {
-      return;
-    }
-
+  useEffect(() => {
     try {
+      const stored = window.localStorage.getItem(FORM_STORAGE_KEY);
+
+      if (!stored) {
+        return;
+      }
+
       const parsed = JSON.parse(stored) as Partial<StoredForm>;
 
       setFormData((prev) => ({
@@ -107,34 +123,12 @@ export function HelpForm({
         city: parsed.city ?? "",
         age: sanitizeAgeInput(parsed.age ?? ""),
         problem: parsed.problem ?? "",
+        details: parsed.details ?? "",
         remember: true,
       }));
     } catch {
       // Ignore - silent fail for cached form data
     }
-  }, []);
-
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        setIsLoadingStats(true);
-        const response = await fetch("/api/status/aktywni", { cache: "no-store" });
-
-        if (!response.ok) {
-          throw new Error("Nie udało się pobrać danych o wolontariuszach");
-        }
-
-        const payload = (await response.json()) as VolunteerStats;
-
-        setStats(payload);
-      } catch {
-        // Ignore - stats are optional
-      } finally {
-        setIsLoadingStats(false);
-      }
-    };
-
-    void loadStats();
   }, []);
 
   const clearFieldError = (field: FormField) => {
@@ -207,6 +201,14 @@ export function HelpForm({
           }
           break;
         }
+        case "details": {
+          if (!formData.details.trim()) {
+            next.details = "Opisz krótko problem";
+          } else {
+            delete next.details;
+          }
+          break;
+        }
         default:
           break;
       }
@@ -223,6 +225,7 @@ export function HelpForm({
     const trimmedName = formData.name.trim();
     const trimmedAddress = formData.address.trim();
     const trimmedCity = formData.city.trim();
+    const trimmedDetails = formData.details.trim();
     const phoneDigits = formData.phone.replace(/\D/g, "");
     const parsedAge = Number.parseInt(formData.age.trim(), 10);
 
@@ -248,6 +251,10 @@ export function HelpForm({
       newErrors.problem = "Wybierz rodzaj problemu";
     }
 
+    if (!trimmedDetails) {
+      newErrors.details = "Opisz krótko problem";
+    }
+
     if (Number.isNaN(parsedAge) || parsedAge < 1) {
       newErrors.age = "Podaj poprawny wiek";
     }
@@ -262,37 +269,39 @@ export function HelpForm({
     setFieldErrors({});
 
     try {
-      const requestBody = {
-        name: trimmedName,
+      const selectedType = reportTypes.find(
+        (t) => String(t.id) === formData.problem
+      );
+      const problemSummary = selectedType ? selectedType.name : "Zgłoszenie";
+
+      await api.reports.create({
+        full_name: trimmedName,
         phone: phoneDigits,
         address: trimmedAddress,
         city: trimmedCity,
         age: parsedAge,
-        problem: formData.problem,
-      };
-
-      const response = await fetch("/api/requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
+        problem: problemSummary,
+        report_type_id: Number(formData.problem),
+        report_details: trimmedDetails,
+        contact_ok: true,
       });
-
-      if (!response.ok) {
-        throw new Error("Coś poszło nie tak. Spróbuj ponownie.");
-      }
 
       if (typeof window !== "undefined") {
         if (formData.remember) {
           const toStore: StoredForm = {
-            name: requestBody.name,
+            name: trimmedName,
             phone: formData.phone,
             address: formData.address,
             city: formData.city,
             age: String(parsedAge),
-            problem: requestBody.problem,
+            problem: formData.problem,
+            details: trimmedDetails,
           };
 
-          window.localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(toStore));
+          window.localStorage.setItem(
+            FORM_STORAGE_KEY,
+            JSON.stringify(toStore)
+          );
         } else {
           window.localStorage.removeItem(FORM_STORAGE_KEY);
         }
@@ -300,7 +309,8 @@ export function HelpForm({
 
       router.push(`./potwierdzenie`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Nieoczekiwany błąd";
+      const message =
+        error instanceof Error ? error.message : "Nieoczekiwany błąd";
       setSubmitError(message);
     } finally {
       setIsSubmitting(false);
@@ -316,7 +326,7 @@ export function HelpForm({
       return "Dane chwilowo niedostępne";
     }
 
-    return `${stats.volunteers} wolontariuszy w gotowości`;
+    return `${stats.total_reports} zgłoszeń w systemie`;
   }, [isLoadingStats, stats]);
 
   return (
@@ -431,18 +441,40 @@ export function HelpForm({
               onBlur={() => validateField("problem")}
               onSelectionChange={(keys) => {
                 const [value] = Array.from(keys);
-                setFormData((prev) => ({ ...prev, problem: (value as string) ?? "" }));
+                setFormData((prev) => ({
+                  ...prev,
+                  problem: (value as string) ?? "",
+                }));
                 clearFieldError("problem");
               }}
             >
-              {problemOptions.map((option) => (
-                <SelectItem key={option.value}>{option.label}</SelectItem>
+              {reportTypes.map((option) => (
+                <SelectItem key={String(option.id)}>
+                  {option.name}
+                </SelectItem>
               ))}
             </Select>
+            <Textarea
+              className="w-full"
+              isRequired
+              errorMessage={fieldErrors.details}
+              isInvalid={Boolean(fieldErrors.details)}
+              label="Szczegóły problemu"
+              name="details"
+              placeholder="Opisz krótko na czym polega problem..."
+              value={formData.details}
+              onBlur={() => validateField("details")}
+              onValueChange={(value) => {
+                setFormData((prev) => ({ ...prev, details: value }));
+                clearFieldError("details");
+              }}
+            />
             <Checkbox
               className="w-full"
               isSelected={formData.remember}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, remember: value }))}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, remember: value }))
+              }
             >
               Zapamiętaj moje dane na tym urządzeniu
             </Checkbox>

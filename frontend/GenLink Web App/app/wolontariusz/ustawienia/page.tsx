@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Checkbox } from "@heroui/checkbox";
@@ -8,11 +8,15 @@ import { Divider } from "@heroui/divider";
 import { Input } from "@heroui/input";
 import { Textarea } from "@heroui/input";
 
+import { useAuth } from "@/components/auth/auth-provider";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+
 export default function VolunteerSettingsPage() {
+  useRequireAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [profile, setProfile] = useState({
-    firstName: "Anna",
-    lastName: "Kowalska",
-    email: "wolontariusz@genlink.pl",
+    fullName: "",
+    email: "",
   });
 
   const [passwords, setPasswords] = useState({
@@ -30,6 +34,22 @@ export default function VolunteerSettingsPage() {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!authLoading) {
+      setIsLoading(false);
+    }
+  }, [authLoading]);
+
+  useEffect(() => {
+    if (user) {
+      setProfile({
+        fullName: user.full_name,
+        email: user.email,
+      });
+    }
+  }, [user]);
 
   const handleProfileChange = (field: keyof typeof profile, value: string) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
@@ -74,13 +94,19 @@ export default function VolunteerSettingsPage() {
       }
     }
 
+    // Simulate API call
     setTimeout(() => {
       setIsSaving(false);
       if (isChangingPassword) {
         setPasswords({ current: "", next: "", confirm: "" });
       }
+      alert("Zmiany zostały zapisane (symulacja).");
     }, 600);
   };
+
+  if (isLoading) {
+    return <div>Ładowanie ustawień...</div>;
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -103,24 +129,16 @@ export default function VolunteerSettingsPage() {
           <CardBody className="grid gap-4 md:grid-cols-2">
             <Input
               isRequired
-              label="Imię"
-              placeholder="np. Anna"
-              value={profile.firstName}
+              className="md:col-span-2"
+              label="Imię i nazwisko"
+              placeholder="np. Anna Kowalska"
+              value={profile.fullName}
               onValueChange={(value: string) =>
-                handleProfileChange("firstName", value)
+                handleProfileChange("fullName", value)
               }
             />
             <Input
-              isRequired
-              label="Nazwisko"
-              placeholder="np. Kowalska"
-              value={profile.lastName}
-              onValueChange={(value: string) =>
-                handleProfileChange("lastName", value)
-              }
-            />
-            <Input
-              isRequired
+              isDisabled
               className="md:col-span-2"
               label="Adres e-mail"
               type="email"

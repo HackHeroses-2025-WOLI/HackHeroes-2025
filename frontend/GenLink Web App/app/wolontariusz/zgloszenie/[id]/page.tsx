@@ -1,34 +1,104 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import NextLink from "next/link";
-import { notFound } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Link } from "@heroui/link";
 
-import {
-  findPanelRequestById,
-  panelCategoryLabels,
-} from "@/data/panelRequests";
+import { api } from "@/lib/api";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+import { Report, ReportType } from "@/types";
 
-export async function generateMetadata(props: any) {
-  const { params } = props as { params: { id: string } };
-  const request = findPanelRequestById(params.id);
+export default function AssignmentPage() {
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  const params = useParams();
+  const router = useRouter();
+  const [report, setReport] = useState<Report | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reportTypes, setReportTypes] = useState<Record<number, ReportType>>(
+    {},
+  );
 
-  return {
-    title: request
-      ? `${request.summary} - GenLink Wolontariusz`
-      : "Zgłoszenie - GenLink",
-    description: request ? request.description : "Szczegóły zgłoszenia",
-  };
-}
+  useEffect(() => {
+    if (!isAuthenticated || authLoading) {
+      return;
+    }
 
-export default function AssignmentPage(props: any) {
-  const { params } = props as { params: { id: string } };
-  const request = findPanelRequestById(params.id);
+    let isMounted = true;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
 
-  if (!request) {
-    notFound();
+    const loadReport = async (showLoader = false) => {
+      if (!params.id) {
+        return;
+      }
+
+      if (showLoader) {
+        setIsLoading(true);
+      }
+
+      try {
+        const [data, types] = await Promise.all([
+          api.reports.by_id(params.id as string),
+          api.types.reportTypes(),
+        ]);
+        if (!isMounted) {
+          return;
+        }
+        setReport(data);
+        setReportTypes(
+          types.reduce<Record<number, ReportType>>((memo, type) => {
+            memo[type.id] = type;
+            return memo;
+          }, {}),
+        );
+        setError(null);
+      } catch (err) {
+        console.error("Failed to load report", err);
+        if (isMounted) {
+          setError("Nie udało się pobrać szczegółów zgłoszenia.");
+        }
+      } finally {
+        if (showLoader && isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadReport(true);
+    intervalId = setInterval(() => {
+      loadReport(false);
+    }, 2000);
+
+    return () => {
+      isMounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [authLoading, isAuthenticated, params.id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-default-500">Ładowanie zgłoszenia...</div>
+      </div>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center gap-4">
+        <div className="text-danger">{error || "Zgłoszenie nie istnieje."}</div>
+        <Button onPress={() => router.back()} variant="flat">
+          Wróć
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -42,66 +112,63 @@ export default function AssignmentPage(props: any) {
           ← Wróć do listy zgłoszeń
         </Link>
         <h1 className="text-3xl font-semibold text-default-900">
-          {request.summary}
+          {report.problem}
         </h1>
         <p className="text-sm text-default-500">
-          Numer zgłoszenia: {request.id}
+          Numer zgłoszenia: {report.id}
         </p>
       </div>
 
       <Card className="border border-default-100">
         <CardHeader className="flex flex-wrap items-center gap-3">
           <Chip color="primary" variant="flat">
-            {panelCategoryLabels[request.category]}
+            {reportTypes[report.report_type_id]?.name ?? "Typ"}
           </Chip>
-          <Chip variant="flat">{request.city}</Chip>
-          <Chip variant="flat">{request.submittedAgo}</Chip>
+          <Chip variant="flat">{report.city}</Chip>
+          <Chip variant="flat">
+            {new Date(report.reported_at).toLocaleDateString("pl-PL", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </Chip>
+          {report.status ? (
+            <Chip
+              color={report.status === "pending" ? "warning" : "success"}
+              variant="flat"
+            >
+              {report.status === "pending" ? "Oczekujące" : report.status}
+            </Chip>
+          ) : (
+            <Chip variant="flat">Zgłoszono</Chip>
+          )}
         </CardHeader>
         <Divider />
         <CardBody className="flex flex-col gap-4 text-sm text-default-600">
           <div className="grid gap-2 md:grid-cols-2">
             <div className="space-y-1">
               <p className="text-default-800 font-medium">
-                {request.senior} ({request.age} lat)
+                Zgłaszający: {report.full_name}
               </p>
               <p>
-                Telefon:{" "}
+                Telefon: {" "}
                 <span className="font-semibold text-default-900">
-                  {request.phone}
+                  {report.phone}
                 </span>
               </p>
-              <p>Preferowany kontakt: {request.preferredContact}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-default-800 font-medium">
-                Notatki koordynatora
-              </p>
-              <p>{request.description}</p>
-              {request.address ? (
-                <p>Miejsce spotkania: {request.address}</p>
-              ) : null}
+              <p className="text-default-800 font-medium">Szczegóły</p>
+              <p>{report.report_details ?? "Brak dodatkowych informacji."}</p>
             </div>
-          </div>
-          <Divider />
-          <div className="space-y-3">
-            <p className="text-default-800 font-medium">
-              Lista kroków do wykonania
-            </p>
-            <ul className="list-disc space-y-2 pl-5">
-              {request.checklist.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
           </div>
         </CardBody>
         <Divider />
         <CardFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-2">
-            <Button radius="lg" variant="flat">
-              Oznacz jako zakończone
-            </Button>
-            <Button color="danger" radius="lg" variant="flat">
-              Anuluj podjęcie
+            {/* Placeholder buttons for future functionality */}
+            <Button isDisabled radius="lg" variant="flat">
+              Podejmij zgłoszenie (Wkrótce)
             </Button>
           </div>
           <Button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
@@ -8,27 +8,49 @@ import { Checkbox } from "@heroui/checkbox";
 import { Divider } from "@heroui/divider";
 import { Input } from "@heroui/input";
 import { Link } from "@heroui/link";
+import { Alert } from "@heroui/alert";
+
+import { useAuth } from "@/components/auth/auth-provider";
+import { api } from "@/lib/api";
+import { authStorage } from "@/lib/auth-storage";
 
 export default function VolunteerLoginPage() {
   const router = useRouter();
+  const { login: authenticate, isAuthenticated, isLoading: authLoading } =
+    useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(
+    () => authStorage.getPreferredPersistence() === "local",
+  );
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Tu trafi integracja z API logowania. Dla prototypu przekierowujemy bez walidacji.
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await api.auth.login({ email, password });
+      await authenticate(response.access_token, { remember: rememberMe });
       router.push("/wolontariusz/panel");
-    }, 500);
+    } catch (err) {
+      setError("Nieprawidłowy email lub hasło.");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace("/wolontariusz/panel");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
+      {error && <Alert color="danger">{error}</Alert>}
       <Card className="border border-default-100 shadow-medium">
         <CardHeader className="flex flex-col gap-2 text-left">
           <h1 className="text-2xl font-semibold text-default-900">

@@ -22,17 +22,20 @@ import {
 import NextLink from "next/link";
 import clsx from "clsx";
 import { useCallback, useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { siteConfig } from "@/config/site";
 import { Logo, SettingsIcon } from "@/components/icons";
 import { Avatar, AvatarGroup, AvatarIcon } from "@heroui/avatar";
 import { useNavigationLoader } from "@/components/navigation-loader";
+import { useAuth } from "@/components/auth/auth-provider";
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { show: showLoader } = useNavigationLoader();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -97,10 +100,11 @@ export const Navbar = () => {
     };
   }, [isMenuOpen]);
 
-  const isInVolunteerSettingsOrPanel = (pathname ?? "").startsWith(
-    "/wolontariusz/ustawienia",
-  ) || (pathname ?? "").startsWith("/wolontariusz/panel") || (pathname ?? "").startsWith("/wolontariusz/login");
-  
+  const isInVolunteerPage = (() => {
+    const p = pathname ?? "";
+    return /^\/wolontariusz(?!\/(?:login|rejestracja)(?:\/|$))/.test(p);
+  })();
+
   const isInVolunteerPanel = (pathname ?? "").startsWith(
     "/wolontariusz/panel",
   );
@@ -143,7 +147,12 @@ export const Navbar = () => {
     return luminance > 0.6 ? "#111827" : "#ffffff"; // dark text for light backgrounds, else white
   };
 
-  const userName = "Marig Howak";
+  const userName = user?.full_name ?? "Wolontariusz";
+
+  const handleLogout = useCallback(() => {
+    logout();
+    router.push("/wolontariusz/login");
+  }, [logout, router]);
 
   return (
     <HeroUINavbar
@@ -187,7 +196,7 @@ export const Navbar = () => {
         className="hidden sm:flex basis-1/2 sm:basis-full"
         justify="end"
       >
-        {!isInVolunteerSettingsOrPanel && (
+        {!isInVolunteerPage && (
           <NavbarItem className="hidden md:flex">
             <Button
               as={NextLink}
@@ -201,7 +210,7 @@ export const Navbar = () => {
             </Button>
           </NavbarItem>
         )}
-        {!isInVolunteerSettingsOrPanel && (
+        {!isInVolunteerPage && (
           <NavbarItem className="hidden md:flex">
           <Button
             as={NextLink}
@@ -218,7 +227,7 @@ export const Navbar = () => {
           </Button>
           </NavbarItem>
         )}
-        {isInVolunteerPanel && (
+        {isInVolunteerPage && Boolean(user) && (
           <NavbarItem className="hidden md:flex items-center gap-3">
               <div className="flex items-center gap-3">
               <Avatar 
@@ -241,7 +250,7 @@ export const Navbar = () => {
                   style={{ WebkitTapHighlightColor: "transparent" }}
                   aria-label="Menu konta"
                 >
-                  <SettingsIcon size={28} />
+                  <SettingsIcon size={24} />
                 </button>
               </DropdownTrigger>
               <DropdownMenu aria-label="Menu konta" variant="faded">
@@ -262,10 +271,9 @@ export const Navbar = () => {
                 </DropdownItem>
                 <DropdownItem
                   key="logout"
-                  href="/wolontariusz/login"
                   className="text-danger"
                   color="danger"
-                  onPress={() => handleNavigate("/wolontariusz/login")}
+                  onPress={handleLogout}
                 >
                   Wyloguj się
                 </DropdownItem>
@@ -314,7 +322,7 @@ export const Navbar = () => {
             ))}
           </div>
           <div className="mt-6 flex flex-col gap-2">
-            {!isInVolunteerSettingsOrPanel && (
+            {!isInVolunteerPage && (
               <Button
               as={NextLink}
               className="w-full font-semibold shadow-[0_25px_80px_rgba(37,99,235,0.35)]"
@@ -328,7 +336,7 @@ export const Navbar = () => {
             </Button>
             )}
             
-            {!isInVolunteerSettingsOrPanel && (
+            {!isInVolunteerPage && (
               <Button
               as={NextLink}
               className={
@@ -346,7 +354,7 @@ export const Navbar = () => {
             )}
             
             
-            {isInVolunteerPanel && (
+            {isInVolunteerPanel && Boolean(user) && (
               <div className="flex items-center gap-3">
                   <Avatar 
                   size="sm"
@@ -385,10 +393,9 @@ export const Navbar = () => {
                     </DropdownItem>
                     <DropdownItem
                       key="logout"
-                      href="/wolontariusz/login"
                       className="text-danger"
                       color="danger"
-                      onPress={() => handleNavigate("/wolontariusz/login")}
+                      onPress={handleLogout}
                     >
                       Wyloguj się
                     </DropdownItem>

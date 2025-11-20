@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import NextLink from "next/link";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
@@ -5,39 +8,83 @@ import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 
 import { GenPointIcon, PhoneCheckIcon } from "@/components/icons";
-import {
-  panelActiveRequest,
-  panelCategoryLabels,
-  panelContactRequests,
-  panelPendingRequests,
-} from "@/data/panelRequests";
-
-const stats = [
-  {
-    label: "GenPoints",
-    value: "128",
-    hint: "Zdobyte w tym miesiącu",
-    icon: GenPointIcon,
-  },
-  {
-    label: "Rozwiązane sprawy",
-    value: "42",
-    hint: "Łącznie w 2025 roku",
-    icon: PhoneCheckIcon,
-  },
-  {
-    label: "Średni czas reakcji",
-    value: "11 min",
-    hint: "Od zgłoszenia do telefonu",
-  },
-];
-
-const activeAssignment = panelActiveRequest;
-const pendingRequests = panelPendingRequests.slice(0, 3);
-const contactRequestsPreview = panelContactRequests.slice(0, 3);
-const hasActiveAssignment = Boolean(activeAssignment);
+import { api } from "@/lib/api";
+import { useRequireAuth } from "@/hooks/use-require-auth";
+import { Report, ReportStats } from "@/types";
 
 export default function VolunteerPanelPage() {
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  const [stats, setStats] = useState<ReportStats | null>(null);
+  const [recentReports, setRecentReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isAuthenticated || authLoading) {
+      return;
+    }
+
+    let isMounted = true;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+
+    const loadData = async (showLoader = false) => {
+      if (showLoader) {
+        setIsLoading(true);
+      }
+
+      try {
+        const [statsData, reportsData] = await Promise.all([
+          api.reports.stats(),
+          api.reports.list({ limit: 3 }),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setStats(statsData);
+        setRecentReports(reportsData);
+      } catch (error) {
+        console.error("Failed to load data", error);
+      } finally {
+        if (showLoader && isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadData(true);
+    intervalId = setInterval(() => {
+      loadData(false);
+    }, 2000);
+
+    return () => {
+      isMounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [authLoading, isAuthenticated]);
+
+  const dashboardStats = [
+    {
+      label: "GenPoints",
+      value: "128", // Placeholder
+      hint: "Zdobyte w tym miesiącu",
+      icon: GenPointIcon,
+    },
+    {
+      label: "Zgłoszenia w systemie",
+      value: stats?.total_reports.toString() ?? "-",
+      hint: "Łącznie",
+      icon: PhoneCheckIcon,
+    },
+    {
+      label: "Średni czas reakcji",
+      value: "11 min", // Placeholder
+      hint: "Od zgłoszenia do telefonu",
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-8">
       <div className="relative flex flex-col gap-4">
@@ -48,243 +95,102 @@ export default function VolunteerPanelPage() {
           Śledź swoje statystyki, odbieraj zgłoszenia i utrzymuj kontakt z
           seniorami w jednym miejscu.
         </p>
-        {/* Main CTA for browsing submissions has been removed per request. */}
-
-        {/* Settings icon moved to global navbar */}
       </div>
 
-      <section className="grid gap-4 sm:grid-cols-3">
-        {stats.map((item) => {
-          const Icon = item.icon;
+      <div className="grid gap-4 sm:grid-cols-3">
+        {dashboardStats.map((stat, index) => (
+          <Card key={index} className="border border-default-100 shadow-sm">
+            <CardBody className="flex flex-row items-center justify-between gap-4 p-6">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-default-500">
+                  {stat.label}
+                </span>
+                <span className="text-2xl font-semibold text-default-900">
+                  {stat.value}
+                </span>
+                <span className="text-xs text-default-400">{stat.hint}</span>
+              </div>
+              {stat.icon && (
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary">
+                  <stat.icon size={24} />
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        ))}
+      </div>
 
-          return (
-            <Card key={item.label} className="border border-default-100">
-              <CardHeader className="flex items-center gap-3 text-sm font-medium text-default-500">
-                {Icon ? (
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-primary">
-                    <Icon size={20} />
-                  </span>
-                ) : null}
-                {item.label}
-              </CardHeader>
-              <CardBody className="text-3xl font-semibold text-default-900">
-                {item.value}
-              </CardBody>
-              <CardFooter className="text-xs text-default-400">
-                {item.hint}
-              </CardFooter>
-            </Card>
-          );
-        })}
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <Card className="border border-default-100">
-          <CardHeader className="flex flex-col gap-1">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-default-900">
-              Twoje aktywne zgłoszenie
+              Oczekujące zgłoszenia
             </h2>
-            <p className="text-sm text-default-500">
-              Pamiętaj, aby zadzwonić w ustalonym czasie i zanotować rezultat
-              rozmowy.
-            </p>
-          </CardHeader>
-          <Divider />
-          {activeAssignment ? (
-            <CardBody className="flex flex-col gap-4 text-sm text-default-600">
-              <div className="flex flex-wrap items-center gap-3">
-                <Chip color="primary" variant="flat">
-                  {panelCategoryLabels[activeAssignment.category]}
-                </Chip>
-                <Chip variant="flat">{activeAssignment.city}</Chip>
-              </div>
-              <div className="grid gap-2">
-                <span className="text-default-800 font-medium">
-                  {activeAssignment.senior} ({activeAssignment.age} lat)
-                </span>
-                <span>Telefon: {activeAssignment.phone}</span>
-                <span>
-                  Preferowany kontakt: {activeAssignment.preferredContact}
-                </span>
-                <p className="text-default-500">
-                  {activeAssignment.description}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-default-50 p-4 text-xs text-default-500">
-                Zapisz, ile GenPoints zdobyłeś po rozmowie – koordynator przyzna
-                punkty po oznaczeniu sprawy jako zakończonej.
-              </div>
-            </CardBody>
-          ) : (
-            <CardBody className="text-sm text-default-500">
-              Obecnie nie prowadzisz żadnego zgłoszenia. Przejrzyj listę nowych
-              próśb i wybierz zadanie, które możesz podjąć.
-            </CardBody>
-          )}
-          <Divider />
-          <CardFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {activeAssignment ? (
-              <>
-                <Button
-                  as={NextLink}
-                  href={`/wolontariusz/zgloszenie/${activeAssignment.id}`}
-                  radius="lg"
-                  variant="bordered"
-                >
-                  Otwórz szczegóły
-                </Button>
-                <div className="flex gap-2">
-                  <Button radius="lg" variant="flat">
-                    Oznacz jako zakończone
-                  </Button>
-                  <Button color="danger" radius="lg" variant="flat">
-                    Anuluj podjęcie
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <Button
-                as={NextLink}
-                href="/wolontariusz/zgloszenia"
-                radius="lg"
-                variant="bordered"
-              >
-                Przeglądaj zgłoszenia
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
-
-        <Card className="border border-default-100 bg-default-50">
-          <CardHeader className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <h2 className="text-xl font-semibold text-default-900">
-                Nowe zgłoszenia w okolicy
-              </h2>
-              <p className="text-sm text-default-500">
-                {hasActiveAssignment
-                  ? "Najpierw zakończ aktywne zgłoszenie, aby przyjąć kolejne."
-                  : "Wybierz zadanie, które odpowiada Twoim kompetencjom."}
-              </p>
-            </div>
-          </CardHeader>
-          <Divider />
-          <CardBody className="flex flex-col gap-4">
-            {pendingRequests.map((request) => (
-              <div
-                key={request.id}
-                className="rounded-2xl bg-background p-4 shadow-sm"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-medium text-default-800">
-                    {request.senior}
-                  </span>
-                  <Chip size="sm" variant="flat">
-                    {request.city}
-                  </Chip>
-                </div>
-                <p className="mt-2 text-sm text-default-600">
-                  {request.summary}
-                </p>
-                <p className="text-xs text-default-400">
-                  Zgłoszenie dodane: {request.submittedAgo}
-                </p>
-                <Button
-                  as={NextLink}
-                  className="mt-3"
-                  color="primary"
-                  href={`/wolontariusz/zgloszenia?podejmij=${request.id}`}
-                  isDisabled={hasActiveAssignment}
-                  radius="lg"
-                  size="sm"
-                >
-                  {hasActiveAssignment ? "Masz aktywne zgłoszenie" : "Podejmij"}
-                </Button>
-              </div>
-            ))}
-            {pendingRequests.length === 0 ? (
-              <div className="rounded-2xl border border-default-100 bg-background p-6 text-center text-sm text-default-500">
-                Wszystkie zgłoszenia zostały podjęte. Wróć tu później.
-              </div>
-            ) : null}
-          </CardBody>
-          <Divider />
-          <CardFooter>
             <Button
               as={NextLink}
+              color="primary"
               href="/wolontariusz/zgloszenia"
-              radius="lg"
-              variant="bordered"
+              variant="flat"
             >
-              Przeglądaj wszystkie zgłoszenia
+              Zobacz wszystkie
             </Button>
-          </CardFooter>
-        </Card>
-      </section>
+          </div>
 
-      <section className="grid gap-6">
-        <Card className="border border-default-100">
-          <CardHeader className="flex flex-col gap-1">
-            <h2 className="text-xl font-semibold text-default-900">
-              Zgłoszenia do kontaktu
-            </h2>
-            <p className="text-sm text-default-500">
-              Te zgłoszenia wymagają krótkiego telefonu, aby doprecyzować temat
-              przed przydzieleniem wolontariusza.
-            </p>
-          </CardHeader>
-          <Divider />
-          <CardBody className="grid gap-4 md:grid-cols-2">
-            {contactRequestsPreview.map((request) => (
-              <div
-                key={request.id}
-                className="rounded-2xl border border-default-100 bg-default-50 p-5"
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-semibold text-default-700">
-                    {request.senior}
-                  </span>
-                  <span className="text-xs text-default-400">
-                    Dodano: {request.submittedAgo}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-default-600">
-                  {request.summary}
-                </p>
-                <p className="mt-2 text-xs text-default-500">
-                  Telefon: {request.phone}
-                </p>
-                <Button
-                  as={NextLink}
-                  className="mt-3"
-                  href={`/wolontariusz/zgloszenie/${request.id}`}
-                  radius="lg"
-                  size="sm"
-                  variant="bordered"
+          {isLoading ? (
+            <div>Ładowanie...</div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {recentReports.map((request) => (
+                <Card
+                  key={request.id}
+                  className="border border-default-100 shadow-sm"
                 >
-                  Otwórz szczegóły
-                </Button>
-              </div>
-            ))}
-            {contactRequestsPreview.length === 0 ? (
-              <div className="rounded-2xl border border-default-100 bg-default-50 p-6 text-center text-sm text-default-500">
-                Aktualnie brak zgłoszeń do kontaktu.
-              </div>
-            ) : null}
-          </CardBody>
-          <Divider />
-          <CardFooter className="flex justify-end">
-            <Button
-              as={NextLink}
-              href="/wolontariusz/zgloszenia#kontakt"
-              radius="lg"
-              variant="bordered"
-            >
-              Wszystkie zgłoszenia do kontaktu
-            </Button>
-          </CardFooter>
-        </Card>
-      </section>
+                  <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-default-900">
+                          {request.full_name}
+                        </span>
+                        <Chip size="sm" variant="flat">
+                          {request.city}
+                        </Chip>
+                      </div>
+                      <p className="text-sm text-default-500">
+                        {request.problem}
+                      </p>
+                    </div>
+                    <Button
+                      as={NextLink}
+                      color="primary"
+                      href={`/wolontariusz/zgloszenie/${request.id}`}
+                      radius="full"
+                      size="sm"
+                    >
+                      Szczegóły
+                    </Button>
+                  </CardBody>
+                </Card>
+              ))}
+              {recentReports.length === 0 && (
+                <div className="text-center text-default-500">
+                  Brak nowych zgłoszeń.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-6">
+          <h2 className="text-xl font-semibold text-default-900">
+            Twoja aktywność
+          </h2>
+          <Card className="border border-default-100 bg-default-50 shadow-none">
+            <CardBody className="p-6 text-center text-sm text-default-500">
+              Tu pojawi się historia Twoich rozmów i rozwiązanych problemów.
+            </CardBody>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
