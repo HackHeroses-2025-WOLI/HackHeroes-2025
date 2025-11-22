@@ -13,6 +13,16 @@ from pydantic import (
     model_validator,
 )
 
+from .limits import (
+    ACCOUNT_CITY_MAX,
+    ACCOUNT_CITY_MIN,
+    ACCOUNT_FULL_NAME_MAX,
+    ACCOUNT_FULL_NAME_MIN,
+    PASSWORD_MAX_LENGTH,
+    PASSWORD_MIN_LENGTH,
+    PHONE_DIGITS,
+)
+
 
 class AvailabilitySlot(BaseModel):
     """Structured availability slot description."""
@@ -84,10 +94,20 @@ class AccountBase(BaseModel):
     """Base account schema."""
 
     email: EmailStr = Field(..., description="Email used as login")
-    full_name: str = Field(..., min_length=3, max_length=100)
-    phone: Optional[str] = Field(None, max_length=9, description="9-digit phone number")
-    city: Optional[str] = Field(None, max_length=100)
-    availability_type: int = Field(..., description="ID of availability type")
+    full_name: str = Field(
+        ...,
+        min_length=ACCOUNT_FULL_NAME_MIN,
+        max_length=ACCOUNT_FULL_NAME_MAX,
+    )
+    phone: Optional[str] = Field(
+        None,
+        description=f"Phone number must be {PHONE_DIGITS} digits",
+    )
+    city: Optional[str] = Field(
+        None,
+        min_length=ACCOUNT_CITY_MIN,
+        max_length=ACCOUNT_CITY_MAX,
+    )
 
 
 class AccountCreate(AccountBase):
@@ -95,36 +115,26 @@ class AccountCreate(AccountBase):
 
     password: str = Field(
         ...,
-        min_length=8,
-        max_length=100,
+        min_length=PASSWORD_MIN_LENGTH,
+        max_length=PASSWORD_MAX_LENGTH,
         description="Password (min 8 characters, letters + digits)",
     )
-    availability: Optional[List[AvailabilitySlot]] = Field(
-        None,
-        description="Weekly availability schedule",
+    is_active: bool = Field(
+        False,
+        description="Manual availability override toggle",
     )
-    availability_json: Optional[str] = Field(None, description="JSON with availability settings")
 
     @field_validator("password")
     @classmethod
     def password_strength(cls, value: str) -> str:
         """Validate password strength."""
 
-        if len(value) < 8:
-            raise ValueError("Password must be at least 8 characters")
+        if len(value) < PASSWORD_MIN_LENGTH:
+            raise ValueError(f"Password must be at least {PASSWORD_MIN_LENGTH} characters")
         if not any(char.isdigit() for char in value):
             raise ValueError("Password must contain at least one digit")
         if not any(char.isalpha() for char in value):
             raise ValueError("Password must contain at least one letter")
-        return value
-
-    @field_validator("availability_json")
-    @classmethod
-    def validate_json(cls, value: Optional[str]) -> Optional[str]:
-        """Validate JSON string."""
-
-        if value:
-            deserialize_availability(value)
         return value
 
     @field_validator("phone")
@@ -132,27 +142,44 @@ class AccountCreate(AccountBase):
     def validate_phone(cls, value: Optional[str]) -> Optional[str]:
         """Validate Polish phone number."""
 
-        if value and (not value.isdigit() or len(value) != 9):
-            raise ValueError("Phone number must be 9 digits")
+        if value and (not value.isdigit() or len(value) != PHONE_DIGITS):
+            raise ValueError(f"Phone number must be {PHONE_DIGITS} digits")
         return value
 
 
 class AccountUpdate(BaseModel):
     """Schema for updating account."""
 
-    full_name: Optional[str] = Field(None, min_length=3, max_length=100)
-    phone: Optional[str] = Field(None, max_length=9, description="9-digit phone number")
-    city: Optional[str] = Field(None, max_length=100)
-    availability_type: Optional[int] = None
+    full_name: Optional[str] = Field(
+        None,
+        min_length=ACCOUNT_FULL_NAME_MIN,
+        max_length=ACCOUNT_FULL_NAME_MAX,
+    )
+    phone: Optional[str] = Field(
+        None,
+        description=f"Phone number must be {PHONE_DIGITS} digits",
+    )
+    city: Optional[str] = Field(
+        None,
+        min_length=ACCOUNT_CITY_MIN,
+        max_length=ACCOUNT_CITY_MAX,
+    )
     availability: Optional[List[AvailabilitySlot]] = None
-    availability_json: Optional[str] = None
-    password: Optional[str] = Field(None, min_length=8)
+    password: Optional[str] = Field(
+        None,
+        min_length=PASSWORD_MIN_LENGTH,
+        max_length=PASSWORD_MAX_LENGTH,
+    )
+    is_active: Optional[bool] = Field(
+        None,
+        description="Manual availability override toggle",
+    )
 
     @field_validator("phone")
     @classmethod
     def validate_phone(cls, value: Optional[str]) -> Optional[str]:
-        if value and (not value.isdigit() or len(value) != 9):
-            raise ValueError("Phone number must be 9 digits")
+        if value and (not value.isdigit() or len(value) != PHONE_DIGITS):
+            raise ValueError(f"Phone number must be {PHONE_DIGITS} digits")
         return value
 
     @field_validator("password")
@@ -162,12 +189,7 @@ class AccountUpdate(BaseModel):
             return value
         return AccountCreate.password_strength(value)
 
-    @field_validator("availability_json")
-    @classmethod
-    def validate_json(cls, value: Optional[str]) -> Optional[str]:
-        if value:
-            deserialize_availability(value)
-        return value
+    # raw availability JSON is not accepted by the update endpoint anymore
 
 
 class AccountOut(AccountBase):
@@ -176,7 +198,8 @@ class AccountOut(AccountBase):
     resolved_cases: int
     resolved_cases_this_year: int
     active_report: Optional[int] = None
-    availability_json: Optional[str] = None
+    availability_json: Optional[str] = Field(default=None, exclude=True)
+    is_active: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -193,7 +216,7 @@ class AccountOut(AccountBase):
     def is_active_now(self) -> bool:
         """Return whether the volunteer is active right now."""
 
-        return is_active_now_from_slots(self.availability)
+        return self.is_active or is_active_now_from_slots(self.availability)
 
 
 class AccountLogin(BaseModel):
@@ -211,6 +234,16 @@ class ActiveVolunteerOut(BaseModel):
     phone: Optional[str] = None
     city: Optional[str] = None
     availability: List[AvailabilitySlot] = Field(default_factory=list)
-    is_active_now: bool = False
+    is_active: bool = Field(False, description="Manual override flag")
+    schedule_active_now: bool = Field(False, description="Currently active per schedule")
+    is_active_now: bool = Field(False, description="True if manual or schedule active")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ActiveVolunteersResponse(BaseModel):
+    """Aggregated response for the public volunteers endpoint."""
+
+    total_manual_active: int
+    total_scheduled_active: int
+    volunteers: List[ActiveVolunteerOut]

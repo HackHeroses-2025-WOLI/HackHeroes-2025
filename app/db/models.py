@@ -21,21 +21,6 @@ class User(Base):
         return f"<User(id={self.id}, username='{self.username}')>"
 
 
-class AvailabilityType(Base):
-    """Availability type (accessibility type)."""
-    __tablename__ = "typ_dostepnosci"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column("nazwa", String, unique=True, nullable=False)
-    description = Column("opis", String)
-    
-    # Relationships
-    accounts = relationship("Account", back_populates="availability_type_rel")
-    
-    def __repr__(self):
-        return f"<AvailabilityType(id={self.id}, name='{self.name}')>"
-
-
 class ReportType(Base):
     """Report type."""
     __tablename__ = "typ_zgloszenia"
@@ -62,6 +47,7 @@ class Account(Base):
     full_name = Column("imie_nazwisko", String, nullable=False)
     phone = Column("nr_tel", String(9), nullable=True)
     password_hash = Column("hash_hasla", String, nullable=False)
+    is_active = Column(Boolean, default=False, nullable=False)
     
     # Location
     city = Column("miejscowosc", String, nullable=True)
@@ -76,13 +62,15 @@ class Account(Base):
         ForeignKey("zgloszenia.id", use_alter=True, name="fk_konta_zgloszenia", ondelete="SET NULL"),
         nullable=True,
     )
-    availability_type = Column(Integer, ForeignKey("typ_dostepnosci.id"), nullable=False)
-    
     # JSON field for additional accessibility settings
-    availability_json = Column("dostepnosc_json", Text, nullable=True)  # JSON string
+    availability_json = Column(
+        "dostepnosc_json",
+        Text,
+        nullable=False,
+        default="[]",
+    )  # JSON string stored for volunteers' schedules
     
     # Relationships
-    availability_type_rel = relationship("AvailabilityType", back_populates="accounts")
     active_report_rel = relationship(
         "Report",
         foreign_keys=[active_report],

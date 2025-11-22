@@ -35,7 +35,6 @@ def setup_database():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with TestingSessionLocal() as db:
-        db.add(models.AvailabilityType(id=1, name="Standard", description="Default accessibility type"))
         db.add_all(
             [
                 models.ReportType(id=1, name="Aplikacje", description="Problemy z aplikacjami"),
@@ -51,22 +50,12 @@ def setup_database():
 
 
 def _account_payload(**overrides):
-    current_day = datetime.now().weekday()
     payload = {
         "email": "jan.kowalski@example.com",
         "password": "SecurePass123",
         "full_name": "Jan Kowalski",
         "phone": "123456789",
         "city": "Warsaw",
-        "availability_type": 1,
-        "availability": [
-            {
-                "day_of_week": current_day,
-                "start_time": "00:00",
-                "end_time": "23:59",
-                "is_active": True,
-            }
-        ],
     }
     payload.update(overrides)
     return payload
@@ -178,12 +167,6 @@ def test_register_account_requires_strong_password():
     assert "Password" in response.json()["detail"][0]["msg"]
 
 
-def test_register_account_rejects_bad_json_payload():
-    response = _register_account(availability_json="{bad json}")
-    assert response.status_code == 422
-    assert "availability_json" in response.json()["detail"][0]["loc"]
-
-
 def test_register_account_rejects_invalid_phone_number():
     response = _register_account(phone="12345abc")
     assert response.status_code == 422
@@ -263,25 +246,86 @@ def test_get_account_by_email_returns_404_for_missing():
 
 def test_public_active_volunteers_endpoint():
     today = datetime.now().weekday()
-    _register_account(
-        email="wolontariusz@example.com",
-        availability=[
-            {
-                "day_of_week": today,
-                "start_time": "00:00",
-                "end_time": "23:59",
-                "is_active": True,
-            }
-        ],
+    volunteer_email = "wolontariusz@example.com"
+    _register_account(email=volunteer_email)
+
+    login = _login_account(email=volunteer_email)
+    token = login.json()["access_token"]
+
+    update_response = client.put(
+        "/api/v1/accounts/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "availability": [
+                {
+                    "day_of_week": today,
+                    "start_time": "00:00",
+                    "end_time": "23:59",
+                    "is_active": True,
+                }
+            ]
+        },
     )
+    assert update_response.status_code == 200
 
     response = client.get("/api/v1/accounts/volunteers/active")
     assert response.status_code == 200
-    volunteers = response.json()
-    assert any(v["email"] == "wolontariusz@example.com" for v in volunteers)
-    first = next(v for v in volunteers if v["email"] == "wolontariusz@example.com")
+    payload = response.json()
+    volunteers = payload["volunteers"]
+    assert payload["total_scheduled_active"] >= 1
+    assert any(v["email"] == volunteer_email for v in volunteers)
+    first = next(v for v in volunteers if v["email"] == volunteer_email)
     assert first["is_active_now"] is True
+    assert first["schedule_active_now"] is True
     assert first["availability"][0]["day_of_week"] == today
+
+
+def test_manual_active_override_makes_volunteer_visible_without_schedule():
+    email = "manual@example.com"
+    _register_account(email=email)
+
+    login = _login_account(email=email)
+    token = login.json()["access_token"]
+
+    update_response = client.put(
+        "/api/v1/accounts/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"is_active": True},
+    )
+    assert update_response.status_code == 200
+
+    response = client.get("/api/v1/accounts/volunteers/active")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_manual_active"] >= 1
+    volunteers = payload["volunteers"]
+    first = next(v for v in volunteers if v["email"] == email)
+    assert first["is_active"] is True
+    assert first["schedule_active_now"] is False
+    assert first["is_active_now"] is True
+
+
+def test_update_account_returns_manual_flag_state():
+    email = "toggle@example.com"
+    _register_account(email=email)
+    login = _login_account(email=email)
+    token = login.json()["access_token"]
+
+    response = client.put(
+        "/api/v1/accounts/me",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"is_active": True},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_active"] is True
+
+    me = client.get(
+        "/api/v1/accounts/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert me.status_code == 200
+    assert me.json()["is_active"] is True
 
 
 def test_create_report_success():

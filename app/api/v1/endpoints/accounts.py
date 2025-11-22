@@ -1,7 +1,6 @@
 """Account endpoints."""
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
 
 from app.db.database import get_db
 from app.schemas import (
@@ -10,9 +9,9 @@ from app.schemas import (
     AccountUpdate,
     AccountLogin,
     ActiveVolunteerOut,
+    ActiveVolunteersResponse,
     Token,
 )
-from app.schemas.account import deserialize_availability
 from app.services.account_service import AccountService
 from app.core.security import create_access_token, get_current_account
 from app.db.models import Account
@@ -38,8 +37,7 @@ def register_account(
     - **full_name**: name and surname
     - **phone**: 9-digit phone number (optional)
     - **city**: city (optional)
-    - **availability_type**: ID of availability type
-    - **availability_json**: JSON with availability settings (optional)
+    Availability data is no longer collected during registration and defaults to empty.
     """
     account = AccountService.create_account(db, account_data)
     return account
@@ -91,31 +89,34 @@ def get_my_account(
 
 @router.get(
     "/volunteers/active",
-    response_model=List[ActiveVolunteerOut],
+    response_model=ActiveVolunteersResponse,
     summary="Public: active volunteers",
-    description="List volunteers that are currently active based on their availability"
+    description="List volunteers that are currently active manually or via their schedule"
 )
 def list_active_volunteers(db: Session = Depends(get_db)):
     """Return non-sensitive data for currently active volunteers."""
 
-    volunteers = AccountService.get_active_volunteers(db)
-    public_payload: List[ActiveVolunteerOut] = []
-    for volunteer in volunteers:
-        try:
-            slots = deserialize_availability(volunteer.availability_json)
-        except ValueError:
-            slots = []
+    volunteer_snapshots, manual_count, schedule_count = AccountService.get_active_volunteers(db)
+    public_payload: list[ActiveVolunteerOut] = []
+    for snapshot in volunteer_snapshots:
+        account = snapshot.account
         public_payload.append(
             ActiveVolunteerOut(
-                email=volunteer.email,
-                full_name=volunteer.full_name,
-                phone=volunteer.phone,
-                city=volunteer.city,
-                availability=slots,
-                is_active_now=True,
+                email=account.email,
+                full_name=account.full_name,
+                phone=account.phone,
+                city=account.city,
+                availability=snapshot.availability,
+                is_active=snapshot.manual_active,
+                schedule_active_now=snapshot.schedule_active,
+                is_active_now=snapshot.manual_active or snapshot.schedule_active,
             )
         )
-    return public_payload
+    return ActiveVolunteersResponse(
+        total_manual_active=manual_count,
+        total_scheduled_active=schedule_count,
+        volunteers=public_payload,
+    )
 
 
 @router.put(

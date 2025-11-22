@@ -1,22 +1,6 @@
-"""Availability type (accessibility) schemas."""
-from typing import Optional
+"""Deprecated module retained for backward compatibility imports.
 
-from pydantic import BaseModel, ConfigDict, Field
+Availability types have been removed from the system.
+"""
 
-
-class AvailabilityTypeBase(BaseModel):
-    """Base availability type schema."""
-    name: str = Field(..., min_length=2, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-
-
-class AvailabilityTypeCreate(AvailabilityTypeBase):
-    """Schema for creating availability type."""
-    pass
-
-
-class AvailabilityTypeOut(AvailabilityTypeBase):
-    """Schema for availability type output."""
-    id: int
-
-    model_config = ConfigDict(from_attributes=True)
+__all__: list[str] = []

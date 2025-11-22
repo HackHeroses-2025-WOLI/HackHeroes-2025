@@ -7,15 +7,12 @@ from app.schemas.account import (
     AccountUpdate,
     AccountLogin,
     ActiveVolunteerOut,
+    ActiveVolunteersResponse,
 )
 from app.schemas.report import (
     ReportCreate,
     ReportOut,
     ReportUpdate,
-)
-from app.schemas.availability_type import (
-    AvailabilityTypeCreate,
-    AvailabilityTypeOut
 )
 from app.schemas.report_type import (
     ReportTypeCreate,
@@ -26,7 +23,7 @@ __all__ = [
     "UserCreate", "UserOut", "UserUpdate",
     "Token", "TokenPayload",
     "AccountCreate", "AccountOut", "AccountUpdate", "AccountLogin", "ActiveVolunteerOut",
+    "ActiveVolunteersResponse",
     "ReportCreate", "ReportOut", "ReportUpdate",
-    "AvailabilityTypeCreate", "AvailabilityTypeOut",
     "ReportTypeCreate", "ReportTypeOut"
 ]

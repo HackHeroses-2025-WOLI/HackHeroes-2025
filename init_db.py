@@ -1,6 +1,6 @@
 """Initialize database tables."""
 from app.db.database import engine, Base
-from app.db.models import User, Account, Report, AvailabilityType, ReportType
+from app.db.models import User, Account, Report, ReportType
 
 
 def init_db():

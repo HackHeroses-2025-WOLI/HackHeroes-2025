@@ -1,6 +1,7 @@
 """Account service for business logic."""
+from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -17,6 +18,16 @@ from app.core.security import get_password_hash, verify_password
 from app.core.exceptions import UserAlreadyExistsException, InvalidCredentialsException
 
 
+@dataclass
+class VolunteerActivity:
+    """Activity snapshot for a single volunteer."""
+
+    account: Account
+    availability: List[AvailabilitySlot]
+    manual_active: bool
+    schedule_active: bool
+
+
 class AccountService:
     """Service for account-related operations."""
     
@@ -29,7 +40,9 @@ class AccountService:
 
         if schedule is not None:
             return serialize_availability(schedule)
-        return raw_json
+        if raw_json is not None:
+            return raw_json
+        return "[]"
 
     @staticmethod
     def get_account_by_email(db: Session, email: str) -> Optional[Account]:
@@ -59,11 +72,8 @@ class AccountService:
             phone=account_data.phone,
             password_hash=hashed_password,
             city=account_data.city,
-            availability_type=account_data.availability_type,
-            availability_json=AccountService._availability_to_json(
-                account_data.availability,
-                account_data.availability_json,
-            ),
+            is_active=account_data.is_active,
+            availability_json="[]",
             resolved_cases=0,
             resolved_cases_this_year=0
         )
@@ -101,15 +111,17 @@ class AccountService:
             account.phone = account_data.phone
         if account_data.city is not None:
             account.city = account_data.city
-        if account_data.availability_type is not None:
-            account.availability_type = account_data.availability_type
-        if account_data.availability is not None or account_data.availability_json is not None:
+        # Only allow updating availability via structured `availability` on the
+        # update endpoint. Raw JSON is no longer accepted for updates.
+        if account_data.availability is not None:
             account.availability_json = AccountService._availability_to_json(
                 account_data.availability,
-                account_data.availability_json,
+                None,
             )
         if account_data.password is not None:
             account.password_hash = get_password_hash(account_data.password)
+        if account_data.is_active is not None:
+            account.is_active = account_data.is_active
         
         db.commit()
         db.refresh(account)
@@ -146,17 +158,36 @@ class AccountService:
     def get_active_volunteers(
         db: Session,
         reference_dt: Optional[datetime] = None
-    ) -> List[Account]:
-        """Return accounts that are active for the provided timestamp."""
+    ) -> Tuple[List[VolunteerActivity], int, int]:
+        """Return active volunteers along with counters.
+
+        Returns:
+            tuple[list[VolunteerActivity], manual_active_count, schedule_active_count]
+        """
 
         moment = reference_dt or datetime.now()
         accounts = db.query(Account).all()
-        active: List[Account] = []
+        active: List[VolunteerActivity] = []
+        manual_count = 0
+        schedule_count = 0
         for account in accounts:
             try:
                 slots = deserialize_availability(account.availability_json)
             except ValueError:
-                continue
-            if is_active_now_from_slots(slots, moment):
-                active.append(account)
-        return active
+                slots = []
+            schedule_active = is_active_now_from_slots(slots, moment)
+            manual_active = bool(account.is_active)
+            if manual_active:
+                manual_count += 1
+            if schedule_active:
+                schedule_count += 1
+            if manual_active or schedule_active:
+                active.append(
+                    VolunteerActivity(
+                        account=account,
+                        availability=slots,
+                        manual_active=manual_active,
+                        schedule_active=schedule_active,
+                    )
+                )
+        return active, manual_count, schedule_count

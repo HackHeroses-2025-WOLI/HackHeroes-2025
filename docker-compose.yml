@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: hackheroes-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Always store SQLite DB inside the mounted volume when running in a container
+      DATABASE_URL: "sqlite:////app/data/users.db"
+    volumes:
+      # Use a host bind mount for local development so the DB file is writable
+      - ./data:/app/data
+    restart: unless-stopped
+
+# Note: we use a host bind mount (./data) for development so the SQLite DB file
+# remains on the host and permissions are easier to manage. For remote/production
+# deployments you can switch to a named volume or use a real DB server (Postgres).

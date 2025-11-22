@@ -97,6 +97,17 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 python init_db.py
 ```
 
+## 🐳 Docker
+
+1. Copy `.env.example` to `.env` and set a secure `SECRET_KEY` (plus any other overrides).
+2. Build and run the stack:
+
+```bash
+docker compose up --build
+```
+
+Docker Compose automatically injects the values from `.env` (they are *not* baked into the image) and mounts a named volume at `/app/data` so the SQLite database survives container restarts.
+
 ## 🚀 Quick Start Commands
 
 ```powershell
