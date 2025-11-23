@@ -14,16 +14,17 @@ import { Alert } from "@heroui/alert";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useRequireAuth } from "@/hooks/use-require-auth";
 import { api } from "@/lib/api";
+import { ApiError } from "@/lib/api-error";
 import type { AvailabilitySlot } from "@/types";
 
 const DAYS_OF_WEEK = [
-  { value: "1", label: "Poniedziałek", shortLabel: "Pn" },
-  { value: "2", label: "Wtorek", shortLabel: "Wt" },
-  { value: "3", label: "Środa", shortLabel: "Śr" },
-  { value: "4", label: "Czwartek", shortLabel: "Cz" },
-  { value: "5", label: "Piątek", shortLabel: "Pt" },
-  { value: "6", label: "Sobota", shortLabel: "So" },
-  { value: "7", label: "Niedziela", shortLabel: "Nd" },
+  { value: "0", label: "Poniedziałek", shortLabel: "Pn" },
+  { value: "1", label: "Wtorek", shortLabel: "Wt" },
+  { value: "2", label: "Środa", shortLabel: "Śr" },
+  { value: "3", label: "Czwartek", shortLabel: "Cz" },
+  { value: "4", label: "Piątek", shortLabel: "Pt" },
+  { value: "5", label: "Sobota", shortLabel: "So" },
+  { value: "6", label: "Niedziela", shortLabel: "Nd" },
 ] as const;
 
 const DEFAULT_TIME_RANGE = {
@@ -115,6 +116,9 @@ const timeToString = (value?: any) => {
   return "";
 };
 
+const collapseProfileInput = (value: string) => value.replace(/\s+/g, " ").replace(/^\s+/, "");
+const trimProfileValue = (value: string) => value.replace(/\s+/g, " ").trim();
+
 export default function VolunteerSettingsPage() {
   useRequireAuth();
   const { user, isLoading: authLoading, refreshProfile } = useAuth();
@@ -135,17 +139,15 @@ export default function VolunteerSettingsPage() {
   const [selectedDays, setSelectedDays] = useState<Set<string>>(
     () => new Set(),
   );
-  const [availabilityTypes, setAvailabilityTypes] = useState<any[] | null>(
-    null,
-  );
-  const [selectedAvailabilityType, setSelectedAvailabilityType] =
-    useState<number | null>(null);
   const [timeRange, setTimeRange] = useState({ ...DEFAULT_TIME_RANGE });
-  const [isActiveNow, setIsActiveNow] = useState(false);
+  const [isManualActive, setIsManualActive] = useState(false);
   const [availabilityError, setAvailabilityError] = useState<string | null>(
     null,
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [profileFieldErrors, setProfileFieldErrors] = useState<
+    Partial<Record<"fullName" | "city", string>>
+  >({});
 
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -189,17 +191,41 @@ export default function VolunteerSettingsPage() {
           start: slots[0].start_time ?? DEFAULT_TIME_RANGE.start,
           end: slots[0].end_time ?? DEFAULT_TIME_RANGE.end,
         });
-        setIsActiveNow(Boolean(user.is_active_now ?? slots.some((slot) => slot.is_active)));
+        setIsManualActive(Boolean(user.is_active));
+        // availability_type no longer editable from UI
       } else {
         setSelectedDays(new Set());
         setTimeRange({ ...DEFAULT_TIME_RANGE });
-        setIsActiveNow(Boolean(user.is_active_now));
+        setIsManualActive(Boolean(user.is_active));
+        // availability_type no longer editable from UI
       }
     }
   }, [user]);
 
+
+  const clearProfileFieldError = (field: "fullName" | "city") => {
+    setProfileFieldErrors((prev) => {
+      if (!prev[field]) {
+        return prev;
+      }
+
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   const handleProfileChange = (field: keyof typeof profile, value: string) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
+    const nextValue =
+      field === "fullName" || field === "city"
+        ? collapseProfileInput(value)
+        : value;
+
+    setProfile((prev) => ({ ...prev, [field]: nextValue }));
+
+    if (field === "fullName" || field === "city") {
+      clearProfileFieldError(field);
+    }
   };
 
   const handleDaySelection = (dayValue: string, nextValue: boolean) => {
@@ -248,6 +274,7 @@ export default function VolunteerSettingsPage() {
     setPasswordError(null);
     setSubmitError(null);
     setAvailabilityError(null);
+    setProfileFieldErrors({});
 
     const isChangingPassword =
       passwords.current || passwords.next || passwords.confirm;
@@ -269,34 +296,43 @@ export default function VolunteerSettingsPage() {
     }
 
     // Validate required profile values
-    if (!profile.city || profile.city.trim().length === 0) {
-      setSubmitError("Wpisz miejscowość.");
-      setIsSaving(false);
+    const nextProfileErrors: Partial<Record<"fullName" | "city", string>> = {};
+    let hasErrors = false;
 
-      return;
+    if (!profile.fullName.trim()) {
+      nextProfileErrors.fullName = "Podaj imię i nazwisko.";
+      hasErrors = true;
     }
+
+    if (!profile.city || profile.city.trim().length === 0) {
+      nextProfileErrors.city = "Wpisz miejscowość.";
+      hasErrors = true;
+    }
+
+    if (Object.keys(nextProfileErrors).length) {
+      setProfileFieldErrors(nextProfileErrors);
+    }
+
+    let availabilityIssue: string | null = null;
 
     if (selectedDays.size === 0) {
-      setAvailabilityError("Wybierz przynajmniej jeden dzień tygodnia.");
-      setIsSaving(false);
-
-      return;
-    }
-
-    if (
+      availabilityIssue = "Wybierz przynajmniej jeden dzień tygodnia.";
+    } else if (
       !TIME_PATTERN.test(timeRange.start) ||
       !TIME_PATTERN.test(timeRange.end)
     ) {
-      setAvailabilityError("Godziny wpisz w formacie HH:MM.");
-      setIsSaving(false);
-
-      return;
+      availabilityIssue = "Godziny wpisz w formacie HH:MM.";
+    } else if (toMinutes(timeRange.start) >= toMinutes(timeRange.end)) {
+      availabilityIssue = "Zakres godzin musi być poprawny.";
     }
 
-    if (toMinutes(timeRange.start) >= toMinutes(timeRange.end)) {
-      setAvailabilityError("Zakres godzin musi być poprawny.");
-      setIsSaving(false);
+    if (availabilityIssue) {
+      setAvailabilityError(availabilityIssue);
+      hasErrors = true;
+    }
 
+    if (hasErrors) {
+      setIsSaving(false);
       return;
     }
 
@@ -312,11 +348,14 @@ export default function VolunteerSettingsPage() {
     }));
 
     try {
+      const normalizedFullName = trimProfileValue(profile.fullName);
+      const normalizedCity = trimProfileValue(profile.city ?? "");
+
       await api.accounts.update({
-        full_name: profile.fullName,
-        city: profile.city ?? null,
+        full_name: normalizedFullName,
+        city: normalizedCity || null,
         availability: availabilityPayload,
-        is_active_now: isActiveNow,
+        is_active: isManualActive,
       });
 
       if (isChangingPassword) {
@@ -327,11 +366,36 @@ export default function VolunteerSettingsPage() {
       router.push("/wolontariusz/panel");
     } catch (error) {
       console.error("Failed to save settings", error);
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : "Nie udało się zapisać zmian.",
-      );
+
+      if (error instanceof ApiError) {
+        const apiProfileErrors: Partial<Record<"fullName" | "city", string>> = {};
+
+        if (error.fieldErrors.full_name) {
+          apiProfileErrors.fullName = error.fieldErrors.full_name;
+        }
+
+        if (error.fieldErrors.city) {
+          apiProfileErrors.city = error.fieldErrors.city;
+        }
+
+        if (Object.keys(apiProfileErrors).length) {
+          setProfileFieldErrors(apiProfileErrors);
+        }
+
+        const availabilityFieldError =
+          error.fieldErrors.availability ||
+          Object.entries(error.fieldErrors).find(([key]) =>
+            key.startsWith("availability"),
+          )?.[1];
+
+        if (availabilityFieldError) {
+          setAvailabilityError(availabilityFieldError);
+        }
+
+        setSubmitError(error.message);
+      } else {
+        setSubmitError("Nie udało się zapisać zmian.");
+      }
     } finally {
       setIsSaving(false);
     }
@@ -368,6 +432,8 @@ export default function VolunteerSettingsPage() {
             <CardBody className="grid flex-1 gap-4 md:grid-rows-3">
               <Input
                 isRequired
+                errorMessage={profileFieldErrors.fullName}
+                isInvalid={Boolean(profileFieldErrors.fullName)}
                 label="Imię i nazwisko"
                 placeholder="np. Anna Kowalska"
                 value={profile.fullName}
@@ -389,6 +455,8 @@ export default function VolunteerSettingsPage() {
               <Input
                 label="Miejscowość"
                 isRequired
+                errorMessage={profileFieldErrors.city}
+                isInvalid={Boolean(profileFieldErrors.city)}
                 placeholder="np. Wrocław"
                 value={profile.city}
                 onValueChange={(value: string) =>
@@ -452,16 +520,16 @@ export default function VolunteerSettingsPage() {
           <CardBody className="flex flex-col gap-5">
             <div>
               <p className="text-sm font-medium text-default-700">
-                Dni tygodnia
+                Dni aktywności
               </p>
               <p className="text-xs text-default-500">
-                Zaznacz, kiedy możesz przyjmować nowe zgłoszenia.
+                Zaznacz te dni tygodnia, kiedy możesz przyjmować nowe zgłoszenia.
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
                 {DAYS_OF_WEEK.map((day) => (
                   <Checkbox
                     key={day.value}
-                    className="group inline-flex h-12 w-40 items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-default-700 transition-colors duration-150 ease-in-out hover:bg-default-100 data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary"
+                    className="group inline-flex h-12 w-40 items-center justify-center gap-2 rounded-full px-4 py-2 mx-[1px] text-sm font-medium text-default-700 transition-colors duration-150 ease-in-out hover:bg-default-100 data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary"
                     isSelected={selectedDays.has(day.value)}
                     onValueChange={(value: boolean) =>
                       handleDaySelection(day.value, value)
@@ -499,8 +567,8 @@ export default function VolunteerSettingsPage() {
               />
             </div>
             <Checkbox
-              isSelected={isActiveNow}
-              onValueChange={(value: boolean) => setIsActiveNow(value)}
+              isSelected={isManualActive}
+              onValueChange={(value: boolean) => setIsManualActive(value)}
             >
               Teraz jestem aktywny
             </Checkbox>
@@ -509,23 +577,6 @@ export default function VolunteerSettingsPage() {
                 {availabilityError}
               </Alert>
             ) : null}
-          </CardBody>
-        </Card>
-
-        <Card className="border border-default-100">
-          <CardHeader className="text-lg font-semibold text-default-900">
-            Powiadomienia
-          </CardHeader>
-          <Divider />
-          <CardBody className="flex flex-col gap-3 text-sm text-default-500">
-            <p>
-              Wkrótce wprowadzimy automatyczne przypominanie o nowych
-              zgłoszeniach i przyznanych GenPoints.
-            </p>
-            <p>
-              Na razie powiadomienia otrzymasz mailowo od koordynatora, gdy
-              tylko pojawi się zgłoszenie dopasowane do Twoich ustawień.
-            </p>
           </CardBody>
         </Card>
 

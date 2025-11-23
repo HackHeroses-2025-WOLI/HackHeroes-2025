@@ -6,12 +6,6 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 
 export type AppViewsCompact = boolean;
 
-export interface AvailabilityType {
-  id: number;
-  name: string;
-  description: string;
-}
-
 export interface AvailabilitySlot {
   day_of_week: number;
   start_time: string;
@@ -25,18 +19,26 @@ export interface ReportType {
   description?: string | null;
 }
 
+export interface AvailabilityType {
+  id: number;
+  name: string;
+  description?: string | null;
+}
+
 export interface Account {
   email: string;
   full_name: string;
   phone?: string | null;
   city?: string | null;
-  availability_type: number;
   resolved_cases: number;
   resolved_cases_this_year: number;
   active_report?: number | null;
   availability_json?: string | null;
   availability?: AvailabilitySlot[];
+  is_active?: boolean;
   is_active_now?: boolean;
+  schedule_active_now?: boolean;
+  availability_type?: number | null;
 }
 
 export interface Report {
@@ -85,17 +87,16 @@ export interface RegisterPayload {
   full_name: string;
   phone?: string;
   city?: string;
-  availability_type: number;
-  availability?: AvailabilitySlot[];
+  availability_type?: number | null;
 }
 
 export interface AccountUpdatePayload {
   full_name?: string;
   phone?: string | null;
   city?: string | null;
-  availability_type?: number;
   availability?: AvailabilitySlot[];
-  is_active_now?: boolean;
+  is_active?: boolean;
+  availability_type?: number | null;
 }
 
 export interface ActiveVolunteerProfile {
@@ -103,5 +104,13 @@ export interface ActiveVolunteerProfile {
   full_name: string;
   city?: string | null;
   availability?: AvailabilitySlot[];
+  is_active: boolean;
+  schedule_active_now: boolean;
   is_active_now: boolean;
+}
+
+export interface ActiveVolunteersSummary {
+  total_manual_active: number;
+  total_scheduled_active: number;
+  volunteers: ActiveVolunteerProfile[];
 }

@@ -14,7 +14,8 @@ import { Chip } from "@heroui/chip";
 
 import { getReportGroupMeta } from "@/config/report-groups";
 import { api } from "@/lib/api";
-import { ReportType, ReportStats } from "@/types";
+import { ApiError } from "@/lib/api-error";
+import { useReportTypes } from "@/hooks/use-report-types";
 
 const FORM_STORAGE_KEY = "genlink-help-form-v1";
 const PHONE_DIGIT_LIMIT = 9;
@@ -35,6 +36,30 @@ interface HelpFormState extends StoredForm {
   remember: boolean;
 }
 
+interface ActiveVolunteerStats {
+  activeCount: number;
+}
+
+const formatVolunteerLabel = (count: number) => {
+  const absCount = Math.abs(count);
+  const teens = absCount % 100;
+  const lastDigit = absCount % 10;
+
+  if (absCount === 1) {
+    return "aktywny wolontariusz";
+  }
+
+  if (teens >= 12 && teens <= 14) {
+    return "aktywnych wolontariuszy";
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return "aktywni wolontariusze";
+  }
+
+  return "aktywnych wolontariuszy";
+};
+
 const formatPhoneNumber = (value: string) => {
   const digitsOnly = value.replace(/\D/g, "").slice(0, PHONE_DIGIT_LIMIT);
   const parts: string[] = [];
@@ -47,6 +72,7 @@ const formatPhoneNumber = (value: string) => {
 };
 
 const sanitizeAgeInput = (value: string) => value.replace(/\D/g, "").slice(0, 3);
+const collapseInlineInput = (value: string) => value.replace(/\s+/g, " ").replace(/^\s+/, "");
 
 export interface HelpFormProps {
   wrapperClassName?: string;
@@ -84,29 +110,52 @@ export function HelpForm({
   >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [stats, setStats] = useState<ReportStats | null>(null);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
-  const [reportTypes, setReportTypes] = useState<ReportType[]>([]);
-  const [activeVolunteers, setActiveVolunteers] = useState<number | null>(null);
+  const [isLoadingVolunteerData, setIsLoadingVolunteerData] = useState(true);
+  const [volunteerStats, setVolunteerStats] =
+    useState<ActiveVolunteerStats | null>(null);
+  const {
+    reportTypes,
+    isLoading: isLoadingReportTypes,
+    error: reportTypesError,
+    refresh: refreshReportTypes,
+  } = useReportTypes();
 
   useEffect(() => {
-    const loadData = async () => {
+    let isMounted = true;
+
+    const loadMeta = async () => {
+      setIsLoadingVolunteerData(true);
+
       try {
-        const [statsData, typesData, volunteers] = await Promise.all([
-          api.reports.stats(),
-          api.types.reportTypes(),
-          api.accounts.activeVolunteers(),
-        ]);
-        setStats(statsData);
-        setReportTypes(typesData);
-        setActiveVolunteers(volunteers.length);
+        const volunteers = await api.accounts.activeVolunteers();
+        if (!isMounted) {
+          return;
+        }
+        const manual = volunteers.total_manual_active ?? 0;
+        const scheduled = volunteers.total_scheduled_active ?? 0;
+        const derivedFromList = (volunteers.volunteers ?? []).filter(
+          (volunteer) => volunteer.is_active_now,
+        ).length;
+        setVolunteerStats({
+          activeCount: Math.max(manual + scheduled, derivedFromList),
+        });
       } catch (error) {
-        console.error("Failed to load initial data", error);
+        console.error("Failed to load helper meta", error);
+        if (isMounted) {
+          setVolunteerStats(null);
+        }
       } finally {
-        setIsLoadingStats(false);
+        if (isMounted) {
+          setIsLoadingVolunteerData(false);
+        }
       }
     };
-    loadData();
+
+    loadMeta();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -134,6 +183,54 @@ export function HelpForm({
       // Ignore - silent fail for cached form data
     }
   }, []);
+
+  const canSelectProblemType =
+    !isLoadingReportTypes && !reportTypesError && reportTypes.length > 0;
+
+  const problemSelectPlaceholder = reportTypesError
+    ? "Nie udało się załadować kategorii"
+    : isLoadingReportTypes
+      ? "Ładowanie kategorii..."
+      : "Z czym potrzebujesz pomocy?";
+
+  const isProblemSelectDisabled = !canSelectProblemType;
+
+  const applyApiFieldErrors = (apiErrors: Record<string, string>) => {
+    const mappedErrors: Partial<Record<FormField, string>> = {};
+
+    Object.entries(apiErrors).forEach(([field, message]) => {
+      switch (field) {
+        case "full_name":
+          mappedErrors.name = message;
+          break;
+        case "phone":
+          mappedErrors.phone = message;
+          break;
+        case "address":
+          mappedErrors.address = message;
+          break;
+        case "city":
+          mappedErrors.city = message;
+          break;
+        case "age":
+          mappedErrors.age = message;
+          break;
+        case "report_details":
+          mappedErrors.details = message;
+          break;
+        case "report_type_id":
+        case "problem":
+          mappedErrors.problem = message;
+          break;
+        default:
+          break;
+      }
+    });
+
+    if (Object.keys(mappedErrors).length) {
+      setFieldErrors((prev) => ({ ...prev, ...mappedErrors }));
+    }
+  };
 
   const clearFieldError = (field: FormField) => {
     setFieldErrors((prev) => {
@@ -199,7 +296,9 @@ export function HelpForm({
         }
         case "problem": {
           if (!formData.problem) {
-            next.problem = "Wybierz rodzaj problemu";
+            next.problem = canSelectProblemType
+              ? "Wybierz rodzaj problemu"
+              : "Poczekaj na załadowanie kategorii zgłoszeń";
           } else {
             delete next.problem;
           }
@@ -252,7 +351,9 @@ export function HelpForm({
     }
 
     if (!formData.problem) {
-      newErrors.problem = "Wybierz rodzaj problemu";
+      newErrors.problem = canSelectProblemType
+        ? "Wybierz rodzaj problemu"
+        : "Poczekaj na załadowanie listy kategorii i spróbuj ponownie.";
     }
 
     if (!trimmedDetails) {
@@ -261,6 +362,11 @@ export function HelpForm({
 
     if (Number.isNaN(parsedAge) || parsedAge < 1) {
       newErrors.age = "Podaj poprawny wiek";
+    }
+
+    if (!canSelectProblemType) {
+      newErrors.problem =
+        newErrors.problem ?? "Lista kategorii zgłoszeń nie jest dostępna.";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -313,35 +419,35 @@ export function HelpForm({
 
       router.push(`./potwierdzenie`);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Nieoczekiwany błąd";
-      setSubmitError(message);
+      if (error instanceof ApiError) {
+        applyApiFieldErrors(error.fieldErrors);
+        setSubmitError(error.message);
+      } else {
+        const message =
+          error instanceof Error ? error.message : "Nieoczekiwany błąd";
+        setSubmitError(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const volunteerInfo = useMemo(() => {
-    if (isLoadingStats) {
+    if (isLoadingVolunteerData) {
       return "Trwa pobieranie...";
     }
 
-    const infoParts: string[] = [];
-
-    if (stats) {
-      infoParts.push(`${stats.total_reports} zgłoszeń w systemie`);
-    }
-
-    if (activeVolunteers !== null) {
-      infoParts.push(`${activeVolunteers} aktywnych wolontariuszy`);
-    }
-
-    if (!infoParts.length) {
+    if (!volunteerStats) {
       return "Dane chwilowo niedostępne";
     }
 
-    return infoParts.join(" • ");
-  }, [isLoadingStats, stats, activeVolunteers]);
+    if (volunteerStats.activeCount === 0) {
+      return "Brak aktywnych wolontariuszy";
+    }
+
+    const label = formatVolunteerLabel(volunteerStats.activeCount);
+    return `${volunteerStats.activeCount} ${label}`;
+  }, [isLoadingVolunteerData, volunteerStats]);
 
   return (
     <div
@@ -372,7 +478,7 @@ export function HelpForm({
               value={formData.name}
               onBlur={() => validateField("name")}
               onValueChange={(value) => {
-                setFormData((prev) => ({ ...prev, name: value }));
+                setFormData((prev) => ({ ...prev, name: collapseInlineInput(value) }));
                 clearFieldError("name");
               }}
             />
@@ -406,7 +512,7 @@ export function HelpForm({
               value={formData.address}
               onBlur={() => validateField("address")}
               onValueChange={(value) => {
-                setFormData((prev) => ({ ...prev, address: value }));
+                setFormData((prev) => ({ ...prev, address: collapseInlineInput(value) }));
                 clearFieldError("address");
               }}
             />
@@ -421,7 +527,7 @@ export function HelpForm({
               value={formData.city}
               onBlur={() => validateField("city")}
               onValueChange={(value) => {
-                setFormData((prev) => ({ ...prev, city: value }));
+                setFormData((prev) => ({ ...prev, city: collapseInlineInput(value) }));
                 clearFieldError("city");
               }}
             />
@@ -450,7 +556,9 @@ export function HelpForm({
               errorMessage={fieldErrors.problem}
               isInvalid={Boolean(fieldErrors.problem)}
               label="Wybierz rodzaj problemu"
-              placeholder="Z czym potrzebujesz pomocy?"
+              isDisabled={isProblemSelectDisabled}
+              isLoading={isLoadingReportTypes}
+              placeholder={problemSelectPlaceholder}
               selectedKeys={formData.problem ? [formData.problem] : []}
               onBlur={() => validateField("problem")}
               onSelectionChange={(keys) => {
@@ -468,13 +576,32 @@ export function HelpForm({
                 return (
                   <SelectItem
                     key={String(option.id)}
-                    description={groupMeta?.label}
+                    description={option.description ?? groupMeta?.label}
                   >
                     {option.name}
                   </SelectItem>
                 );
               })}
             </Select>
+            {reportTypesError ? (
+              <Alert color="warning" title="Nie udało się pobrać kategorii" variant="flat">
+                Spróbuj ponownie za chwilę.
+                <div className="mt-2">
+                  <Button
+                    size="sm"
+                    isDisabled={isLoadingReportTypes}
+                    variant="flat"
+                    onPress={() => {
+                      refreshReportTypes().catch(() => {
+                        /* błąd obsługiwany w stanie */
+                      });
+                    }}
+                  >
+                    Odśwież listę
+                  </Button>
+                </div>
+              </Alert>
+            ) : null}
             <Textarea
               className="w-full"
               isRequired

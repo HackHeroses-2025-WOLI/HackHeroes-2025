@@ -1,17 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { Input } from "@heroui/input";
-import { Select, SelectItem } from "@heroui/select";
 import { api } from "@/lib/api";
-import { AvailabilityType } from "@/types";
+import { ApiError } from "@/lib/api-error";
 import { Alert } from "@heroui/alert";
 
 const PHONE_DIGIT_LIMIT = 9;
+
+const collapseWhitespace = (value: string) => value.replace(/\s+/g, " ").trimStart();
+const trimForPayload = (value: string) => value.replace(/\s+/g, " ").trim();
+const sanitizeEmail = (value: string) => value.replace(/\s+/g, "");
 
 const formatPhoneNumber = (value: string) => {
   const digitsOnly = value.replace(/\D/g, "").slice(0, PHONE_DIGIT_LIMIT);
@@ -35,62 +38,112 @@ export default function VolunteerRegisterPage() {
     phone: "",
     city: "",
   });
-  const [availabilityTypes, setAvailabilityTypes] = useState<AvailabilityType[]>(
-    []
-  );
-  const [selectedAvailabilityType, setSelectedAvailabilityType] = useState<
-    string | undefined
-  >(undefined);
+  type RegisterField = keyof typeof form;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<RegisterField, string>>
+  >({});
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    api.types
-      .availability()
-      .then(setAvailabilityTypes)
-      .catch((err) => console.error("Failed to fetch availability types", err));
-  }, []);
-
   const handleChange = (field: keyof typeof form, value: string) => {
+    let nextValue = value;
+
+    if (field === "firstName" || field === "lastName" || field === "city") {
+      nextValue = collapseWhitespace(value);
+    }
+
+    if (field === "email") {
+      nextValue = sanitizeEmail(value);
+    }
+
     setForm((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: nextValue,
     }));
+
+    setFieldErrors((prev) => {
+      if (!prev[field]) {
+        return prev;
+      }
+
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
-    setPasswordError(null);
     setError(null);
+    setFieldErrors({});
+
+    const nextFieldErrors: Partial<Record<RegisterField, string>> = {};
 
     if (form.password !== form.confirmPassword) {
-      setPasswordError("Hasła muszą być identyczne.");
+      nextFieldErrors.password = "Hasła muszą być identyczne.";
+      nextFieldErrors.confirmPassword = "Hasła muszą być identyczne.";
+
+      setFieldErrors(nextFieldErrors);
       setIsSubmitting(false);
 
-      return;
-    }
-
-    if (!selectedAvailabilityType) {
-      setError("Wybierz typ dostępności.");
-      setIsSubmitting(false);
       return;
     }
 
     try {
+      // send phone to the API as digits-only (e.g. 600600600), while keeping
+      // the displayed value formatted as XXX-XXX-XXX in the UI
+      const phoneForApi = form.phone.replace(/\D/g, "").slice(0, PHONE_DIGIT_LIMIT);
+
+      const normalizedFirstName = trimForPayload(form.firstName);
+      const normalizedLastName = trimForPayload(form.lastName);
+      const normalizedCity = trimForPayload(form.city);
+      const normalizedEmail = sanitizeEmail(form.email).trim();
+
       await api.auth.register({
-        email: form.email,
-        password: form.password,
-        full_name: `${form.firstName} ${form.lastName}`,
-        phone: form.phone,
-        city: form.city,
-        availability_type: Number(selectedAvailabilityType),
+        email: normalizedEmail,
+        password: form.password.trim(),
+        full_name: `${normalizedFirstName} ${normalizedLastName}`.trim(),
+        phone: phoneForApi,
+        city: normalizedCity,
       });
       router.push("/wolontariusz/rejestracja/sukces");
     } catch (err) {
       console.error(err);
-      setError("Rejestracja nie powiodła się. Spróbuj ponownie.");
+      if (err instanceof ApiError) {
+        const mapped: Partial<Record<RegisterField, string>> = {};
+
+        if (err.fieldErrors.email) {
+          mapped.email = err.fieldErrors.email;
+        }
+
+        if (err.fieldErrors.password) {
+          mapped.password = err.fieldErrors.password;
+          mapped.confirmPassword = err.fieldErrors.password;
+        }
+
+        if (err.fieldErrors.phone) {
+          mapped.phone = err.fieldErrors.phone;
+        }
+
+        if (err.fieldErrors.city) {
+          mapped.city = err.fieldErrors.city;
+        }
+
+        if (err.fieldErrors.full_name) {
+          mapped.firstName = err.fieldErrors.full_name;
+          mapped.lastName = err.fieldErrors.full_name;
+        }
+
+        if (Object.keys(mapped).length) {
+          setFieldErrors(mapped);
+        }
+
+        setError(err.message);
+      } else {
+        setError("Rejestracja nie powiodła się. Spróbuj ponownie.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -114,6 +167,8 @@ export default function VolunteerRegisterPage() {
           <CardBody className="grid gap-4 md:grid-cols-2">
             <Input
               isRequired
+              isInvalid={Boolean(fieldErrors.firstName)}
+              errorMessage={fieldErrors.firstName}
               label="Imię"
               placeholder="np. Anna"
               value={form.firstName}
@@ -121,6 +176,8 @@ export default function VolunteerRegisterPage() {
             />
             <Input
               isRequired
+              isInvalid={Boolean(fieldErrors.lastName)}
+              errorMessage={fieldErrors.lastName}
               label="Nazwisko"
               placeholder="np. Kowalska"
               value={form.lastName}
@@ -129,6 +186,8 @@ export default function VolunteerRegisterPage() {
             <Input
               isRequired
               className="md:col-span-2"
+              isInvalid={Boolean(fieldErrors.email)}
+              errorMessage={fieldErrors.email}
               label="Adres e-mail"
               placeholder="np. anna@genlink.pl"
               type="email"
@@ -138,33 +197,33 @@ export default function VolunteerRegisterPage() {
             <Input
               isRequired
               className="md:col-span-2"
-              errorMessage={passwordError ?? undefined}
-              isInvalid={Boolean(passwordError)}
+              errorMessage={fieldErrors.password}
+              isInvalid={Boolean(fieldErrors.password)}
               label="Hasło"
               placeholder="Ustal hasło"
               type="password"
               value={form.password}
               onValueChange={(value) => {
-                setPasswordError(null);
                 handleChange("password", value);
               }}
             />
             <Input
               isRequired
               className="md:col-span-2"
-              errorMessage={passwordError ?? undefined}
-              isInvalid={Boolean(passwordError)}
+              errorMessage={fieldErrors.confirmPassword}
+              isInvalid={Boolean(fieldErrors.confirmPassword)}
               label="Potwierdź hasło"
               placeholder="Powtórz hasło"
               type="password"
               value={form.confirmPassword}
               onValueChange={(value) => {
-                setPasswordError(null);
                 handleChange("confirmPassword", value);
               }}
             />
             <Input
               isRequired
+              isInvalid={Boolean(fieldErrors.phone)}
+              errorMessage={fieldErrors.phone}
               label="Numer telefonu"
               placeholder="np. 600 600 600"
               inputMode="numeric"
@@ -175,30 +234,13 @@ export default function VolunteerRegisterPage() {
             />
             <Input
               isRequired
+              isInvalid={Boolean(fieldErrors.city)}
+              errorMessage={fieldErrors.city}
               label="Miejscowość"
               placeholder="np. Wrocław"
               value={form.city}
               onValueChange={(value) => handleChange("city", value)}
             />
-            <Select
-              isRequired
-              className="md:col-span-2"
-              label="Typ dostępności"
-              placeholder="Wybierz typ dostępności"
-              selectedKeys={
-                selectedAvailabilityType ? [selectedAvailabilityType] : []
-              }
-              onSelectionChange={(keys) => {
-                const [value] = Array.from(keys);
-                setSelectedAvailabilityType((value as string) ?? undefined);
-              }}
-            >
-              {availabilityTypes.map((type) => (
-                <SelectItem key={String(type.id)}>
-                  {type.name}
-                </SelectItem>
-              ))}
-            </Select>
           </CardBody>
           <Divider />
           <CardFooter className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

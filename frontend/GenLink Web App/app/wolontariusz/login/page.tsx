@@ -12,6 +12,7 @@ import { Alert } from "@heroui/alert";
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { api } from "@/lib/api";
+import { ApiError } from "@/lib/api-error";
 import { authStorage } from "@/lib/auth-storage";
 
 export default function VolunteerLoginPage() {
@@ -32,11 +33,21 @@ export default function VolunteerLoginPage() {
     setError(null);
 
     try {
-      const response = await api.auth.login({ email, password });
+      const normalizedEmail = email.trim();
+      const normalizedPassword = password.trim();
+
+      const response = await api.auth.login({
+        email: normalizedEmail,
+        password: normalizedPassword,
+      });
       await authenticate(response.access_token, { remember: rememberMe });
       router.push("/wolontariusz/panel");
     } catch (err) {
-      setError("Nieprawidłowy email lub hasło.");
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Nieprawidłowy email lub hasło.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +81,7 @@ export default function VolunteerLoginPage() {
               placeholder="np. imie@genlink.pl"
               type="email"
               value={email}
-              onValueChange={setEmail}
+              onValueChange={(value) => setEmail(value.replace(/\s+/g, ""))}
             />
             <Input
               isRequired

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import NextLink from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
@@ -12,6 +12,7 @@ import { Link } from "@heroui/link";
 import { getReportGroupMeta } from "@/config/report-groups";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useReportTypes } from "@/hooks/use-report-types";
 import { Report, ReportType } from "@/types";
 
 const formatPhoneNumber = (phone?: string | null) => {
@@ -35,9 +36,14 @@ export default function AssignmentPage() {
   const [report, setReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [reportTypes, setReportTypes] = useState<Record<number, ReportType>>(
-    {},
-  );
+  const { reportTypes } = useReportTypes();
+
+  const reportTypesMap = useMemo(() => {
+    return reportTypes.reduce<Record<number, ReportType>>((memo, type) => {
+      memo[type.id] = type;
+      return memo;
+    }, {});
+  }, [reportTypes]);
 
   useEffect(() => {
     if (!isAuthenticated || authLoading) {
@@ -57,20 +63,11 @@ export default function AssignmentPage() {
       }
 
       try {
-        const [data, types] = await Promise.all([
-          api.reports.by_id(params.id as string),
-          api.types.reportTypes(),
-        ]);
+        const data = await api.reports.by_id(params.id as string);
         if (!isMounted) {
           return;
         }
         setReport(data);
-        setReportTypes(
-          types.reduce<Record<number, ReportType>>((memo, type) => {
-            memo[type.id] = type;
-            return memo;
-          }, {}),
-        );
         setError(null);
       } catch (err) {
         console.error("Failed to load report", err);
@@ -139,7 +136,7 @@ export default function AssignmentPage() {
       <Card className="border border-default-100">
         <CardHeader className="flex flex-wrap items-center gap-3">
           <Chip color="primary" variant="flat">
-            {reportTypes[report.report_type_id]?.name ?? "Typ"}
+            {reportTypesMap[report.report_type_id]?.name ?? "Typ"}
           </Chip>
           {reportGroup ? (
             <Chip color={reportGroup.color} variant="flat">

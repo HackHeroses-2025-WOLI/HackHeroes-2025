@@ -1,8 +1,7 @@
 import { API_CONFIG } from "@/config/api";
 import {
   Account,
-  ActiveVolunteerProfile,
-  AvailabilityType,
+  ActiveVolunteersSummary,
   LoginResponse,
   RegisterPayload,
   Report,
@@ -13,6 +12,7 @@ import {
 } from "@/types";
 
 import { authStorage } from "./auth-storage";
+import { buildApiError } from "./api-error";
 
 const withBase = (path: string) => `${API_CONFIG.BASE_URL}${path}`;
 
@@ -33,6 +33,20 @@ const getHeaders = (token?: string) => {
   return headers;
 };
 
+const parseJsonOrThrow = async <T>(response: Response) => {
+  if (!response.ok) {
+    throw await buildApiError(response);
+  }
+
+  return (await response.json()) as T;
+};
+
+const ensureSuccess = async (response: Response) => {
+  if (!response.ok) {
+    throw await buildApiError(response);
+  }
+};
+
 export const api = {
   accounts: {
     update: async (payload: AccountUpdatePayload) => {
@@ -42,22 +56,14 @@ export const api = {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update account");
-      }
-
-      return (await response.json()) as Account;
+      return await parseJsonOrThrow<Account>(response);
     },
     activeVolunteers: async () => {
       const response = await fetch(
         withBase("/api/v1/accounts/volunteers/active"),
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to load active volunteers");
-      }
-
-      return (await response.json()) as ActiveVolunteerProfile[];
+      return await parseJsonOrThrow<ActiveVolunteersSummary>(response);
     },
     deleteMe: async () => {
       const response = await fetch(withBase("/api/v1/accounts/me"), {
@@ -65,9 +71,7 @@ export const api = {
         headers: getHeaders(),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to delete account");
-      }
+      await ensureSuccess(response);
     },
   },
   auth: {
@@ -78,11 +82,7 @@ export const api = {
         body: JSON.stringify(credentials),
       });
 
-      if (!response.ok) {
-        throw new Error("Login failed");
-      }
-
-      return (await response.json()) as LoginResponse;
+      return await parseJsonOrThrow<LoginResponse>(response);
     },
     register: async (data: RegisterPayload) => {
       const response = await fetch(withBase("/api/v1/accounts/register"), {
@@ -91,37 +91,25 @@ export const api = {
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        throw new Error("Registration failed");
-      }
-
-      return await response.json();
+      return await parseJsonOrThrow(response);
     },
     me: async () => {
       const response = await fetch(withBase("/api/v1/accounts/me"), {
         headers: getHeaders(),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch user data");
-      }
-
-      return (await response.json()) as Account;
+      return await parseJsonOrThrow<Account>(response);
     },
   },
   reports: {
     create: async (data: ReportCreatePayload) => {
-      const response = await fetch(withBase("/api/v1/reports/"), {
+      const response = await fetch(withBase("/api/v1/reports"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create report");
-      }
-
-      return (await response.json()) as Report;
+      return await parseJsonOrThrow<Report>(response);
     },
     list: async (params?: {
       city?: string;
@@ -132,7 +120,7 @@ export const api = {
       date_from?: string;
       date_to?: string;
     }) => {
-      const url = new URL(withBase("/api/v1/reports/"));
+      const url = new URL(withBase("/api/v1/reports"));
 
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
@@ -146,53 +134,28 @@ export const api = {
         headers: getHeaders(),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch reports");
-      }
-
-      return (await response.json()) as Report[];
+      return await parseJsonOrThrow<Report[]>(response);
     },
     by_id: async (id: number | string) => {
       const response = await fetch(withBase(`/api/v1/reports/${id}`), {
         headers: getHeaders(),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch report");
-      }
-
-      return (await response.json()) as Report;
+      return await parseJsonOrThrow<Report>(response);
     },
     stats: async () => {
       const response = await fetch(withBase("/api/v1/reports/stats"), {
         headers: getHeaders(),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch stats");
-      }
-
-      return (await response.json()) as ReportStats;
+      return await parseJsonOrThrow<ReportStats>(response);
     },
   },
   types: {
-    availability: async () => {
-      const response = await fetch(withBase("/api/v1/types/availability"));
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch availability types");
-      }
-
-      return (await response.json()) as AvailabilityType[];
-    },
     reportTypes: async () => {
       const response = await fetch(withBase("/api/v1/types/report_types"));
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch report types");
-      }
-
-      return (await response.json()) as ReportType[];
+      return await parseJsonOrThrow<ReportType[]>(response);
     },
   },
 };

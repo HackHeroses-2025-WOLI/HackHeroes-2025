@@ -14,11 +14,12 @@ import { Alert } from "@heroui/alert";
 import { getReportGroupMeta } from "@/config/report-groups";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/hooks/use-require-auth";
-import { Report, ReportType } from "@/types";
+import { useReportTypes } from "@/hooks/use-report-types";
+import { Report } from "@/types";
 
 const FILTER_LAYOUT = {
   // Adjust these values (in px) to control the category box width.
-  categoryWidth: 280,
+  categoryWidth: 300,
 };
 
 export default function RequestsPage() {
@@ -28,9 +29,13 @@ export default function RequestsPage() {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [reports, setReports] = useState<Report[]>([]);
-  const [reportTypes, setReportTypes] = useState<ReportType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  const {
+    reportTypes,
+    isLoading: isLoadingReportTypes,
+    error: reportTypesError,
+  } = useReportTypes();
+  
   useEffect(() => {
     if (!isAuthenticated || authLoading) {
       return;
@@ -45,22 +50,13 @@ export default function RequestsPage() {
       }
 
       try {
-        const reportsPromise = api.reports.list();
-        const typesPromise = initial ? api.types.reportTypes() : null;
-
-        const [reportsData, typesData] = await Promise.all([
-          reportsPromise,
-          typesPromise ?? Promise.resolve(null),
-        ]);
+        const reportsData = await api.reports.list();
 
         if (!isMounted) {
           return;
         }
 
         setReports(reportsData);
-        if (typesData) {
-          setReportTypes(typesData);
-        }
       } catch (error) {
         console.error("Failed to load data", error);
       } finally {
@@ -83,10 +79,14 @@ export default function RequestsPage() {
     };
   }, [authLoading, isAuthenticated]);
 
-  const categories = useMemo(() => {
+  const categories = useMemo<Array<{ label: string; value: string; description?: string }>>(() => {
     return [
       { label: "Wszystkie", value: "all" },
-      ...reportTypes.map((t) => ({ label: t.name, value: String(t.id) })),
+      ...reportTypes.map((t) => ({
+        label: t.name,
+        value: String(t.id),
+        description: t.description ?? undefined,
+      })),
     ];
   }, [reportTypes]);
 
@@ -147,6 +147,7 @@ export default function RequestsPage() {
                 label="Kategoria"
                 placeholder="Wybierz kategorię"
                 labelPlacement="outside-left"
+                isLoading={isLoadingReportTypes}
                 selectedKeys={[selectedCategory]}
                 style={{ width: `${FILTER_LAYOUT.categoryWidth}px` }}
                 onSelectionChange={(keys) => {
@@ -156,11 +157,21 @@ export default function RequestsPage() {
                 }}
               >
                 {categories.map((category) => (
-                  <SelectItem key={category.value}>{category.label}</SelectItem>
+                  <SelectItem
+                    key={category.value}
+                    description={category.description}
+                  >
+                    {category.label}
+                  </SelectItem>
                 ))}
               </Select>
             </div>
           </div>
+          {reportTypesError ? (
+            <Alert color="warning" variant="flat">
+              Nie udało się pobrać listy kategorii zgłoszeń. Filtr działa w tej chwili tylko dla opcji „Wszystkie”.
+            </Alert>
+          ) : null}
         </CardHeader>
         <Divider />
         <CardBody className="flex flex-col gap-5">
