@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./users.db"
     
     # CORS - will be parsed from comma-separated string
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8080"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8080,https://hackheroes-2025-frontend.onrender.com"
     
     # Server
     HOST: str = "0.0.0.0"

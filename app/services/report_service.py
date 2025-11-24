@@ -254,7 +254,29 @@ class ReportService:
 
     @staticmethod
     def get_average_response_minutes(db: Session) -> Optional[float]:
-        """Average minutes from report submission to first acceptance."""
+        """Average minutes from report submission to first acceptance.
+        
+        Only calculates if there is at least one currently active volunteer.
+        Returns None if no volunteers are active or no accepted reports exist.
+        """
+        from app.db.models import Account
+        from datetime import datetime, timezone
+        
+        # Check if at least one volunteer is currently active
+        has_active = db.query(Account).filter(Account.is_active == True).first()
+        
+        if not has_active:
+            # Also check if any volunteer is active based on schedule
+            all_accounts = db.query(Account).filter(Account.availability_json.isnot(None)).all()
+            has_scheduled_active = False
+            
+            for account in all_accounts:
+                if account.is_active_now:
+                    has_scheduled_active = True
+                    break
+            
+            if not has_scheduled_active:
+                return None
 
         rows = (
             db.query(Report.reported_at, Report.accepted_at)

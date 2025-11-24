@@ -289,23 +289,53 @@ Required variables in `.env`:
 
 ```env
 SECRET_KEY=your-super-secret-key-min-32-chars
+CORS_ORIGINS=http://localhost:3000,https://your-frontend-domain.com
 ```
+
+### CORS Configuration
+
+The `CORS_ORIGINS` environment variable controls which origins can access the API. It accepts a comma-separated list of allowed origins.
+
+**Development:**
+```env
+CORS_ORIGINS="http://localhost:3000,http://localhost:8080"
+```
+
+**Production (Render.com example):**
+```env
+CORS_ORIGINS="https://hackheroes-2025-frontend.onrender.com,https://your-domain.com"
+```
+
+**Important:** On deployment platforms like Render, set `CORS_ORIGINS` as an environment variable in the platform's dashboard, not in the repository.
 
 ## 🔒 Security Notes
 
 - ⚠️ **NEVER** commit `.env` file or SSL certificates to git
 - ⚠️ Always use a strong `SECRET_KEY` in production
 - ⚠️ Use HTTPS in production
-- ⚠️ Review CORS settings for production
+- ⚠️ Review CORS settings for production - only allow trusted frontend domains
 
 ## 🚢 Deployment
 
 For production:
-1. Set `DEBUG=False` in `.env`
-2. Use PostgreSQL instead of SQLite
-3. Set up proper HTTPS/SSL
-4. Use environment variables on hosting platform
-5. Configure proper CORS origins
+1. Set `DEBUG=False` in `.env` (or as environment variable)
+2. Set `SECRET_KEY` to a strong random value (minimum 32 characters)
+3. Configure `CORS_ORIGINS` with your actual frontend URL(s)
+4. Use PostgreSQL instead of SQLite for better performance
+5. Set up proper HTTPS/SSL
+6. Use environment variables on hosting platform (don't commit secrets!)
+
+### Render.com Deployment
+
+When deploying to Render.com, set these environment variables in the dashboard:
+
+```
+SECRET_KEY=<generate-strong-random-key>
+CORS_ORIGINS=https://hackheroes-2025-frontend.onrender.com
+DEBUG=False
+```
+
+The backend will automatically parse the comma-separated `CORS_ORIGINS` and configure CORS middleware to allow preflight OPTIONS requests and actual requests from those domains.
 
 ## 📄 License
 
