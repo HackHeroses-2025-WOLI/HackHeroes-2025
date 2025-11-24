@@ -457,7 +457,12 @@ export function HelpForm({
         wrapperClassName,
       )}
     >
-      <Card className={clsx("w-full min-w-0 border border-default-100 overflow-hidden", cardClassName)}>
+      <Card
+        className={clsx(
+          "w-full min-w-0 overflow-hidden border border-default-100 shadow-[0_0_35px_rgba(15,23,42,0.16),0_0_0_1px_rgba(15,23,42,0.08)]",
+          cardClassName,
+        )}
+      >
         <CardHeader className="flex w-full flex-col gap-3 text-left">
           <Chip color="success" variant="flat">
             {volunteerInfo}

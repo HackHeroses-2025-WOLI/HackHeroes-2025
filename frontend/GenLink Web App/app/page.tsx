@@ -131,7 +131,7 @@ export default function Home() {
           <CardHeader className="flex flex-col gap-2 text-left">
             <h2 className="text-2xl font-semibold">Dla wolontariuszy</h2>
             <p className="text-sm text-default-500">
-              Chcesz podzielić się swoim doświadczeniem i cierpliwością?
+              Chcesz wykazać się swoim doświadczeniem i cierpliwością?
             </p>
           </CardHeader>
           <Divider />
