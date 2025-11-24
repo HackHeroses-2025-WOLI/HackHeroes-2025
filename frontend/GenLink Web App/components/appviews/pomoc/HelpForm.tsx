@@ -25,14 +25,14 @@ interface StoredForm {
   phone: string;
   address: string;
   city: string;
-  problem: string;
-  details: string;
   age: string;
 }
 
-type FormField = keyof StoredForm;
+type FormField = keyof StoredForm | "problem" | "details";
 
 interface HelpFormState extends StoredForm {
+  problem: string;
+  details: string;
   remember: boolean;
 }
 
@@ -49,7 +49,7 @@ const formatVolunteerLabel = (count: number) => {
     return "aktywny wolontariusz";
   }
 
-  if (teens >= 12 && teens <= 14) {
+  if (teens >= 10 && teens <= 20) {
     return "aktywnych wolontariuszy";
   }
 
@@ -72,7 +72,19 @@ const formatPhoneNumber = (value: string) => {
 };
 
 const sanitizeAgeInput = (value: string) => value.replace(/\D/g, "").slice(0, 3);
-const collapseInlineInput = (value: string) => value.replace(/\s+/g, " ").replace(/^\s+/, "");
+const capitalizeWords = (value: string) =>
+  value
+    .split(" ")
+    .map((word) =>
+      word ? word.charAt(0).toUpperCase() + word.slice(1) : "",
+    )
+    .join(" ");
+
+const capitalizeFirstLetter = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1);
+
+const collapseInlineInput = (value: string) =>
+  value.replace(/\s+/g, " ").replace(/^\s+/, "");
 
 export interface HelpFormProps {
   wrapperClassName?: string;
@@ -175,8 +187,6 @@ export function HelpForm({
         address: parsed.address ?? "",
         city: parsed.city ?? "",
         age: sanitizeAgeInput(parsed.age ?? ""),
-        problem: parsed.problem ?? "",
-        details: parsed.details ?? "",
         remember: true,
       }));
     } catch {
@@ -382,7 +392,14 @@ export function HelpForm({
       const selectedType = reportTypes.find(
         (t) => String(t.id) === formData.problem
       );
-      const problemSummary = selectedType ? selectedType.name : "Zgłoszenie";
+      const selectedSummary = selectedType?.name?.trim() ?? "Zgłoszenie";
+      const candidateSummary = selectedSummary.length >= 5
+        ? selectedSummary
+        : selectedType?.description?.trim() ?? selectedSummary;
+      const problemSummary =
+        candidateSummary.length >= 5
+          ? candidateSummary
+          : `${candidateSummary} zgłoszenie`;
 
       await api.reports.create({
         full_name: trimmedName,
@@ -405,8 +422,6 @@ export function HelpForm({
             address: formData.address,
             city: formData.city,
             age: String(parsedAge),
-            problem: formData.problem,
-            details: trimmedDetails,
           };
 
           window.localStorage.setItem(
@@ -484,7 +499,9 @@ export function HelpForm({
               value={formData.name}
               onBlur={() => validateField("name")}
               onValueChange={(value) => {
-                setFormData((prev) => ({ ...prev, name: collapseInlineInput(value) }));
+                const cleaned = collapseInlineInput(value);
+                const capitalized = cleaned ? capitalizeWords(cleaned) : cleaned;
+                setFormData((prev) => ({ ...prev, name: capitalized }));
                 clearFieldError("name");
               }}
             />
@@ -518,7 +535,9 @@ export function HelpForm({
               value={formData.address}
               onBlur={() => validateField("address")}
               onValueChange={(value) => {
-                setFormData((prev) => ({ ...prev, address: collapseInlineInput(value) }));
+                const cleaned = collapseInlineInput(value);
+                const capitalized = cleaned ? capitalizeFirstLetter(cleaned) : cleaned;
+                setFormData((prev) => ({ ...prev, address: capitalized }));
                 clearFieldError("address");
               }}
             />
@@ -533,7 +552,9 @@ export function HelpForm({
               value={formData.city}
               onBlur={() => validateField("city")}
               onValueChange={(value) => {
-                setFormData((prev) => ({ ...prev, city: collapseInlineInput(value) }));
+                const cleaned = collapseInlineInput(value);
+                const capitalized = cleaned ? capitalizeFirstLetter(cleaned) : cleaned;
+                setFormData((prev) => ({ ...prev, city: capitalized }));
                 clearFieldError("city");
               }}
             />

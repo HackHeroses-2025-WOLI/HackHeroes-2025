@@ -19,6 +19,7 @@ export default function VolunteerPanelPage() {
   const [account, setAccount] = useState<Account | null>(null);
   const [stats, setStats] = useState<ReportStats | null>(null);
   const [recentReports, setRecentReports] = useState<Report[]>([]);
+  const [hasMoreReports, setHasMoreReports] = useState(false);
   const [activeReport, setActiveReport] = useState<Report | null>(null);
   const [avgResponseTime, setAvgResponseTime] = useState<number | null>(null);
   const [completedReports, setCompletedReports] = useState<Report[]>([]);
@@ -40,6 +41,11 @@ export default function VolunteerPanelPage() {
     return parts ? parts.join("-") : digits;
   };
 
+  const applyRecentReports = (reportsData: Report[]) => {
+    setRecentReports(reportsData.slice(0, 3));
+    setHasMoreReports(reportsData.length > 3);
+  };
+
   const handleCancelReport = async () => {
     if (!activeReport) return;
     
@@ -50,12 +56,12 @@ export default function VolunteerPanelPage() {
       const [accountData, statsData, reportsData, completedData] = await Promise.all([
         api.auth.me(),
         api.reports.stats(),
-        api.reports.list({ limit: 3 }),
+        api.reports.list({ limit: 4 }),
         api.reports.myCompleted({ limit: 5 }),
       ]);
       setAccount(accountData);
       setStats(statsData);
-      setRecentReports(reportsData);
+      applyRecentReports(reportsData);
       setCompletedReports(completedData);
       setActiveReport(null);
     } catch (error) {
@@ -76,12 +82,12 @@ export default function VolunteerPanelPage() {
       const [accountData, statsData, reportsData, completedData] = await Promise.all([
         api.auth.me(),
         api.reports.stats(),
-        api.reports.list({ limit: 3 }),
+        api.reports.list({ limit: 4 }),
         api.reports.myCompleted({ limit: 5 }),
       ]);
       setAccount(accountData);
       setStats(statsData);
-      setRecentReports(reportsData);
+      applyRecentReports(reportsData);
       setCompletedReports(completedData);
       setActiveReport(null);
     } catch (error) {
@@ -106,7 +112,7 @@ export default function VolunteerPanelPage() {
         const [accountData, statsData, reportsData, avgData, completedData] = await Promise.all([
           api.auth.me(),
           api.reports.stats(),
-          api.reports.list({ limit: 3 }),
+          api.reports.list({ limit: 4 }),
           api.reports.metrics.avgResponseTime(),
           api.reports.myCompleted({ limit: 5 }),
         ]);
@@ -115,7 +121,7 @@ export default function VolunteerPanelPage() {
 
         setAccount(accountData);
         setStats(statsData);
-        setRecentReports(reportsData);
+        applyRecentReports(reportsData);
         setCompletedReports(completedData);
         // fetch active report for display if the account claims one
         if (accountData?.active_report) {
@@ -221,14 +227,16 @@ export default function VolunteerPanelPage() {
               <h2 className="text-xl font-semibold text-default-900">
                 Oczekujące zgłoszenia
               </h2>
-              <Button
-                as={NextLink}
-                color="primary"
-                href="/wolontariusz/zgloszenia"
-                variant="flat"
-              >
-                Zobacz wszystkie
-              </Button>
+              {hasMoreReports ? (
+                <Button
+                  as={NextLink}
+                  color="primary"
+                  href="/wolontariusz/zgloszenia"
+                  variant="flat"
+                >
+                  Zobacz wszystkie
+                </Button>
+              ) : null}
             </div>
           )}
 
@@ -300,7 +308,6 @@ export default function VolunteerPanelPage() {
                       </Button>
                     </div>
 
-                    <Button as={NextLink} href={`/wolontariusz/zgloszenie/${activeReport.id}`} radius="lg" variant="bordered">Szczegóły</Button>
                   </CardFooter>
                 </Card>
               ) : (

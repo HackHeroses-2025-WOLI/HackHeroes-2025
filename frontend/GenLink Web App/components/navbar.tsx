@@ -174,7 +174,7 @@ export const Navbar = () => {
             <p className="font-semibold tracking-tight text-inherit">GenLink</p>
           </NextLink>
         </NavbarBrand>
-        <ul className="hidden lg:flex gap-6">
+        <ul className="hidden lg:flex gap-6 ml-8">
           {siteConfig.navItems.map((item) => (
             <NavbarItem key={item.href}>
               <NextLink

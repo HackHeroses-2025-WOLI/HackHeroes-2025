@@ -6,11 +6,15 @@ import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { Input } from "@heroui/input";
+import NextLink from "next/link";
 import { api } from "@/lib/api";
 import { ApiError } from "@/lib/api-error";
 import { Alert } from "@heroui/alert";
 
 const PHONE_DIGIT_LIMIT = 9;
+
+const capitalizeFirstLetter = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1);
 
 const collapseWhitespace = (value: string) => value.replace(/\s+/g, " ").trimStart();
 const trimForPayload = (value: string) => value.replace(/\s+/g, " ").trim();
@@ -50,7 +54,8 @@ export default function VolunteerRegisterPage() {
     let nextValue = value;
 
     if (field === "firstName" || field === "lastName" || field === "city") {
-      nextValue = collapseWhitespace(value);
+      const collapsed = collapseWhitespace(value);
+      nextValue = collapsed ? capitalizeFirstLetter(collapsed) : collapsed;
     }
 
     if (field === "email") {
@@ -243,11 +248,13 @@ export default function VolunteerRegisterPage() {
             />
           </CardBody>
           <Divider />
-          <CardFooter className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <p className="text-xs text-default-400">
-              Zakładając konto, potwierdzasz, że przeczytałeś(-aś) zasady
-              wolontariatu GenLink.
-            </p>
+          <CardFooter className="flex flex-col items-center gap-4 text-center md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1 text-xs text-default-400 md:text-left">
+              <p>
+                Zakładając konto, potwierdzasz, że przeczytałeś(-aś) zasady
+                wolontariatu GenLink.
+              </p>
+            </div>
             <Button
               color="primary"
               isLoading={isSubmitting}
@@ -257,6 +264,14 @@ export default function VolunteerRegisterPage() {
               Zarejestruj się
             </Button>
           </CardFooter>
+          <div className="flex flex-col items-center gap-1 pb-6 text-center text-sm text-default-500">
+            <p>
+              Masz już konto?{" "}
+              <NextLink className="font-semibold text-primary" href="/wolontariusz/login">
+                Zaloguj się
+              </NextLink>
+            </p>
+          </div>
         </form>
       </Card>
     </div>

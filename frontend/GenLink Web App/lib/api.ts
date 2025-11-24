@@ -224,13 +224,4 @@ export const api = {
       return await parseJsonOrThrow<ReportType[]>(response);
     },
   },
-  system: {
-    stats: async () => {
-      const response = await fetch(withBase("/api/v1/system/stats"), {
-        headers: getHeaders(),
-      });
-
-      return await parseJsonOrThrow<any>(response);
-    },
-  },
 };

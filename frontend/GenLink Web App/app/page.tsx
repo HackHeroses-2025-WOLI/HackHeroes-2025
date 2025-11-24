@@ -149,7 +149,7 @@ export default function Home() {
               as={NextLink}
               className="mt-2"
               color="primary"
-              href="/wolontariusz/login"
+              href="/wolontariusz/rejestracja"
               radius="lg"
             >
               Dołącz do wolontariuszy

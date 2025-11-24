@@ -118,6 +118,14 @@ const timeToString = (value?: any) => {
 
 const collapseProfileInput = (value: string) => value.replace(/\s+/g, " ").replace(/^\s+/, "");
 const trimProfileValue = (value: string) => value.replace(/\s+/g, " ").trim();
+const normalizeTimeString = (value?: string | null) => {
+  if (!value) {
+    return "";
+  }
+
+  const [hours = "00", minutes = "00"] = value.split(":");
+  return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+};
 
 export default function VolunteerSettingsPage() {
   useRequireAuth();
@@ -139,7 +147,10 @@ export default function VolunteerSettingsPage() {
   const [selectedDays, setSelectedDays] = useState<Set<string>>(
     () => new Set(),
   );
-  const [timeRange, setTimeRange] = useState({ ...DEFAULT_TIME_RANGE });
+  const [timeRange, setTimeRange] = useState({
+    start: normalizeTimeString(DEFAULT_TIME_RANGE.start),
+    end: normalizeTimeString(DEFAULT_TIME_RANGE.end),
+  });
   const [isManualActive, setIsManualActive] = useState(false);
   const [availabilityError, setAvailabilityError] = useState<string | null>(
     null,
@@ -188,14 +199,19 @@ export default function VolunteerSettingsPage() {
 
         setSelectedDays(new Set(orderedDays));
         setTimeRange({
-          start: slots[0].start_time ?? DEFAULT_TIME_RANGE.start,
-          end: slots[0].end_time ?? DEFAULT_TIME_RANGE.end,
+          start: normalizeTimeString(
+            slots[0].start_time ?? DEFAULT_TIME_RANGE.start,
+          ),
+          end: normalizeTimeString(slots[0].end_time ?? DEFAULT_TIME_RANGE.end),
         });
         setIsManualActive(Boolean(user.is_active));
         // availability_type no longer editable from UI
       } else {
         setSelectedDays(new Set());
-        setTimeRange({ ...DEFAULT_TIME_RANGE });
+        setTimeRange({
+          start: normalizeTimeString(DEFAULT_TIME_RANGE.start),
+          end: normalizeTimeString(DEFAULT_TIME_RANGE.end),
+        });
         setIsManualActive(Boolean(user.is_active));
         // availability_type no longer editable from UI
       }
@@ -314,16 +330,17 @@ export default function VolunteerSettingsPage() {
     }
 
     let availabilityIssue: string | null = null;
+    const hasSelectedDays = selectedDays.size > 0;
 
-    if (selectedDays.size === 0) {
-      availabilityIssue = "Wybierz przynajmniej jeden dzień tygodnia.";
-    } else if (
-      !TIME_PATTERN.test(timeRange.start) ||
-      !TIME_PATTERN.test(timeRange.end)
-    ) {
-      availabilityIssue = "Godziny wpisz w formacie HH:MM.";
-    } else if (toMinutes(timeRange.start) >= toMinutes(timeRange.end)) {
-      availabilityIssue = "Zakres godzin musi być poprawny.";
+    if (hasSelectedDays) {
+      if (
+        !TIME_PATTERN.test(timeRange.start) ||
+        !TIME_PATTERN.test(timeRange.end)
+      ) {
+        availabilityIssue = "Godziny wpisz w formacie HH:MM.";
+      } else if (toMinutes(timeRange.start) >= toMinutes(timeRange.end)) {
+        availabilityIssue = "Zakres godzin musi być poprawny.";
+      }
     }
 
     if (availabilityIssue) {
@@ -573,7 +590,7 @@ export default function VolunteerSettingsPage() {
               Teraz jestem aktywny
             </Checkbox>
             {availabilityError ? (
-              <Alert color="warning" variant="flat">
+              <Alert color="danger" variant="flat">
                 {availabilityError}
               </Alert>
             ) : null}

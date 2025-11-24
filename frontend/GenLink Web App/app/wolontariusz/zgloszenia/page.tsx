@@ -147,6 +147,10 @@ export default function RequestsPage() {
                 label="Kategoria"
                 placeholder="Wybierz kategorię"
                 labelPlacement="outside-left"
+                classNames={{
+                  listbox: "max-h-[999px]",
+                  popoverContent: "max-h-[999px] overflow-visible",
+                }}
                 isLoading={isLoadingReportTypes}
                 selectedKeys={[selectedCategory]}
                 style={{ width: `${FILTER_LAYOUT.categoryWidth}px` }}

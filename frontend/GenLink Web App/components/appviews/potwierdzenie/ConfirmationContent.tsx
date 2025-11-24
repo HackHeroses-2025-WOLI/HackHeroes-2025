@@ -10,7 +10,7 @@ import { Divider } from "@heroui/divider";
 import { Link } from "@heroui/link";
 import { Chip } from "@heroui/chip";
 import { api } from "@/lib/api";
-import type { AppViewsCompact, SystemStats } from "@/types";
+import type { AppViewsCompact } from "@/types";
 
 export interface ConfirmationContentProps {
   wrapperClassName?: string;
@@ -44,28 +44,34 @@ export function ConfirmationContent({
   appViewsCompact = false,
 }: ConfirmationContentProps) {
   const searchParams = useSearchParams();
-  const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [averageResponseMinutes, setAverageResponseMinutes] = useState<number | null>(null);
+  const [isLoadingEta, setIsLoadingEta] = useState(true);
   
   useEffect(() => {
-    const loadSystemStats = async () => {
+    const loadAverageResponseTime = async () => {
       try {
-        const stats = await api.system.stats();
-        setSystemStats(stats);
+        const payload = await api.reports.metrics.avgResponseTime();
+        const avgMinutes = payload.average_response_minutes;
+
+        if (typeof avgMinutes === "number" && Number.isFinite(avgMinutes)) {
+          setAverageResponseMinutes(Math.max(1, Math.round(avgMinutes)));
+        } else {
+          setAverageResponseMinutes(null);
+        }
       } catch (error) {
-        console.error("Failed to load system stats", error);
+        console.error("Failed to load average response time", error);
       } finally {
-        setIsLoadingStats(false);
+        setIsLoadingEta(false);
       }
     };
 
-    loadSystemStats();
+    loadAverageResponseTime();
   }, []);
 
   // Use API response time if available, otherwise fall back to resolveEtaMinutes logic
   const getEtaDisplay = () => {
-    if (systemStats?.average_response_time && !isLoadingStats) {
-      return systemStats.average_response_time;
+    if (averageResponseMinutes !== null && !isLoadingEta) {
+      return `${averageResponseMinutes} minut`;
     }
     const fallbackEta = resolveEtaMinutes(etaMinutes, searchParams?.get("eta"));
     return `${fallbackEta} minut`;
@@ -80,7 +86,7 @@ export function ConfirmationContent({
           <h1 className="text-3xl font-semibold text-success-600">Dziękujemy!</h1>
           <p className="text-base text-default-600">
             Przyjęliśmy Twoje zgłoszenie. Wolontariusz GenLink skontaktuje się z Tobą telefonicznie w ciągu najbliższych
-            <span className="font-semibold text-default-800"> {isLoadingStats ? "kilku minut" : etaDisplay} </span>(jest to czas orientacyjny).
+            <span className="font-semibold text-default-800"> {isLoadingEta ? "kilku minut" : etaDisplay} </span>(jest to czas orientacyjny).
           </p>
         </CardHeader>
         <CardBody className="flex flex-col gap-2 text-sm text-default-600">
@@ -90,7 +96,7 @@ export function ConfirmationContent({
             </Chip>
             <p className="text-default-700 font-semibold">
               Wolontariusze GenLink nigdy nie proszą o hasła, kody z SMS ani przelewy. Jeśli masz wątpliwości, zakończ
-              rozmowę i skontaktuj się z nami pod numerem <span className="font-semibold">XXXXXXX</span>.
+              rozmowę i skontaktuj się z nami pod numerem <span className="font-semibold">22 000 00 00</span>.
             </p>
           </div>
         </CardBody>

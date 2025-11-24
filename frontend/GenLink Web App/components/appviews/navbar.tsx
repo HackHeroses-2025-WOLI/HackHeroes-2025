@@ -19,7 +19,7 @@ export const Navbar = () => {
               <p className="font-semibold tracking-tight text-inherit">GenLink</p>
             </div>
           </NavbarBrand>
-          <ul className="hidden lg:flex gap-6 items-center">
+          <ul className="hidden lg:flex gap-6 items-center ml-8">
           {siteConfig.navItems.map((item) => (
             <NavbarItem key={item.href}>
               <span className={clsx("text-sm font-medium data-[active=true]:text-primary")}>

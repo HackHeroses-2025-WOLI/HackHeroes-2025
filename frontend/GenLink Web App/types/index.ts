@@ -123,8 +123,3 @@ export interface ActiveVolunteersSummary {
 export interface AverageResponseTime {
   average_response_minutes: number | null;
 }
-
-export interface SystemStats {
-  average_response_time?: number | string | null;
-  total_reports?: number | null;
-}
