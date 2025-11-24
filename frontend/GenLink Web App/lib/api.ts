@@ -104,7 +104,7 @@ export const api = {
   },
   reports: {
     create: async (data: ReportCreatePayload) => {
-      const response = await fetch(withBase("/api/v1/reports"), {
+      const response = await fetch(withBase("/api/v1/reports/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -121,7 +121,7 @@ export const api = {
       date_from?: string;
       date_to?: string;
     }) => {
-      const url = new URL(withBase("/api/v1/reports"));
+      const url = new URL(withBase("/api/v1/reports/"));
 
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
@@ -138,21 +138,21 @@ export const api = {
       return await parseJsonOrThrow<Report[]>(response);
     },
     by_id: async (id: number | string) => {
-      const response = await fetch(withBase(`/api/v1/reports/${id}`), {
+      const response = await fetch(withBase(`/api/v1/reports/${id}/`), {
         headers: getHeaders(),
       });
 
       return await parseJsonOrThrow<Report>(response);
     },
     myAcceptedReport: async () => {
-      const response = await fetch(withBase("/api/v1/reports/my-accepted-report"), {
+      const response = await fetch(withBase("/api/v1/reports/my-accepted-report/"), {
         headers: getHeaders(),
       });
 
       return await parseJsonOrThrow<{ report_id: number | null }>(response);
     },
     myCompleted: async (params?: { skip?: number; limit?: number }) => {
-      const url = new URL(withBase("/api/v1/reports/my-completed-reports"));
+      const url = new URL(withBase("/api/v1/reports/my-completed-reports/"));
 
       if (params?.skip !== undefined) {
         url.searchParams.append("skip", String(params.skip));
@@ -169,14 +169,14 @@ export const api = {
       return await parseJsonOrThrow<Report[]>(response);
     },
     stats: async () => {
-      const response = await fetch(withBase("/api/v1/reports/stats"), {
+      const response = await fetch(withBase("/api/v1/reports/stats/"), {
         headers: getHeaders(),
       });
 
       return await parseJsonOrThrow<ReportStats>(response);
     },
     accept: async (id: number | string) => {
-      const response = await fetch(withBase(`/api/v1/reports/${id}/accept`), {
+      const response = await fetch(withBase(`/api/v1/reports/${id}/accept/`), {
         method: "POST",
         headers: getHeaders(),
       });
@@ -186,7 +186,7 @@ export const api = {
     active: {
       cancel: async () => {
         const response = await fetch(
-          withBase("/api/v1/reports/active/cancel"),
+          withBase("/api/v1/reports/active/cancel/"),
           {
             method: "POST",
             headers: getHeaders(),
@@ -197,7 +197,7 @@ export const api = {
       },
       complete: async () => {
         const response = await fetch(
-          withBase("/api/v1/reports/active/complete"),
+          withBase("/api/v1/reports/active/complete/"),
           {
             method: "POST",
             headers: getHeaders(),
@@ -210,7 +210,7 @@ export const api = {
     metrics: {
       avgResponseTime: async () => {
         const response = await fetch(
-          withBase("/api/v1/reports/metrics/avg-response-time")
+          withBase("/api/v1/reports/metrics/avg-response-time/")
         );
 
         return await parseJsonOrThrow<AverageResponseTime>(response);
