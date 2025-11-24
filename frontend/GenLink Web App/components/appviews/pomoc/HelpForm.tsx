@@ -394,6 +394,7 @@ export function HelpForm({
         report_type_id: Number(formData.problem),
         report_details: trimmedDetails,
         contact_ok: true,
+        is_reviewed: true,
       });
 
       if (typeof window !== "undefined") {

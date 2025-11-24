@@ -2,13 +2,15 @@
 
 import NextLink from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
 import { Divider } from "@heroui/divider";
 import { Link } from "@heroui/link";
 import { Chip } from "@heroui/chip";
-import type { AppViewsCompact } from "@/types";
+import { api } from "@/lib/api";
+import type { AppViewsCompact, SystemStats } from "@/types";
 
 export interface ConfirmationContentProps {
   wrapperClassName?: string;
@@ -42,7 +44,34 @@ export function ConfirmationContent({
   appViewsCompact = false,
 }: ConfirmationContentProps) {
   const searchParams = useSearchParams();
-  const eta = resolveEtaMinutes(etaMinutes, searchParams?.get("eta"));
+  const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  
+  useEffect(() => {
+    const loadSystemStats = async () => {
+      try {
+        const stats = await api.system.stats();
+        setSystemStats(stats);
+      } catch (error) {
+        console.error("Failed to load system stats", error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    loadSystemStats();
+  }, []);
+
+  // Use API response time if available, otherwise fall back to resolveEtaMinutes logic
+  const getEtaDisplay = () => {
+    if (systemStats?.average_response_time && !isLoadingStats) {
+      return systemStats.average_response_time;
+    }
+    const fallbackEta = resolveEtaMinutes(etaMinutes, searchParams?.get("eta"));
+    return `${fallbackEta} minut`;
+  };
+
+  const etaDisplay = getEtaDisplay();
 
   return (
     <div className={clsx("mx-auto flex w-full max-w-2xl flex-col gap-6 py-10", wrapperClassName)}>
@@ -51,7 +80,7 @@ export function ConfirmationContent({
           <h1 className="text-3xl font-semibold text-success-600">Dziękujemy!</h1>
           <p className="text-base text-default-600">
             Przyjęliśmy Twoje zgłoszenie. Wolontariusz GenLink skontaktuje się z Tobą telefonicznie w ciągu najbliższych
-            <span className="font-semibold text-default-800"> {eta} minut </span>(jest to czas orientacyjny).
+            <span className="font-semibold text-default-800"> {isLoadingStats ? "kilku minut" : etaDisplay} </span>(jest to czas orientacyjny).
           </p>
         </CardHeader>
         <CardBody className="flex flex-col gap-2 text-sm text-default-600">

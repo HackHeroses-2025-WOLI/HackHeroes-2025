@@ -13,7 +13,7 @@ import { Alert } from "@heroui/alert";
 
 import { getReportGroupMeta } from "@/config/report-groups";
 import { api } from "@/lib/api";
-import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useRequireNoActiveReport } from "@/hooks/use-require-no-active-report";
 import { useReportTypes } from "@/hooks/use-report-types";
 import { Report } from "@/types";
 
@@ -23,7 +23,7 @@ const FILTER_LAYOUT = {
 };
 
 export default function RequestsPage() {
-  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  const { isAuthenticated, isLoading: authLoading } = useRequireNoActiveReport();
   const searchParams = useSearchParams();
   const preselectId = searchParams.get("podejmij") ?? undefined;
   const [query, setQuery] = useState("");
@@ -199,17 +199,24 @@ export default function RequestsPage() {
                       </span>
                     </div>
                     <div className="flex flex-col gap-2 sm:items-end">
-                      <div className="flex flex-wrap gap-2 sm:justify-end">
+                      <div className="flex flex-wrap gap-2 sm:justify-end sm:items-center">
+                        <Chip
+                          color={groupMeta?.color ?? "primary"}
+                          size="sm"
+                          variant="flat"
+                        >
+                          {getCategoryLabel(request.report_type_id)}
+                        </Chip>
                         <Chip size="sm" variant="flat">
                           {request.city}
                         </Chip>
-                        {groupMeta ? (
-                          <Chip color={groupMeta.color} size="sm" variant="flat">
-                            {groupMeta.label}
-                          </Chip>
-                        ) : null}
-                        <Chip color="primary" size="sm" variant="flat">
-                          {getCategoryLabel(request.report_type_id)}
+                        <Chip
+                          className="sm:ml-2"
+                          color={request.is_reviewed ? "success" : "warning"}
+                          size="sm"
+                          variant="flat"
+                        >
+                          {request.is_reviewed ? "Zweryfikowane" : "Do konsultacji"}
                         </Chip>
                       </div>
                     </div>
@@ -230,7 +237,7 @@ export default function RequestsPage() {
                       href={`/wolontariusz/zgloszenie/${request.id}`}
                       radius="lg"
                     >
-                      Podejmij zgłoszenie
+                      Zobacz szczegóły
                     </Button>
                   </div>
                   <Button
@@ -240,7 +247,7 @@ export default function RequestsPage() {
                     href={`/wolontariusz/zgloszenie/${request.id}`}
                     radius="lg"
                   >
-                    Podejmij zgłoszenie
+                    Zobacz szczegóły
                   </Button>
                 </div>
               );

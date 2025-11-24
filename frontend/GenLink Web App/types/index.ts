@@ -39,6 +39,7 @@ export interface Account {
   is_active_now?: boolean;
   schedule_active_now?: boolean;
   availability_type?: number | null;
+  genpoints?: number | null;
 }
 
 export interface Report {
@@ -54,8 +55,11 @@ export interface Report {
   report_details?: string | null;
   reporter_email?: string | null;
   status?: string;
+  is_reviewed?: boolean;
   reported_at: string;
   report_group?: string | null;
+  accepted_at?: string | null;
+  completed_at?: string | null;
 }
 
 export interface ReportStats {
@@ -74,6 +78,7 @@ export interface ReportCreatePayload {
   report_type_id: number;
   report_details?: string | null;
   reporter_email?: string | null;
+  is_reviewed?: boolean;
 }
 
 export interface LoginResponse {
@@ -113,4 +118,13 @@ export interface ActiveVolunteersSummary {
   total_manual_active: number;
   total_scheduled_active: number;
   volunteers: ActiveVolunteerProfile[];
+}
+
+export interface AverageResponseTime {
+  average_response_minutes: number | null;
+}
+
+export interface SystemStats {
+  average_response_time?: number | string | null;
+  total_reports?: number | null;
 }

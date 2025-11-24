@@ -11,7 +11,7 @@ import { Link } from "@heroui/link";
 
 import { getReportGroupMeta } from "@/config/report-groups";
 import { api } from "@/lib/api";
-import { useRequireAuth } from "@/hooks/use-require-auth";
+import { useRequireNoActiveReport } from "@/hooks/use-require-no-active-report";
 import { useReportTypes } from "@/hooks/use-report-types";
 import { Report, ReportType } from "@/types";
 
@@ -30,11 +30,12 @@ const formatPhoneNumber = (phone?: string | null) => {
 };
 
 export default function AssignmentPage() {
-  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  const { isAuthenticated, isLoading: authLoading } = useRequireNoActiveReport();
   const params = useParams();
   const router = useRouter();
   const [report, setReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAccepting, setIsAccepting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { reportTypes } = useReportTypes();
 
@@ -44,6 +45,27 @@ export default function AssignmentPage() {
       return memo;
     }, {});
   }, [reportTypes]);
+
+  const handleAcceptReport = async () => {
+    if (!report) return;
+    
+    setIsAccepting(true);
+    try {
+      await api.reports.accept(report.id);
+      router.push("/wolontariusz/panel");
+    } catch (error: any) {
+      console.error("Failed to accept report", error);
+      if (error.status === 409) {
+        alert("To zgłoszenie jest już przypisane do innego wolontariusza.");
+      } else if (error.status === 400) {
+        alert("Masz już przypisane inne zgłoszenie. Zakończ je przed przyjęciem nowego.");
+      } else {
+        alert("Nie udało się przyjąć zgłoszenia. Spróbuj ponownie.");
+      }
+    } finally {
+      setIsAccepting(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated || authLoading) {
@@ -134,33 +156,28 @@ export default function AssignmentPage() {
       </div>
 
       <Card className="border border-default-100">
-        <CardHeader className="flex flex-wrap items-center gap-3">
-          <Chip color="primary" variant="flat">
-            {reportTypesMap[report.report_type_id]?.name ?? "Typ"}
-          </Chip>
-          {reportGroup ? (
-            <Chip color={reportGroup.color} variant="flat">
-              {reportGroup.label}
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip color={reportGroup?.color ?? "primary"} variant="flat">
+              {reportTypesMap[report.report_type_id]?.name ?? "Typ"}
             </Chip>
-          ) : null}
-          <Chip variant="flat">{report.city}</Chip>
-          <Chip variant="flat">
-            {new Date(report.reported_at).toLocaleDateString("pl-PL", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </Chip>
-          {report.status ? (
+            <Chip variant="flat">{report.city}</Chip>
+            <Chip variant="flat">
+              {new Date(report.reported_at).toLocaleDateString("pl-PL", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </Chip>
+          </div>
+          <div className="flex items-center">
             <Chip
-              color={report.status === "pending" ? "warning" : "success"}
+              color={report.is_reviewed ? "success" : "warning"}
               variant="flat"
             >
-              {report.status === "pending" ? "Oczekujące" : report.status}
+              {report.is_reviewed ? "Zweryfikowane" : "Do konsultacji"}
             </Chip>
-          ) : (
-            <Chip variant="flat">Zgłoszono</Chip>
-          )}
+          </div>
         </CardHeader>
         <Divider className="h-px bg-default-100" />
         <CardBody className="flex flex-col gap-4 text-sm text-default-600">
@@ -184,9 +201,15 @@ export default function AssignmentPage() {
         </CardBody>
         <CardFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-2">
-            {/* Placeholder buttons dla dalszego rozwoju */}
-            <Button isDisabled radius="lg" variant="flat">
-              Podejmij zgłoszenie (Wkrótce)
+            <Button 
+              color="primary"
+              radius="lg" 
+              variant="flat"
+              onPress={handleAcceptReport}
+              isDisabled={isAccepting}
+              isLoading={isAccepting}
+            >
+              Podejmij zgłoszenie
             </Button>
           </div>
           <Button
