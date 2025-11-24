@@ -272,7 +272,7 @@ curl "http://localhost:8000/api/v1/reports/?search=winda&date_from=2025-01-01&da
 
 ### GET /api/v1/reports/stats
 
-Reports statistics.
+Statistics for reports that are still pending (not completed yet).
 
 ```bash
 curl http://localhost:8000/api/v1/reports/stats \

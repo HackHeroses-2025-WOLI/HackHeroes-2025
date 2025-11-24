@@ -357,6 +357,32 @@ def test_reports_endpoints_require_token():
     assert response.status_code == 201
 
 
+def test_reports_listing_without_trailing_slash_returns_ok():
+    headers = _auth_headers(email="noslash@example.com")
+    _create_report()
+
+    response = client.get("/api/v1/reports?limit=5", headers=headers, follow_redirects=False)
+    assert response.status_code == 200
+    assert response.history == []  # no redirect
+    assert len(response.json()) >= 1
+
+
+def test_inactive_volunteer_can_view_reports():
+    headers = _auth_headers(email="inactive@example.com")
+    _create_report()
+
+    deactivate = client.put(
+        "/api/v1/accounts/me",
+        headers=headers,
+        json={"is_active": False},
+    )
+    assert deactivate.status_code == 200
+
+    response = client.get("/api/v1/reports", headers=headers, follow_redirects=False)
+    assert response.status_code == 200
+    assert len(response.json()) >= 1
+
+
 def test_get_all_reports_supports_filters():
     headers = _auth_headers()
     first = _create_report()
@@ -435,10 +461,11 @@ def test_get_all_reports_supports_filters():
     assert len(response.json()) == 1
 
 
-def test_get_reports_stats():
+def test_get_reports_stats_counts_only_pending_reports():
     headers = _auth_headers()
-    _create_report(headers)
-    _create_report(
+    first = _create_report(headers=headers)
+    first_id = first.json()["id"]
+    second = _create_report(
         headers,
         full_name="Ewa Kowal",
         phone="123456789",
@@ -447,13 +474,20 @@ def test_get_reports_stats():
         problem="Niedziałająca winda na dworcu",
         address="ul. Dworcowa 1",
     )
+    assert second.status_code == 201
+
+    accept_first = client.post(f"/api/v1/reports/{first_id}/accept", headers=headers)
+    assert accept_first.status_code == 200
+    complete_first = client.post("/api/v1/reports/active/complete", headers=headers)
+    assert complete_first.status_code == 200
 
     response = client.get("/api/v1/reports/stats", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert data["total_reports"] == 2
-    assert data["by_type"]["1"] == 1
+    assert data["total_reports"] == 1
+    # Only report type 2 (pending) should be counted
     assert data["by_type"]["2"] == 1
+    assert "1" not in data["by_type"]
 
 
 def test_volunteer_accepts_and_blocks_others_until_release():

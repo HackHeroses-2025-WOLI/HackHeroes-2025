@@ -218,7 +218,7 @@ Account responses returned by authenticated endpoints now expose a `genpoints` c
   - Note: This endpoint shows only reports that are neither currently assigned nor already completed
 
 - `GET /api/v1/reports/{id}` - Get a report by ID
-- `GET /api/v1/reports/stats` - Reports statistics
+- `GET /api/v1/reports/stats` - Statistics for pending (not yet completed) reports
 - `GET /api/v1/reports/metrics/avg-response-time` - Public average response time (minutes) between report submission and first acceptance
 - `GET /api/v1/reports/my-accepted-report` - Authenticated helper returning the ID of the report currently assigned to you (or `null` if none)
 - `GET /api/v1/reports/my-completed-reports` - Get full report data for all reports completed by you (requires auth, supports `skip`/`limit` pagination)

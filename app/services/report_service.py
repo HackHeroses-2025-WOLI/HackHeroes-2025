@@ -3,11 +3,12 @@ from datetime import datetime, time, timezone
 from typing import List, Optional
 
 from fastapi import HTTPException, status
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db.models import Account, Report
 from app.schemas.report import ReportCreate, ReportUpdate
+from app.schemas.account import deserialize_availability, is_active_now_from_slots
 
 
 class ReportService:
@@ -41,9 +42,10 @@ class ReportService:
     ) -> List[Report]:
         """Get all unaccepted and uncompleted reports with optional filters and pagination."""
         # Exclude reports currently assigned to any volunteer
-        assigned_ids = db.query(Account.active_report).filter(
-            Account.active_report.isnot(None)
-        ).scalar_subquery()
+        assigned_ids = (
+            select(Account.active_report)
+            .where(Account.active_report.isnot(None))
+        )
         
         # Exclude both actively assigned reports AND completed reports
         query = db.query(Report).filter(
@@ -236,20 +238,19 @@ class ReportService:
     
     @staticmethod
     def get_statistics(db: Session) -> dict:
-        """Get reports statistics."""
-        total = db.query(Report).count()
+        """Get statistics for pending (not yet completed) reports."""
+        pending_query = db.query(Report).filter(Report.completed_at.is_(None))
+        total_pending = pending_query.count()
         by_type = (
-            db.query(
-                Report.report_type_id,
-                func.count(Report.id)
-            )
+            pending_query
+            .with_entities(Report.report_type_id, func.count(Report.id))
             .group_by(Report.report_type_id)
             .all()
         )
 
         return {
-            "total_reports": total,
-            "by_type": {typ_id: count for typ_id, count in by_type}
+            "total_reports": total_pending,
+            "by_type": {typ_id: count for typ_id, count in by_type},
         }
 
     @staticmethod
@@ -259,23 +260,21 @@ class ReportService:
         Only calculates if there is at least one currently active volunteer.
         Returns None if no volunteers are active or no accepted reports exist.
         """
-        from app.db.models import Account
-        from datetime import datetime, timezone
-        
-        # Check if at least one volunteer is currently active
-        has_active = db.query(Account).filter(Account.is_active == True).first()
-        
-        if not has_active:
-            # Also check if any volunteer is active based on schedule
-            all_accounts = db.query(Account).filter(Account.availability_json.isnot(None)).all()
-            has_scheduled_active = False
-            
-            for account in all_accounts:
-                if account.is_active_now:
-                    has_scheduled_active = True
+        manual_active_exists = db.query(Account).filter(Account.is_active.is_(True)).first()
+
+        if not manual_active_exists:
+            schedule_active_exists = False
+            accounts = db.query(Account).all()
+            for account in accounts:
+                try:
+                    slots = deserialize_availability(account.availability_json)
+                except ValueError:
+                    slots = []
+                if is_active_now_from_slots(slots):
+                    schedule_active_exists = True
                     break
-            
-            if not has_scheduled_active:
+
+            if not schedule_active_exists:
                 return None
 
         rows = (

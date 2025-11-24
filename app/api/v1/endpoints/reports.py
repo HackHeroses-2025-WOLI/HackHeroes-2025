@@ -82,6 +82,36 @@ def get_all_reports(
 
 
 @router.get(
+    "",
+    response_model=List[ReportOut],
+    include_in_schema=False,
+)
+def get_all_reports_no_slash(
+    skip: int = Query(0, ge=0, description="Liczba pominiętych wyników"),
+    limit: int = Query(100, ge=1, le=500, description="Maksymalna liczba wyników"),
+    report_type_id: Optional[int] = Query(None, description="Filter by report type id"),
+    city: Optional[str] = Query(None, description="Filter by city"),
+    search: Optional[str] = Query(None, min_length=2, description="Szukaj po adresie lub opisie"),
+    date_from: Optional[date] = Query(None, description="Filter reports from date (YYYY-MM-DD)"),
+    date_to: Optional[date] = Query(None, description="Filter reports to date (YYYY-MM-DD)"),
+    db: Session = Depends(get_db),
+    current_account: Account = Depends(get_current_account),
+):
+    """Support /api/v1/reports without trailing slash to avoid redirects."""
+    return get_all_reports(
+        skip=skip,
+        limit=limit,
+        report_type_id=report_type_id,
+        city=city,
+        search=search,
+        date_from=date_from,
+        date_to=date_to,
+        db=db,
+        _=current_account,
+    )
+
+
+@router.get(
     "/stats",
     summary="Reports statistics",
     description="Get basic statistics for reports"
