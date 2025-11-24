@@ -197,6 +197,7 @@ class AccountOut(AccountBase):
 
     resolved_cases: int
     resolved_cases_this_year: int
+    genpoints: int
     active_report: Optional[int] = None
     availability_json: Optional[str] = Field(default=None, exclude=True)
     is_active: bool = False

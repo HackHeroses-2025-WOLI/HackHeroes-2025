@@ -97,6 +97,19 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 python init_db.py
 ```
 
+### Optional: Manual schema helpers
+When upgrading an existing SQLite database, run the lightweight helpers to ensure all required columns exist:
+
+```bash
+python scripts/add_is_active_column.py users.db
+python scripts/add_is_reviewed_column.py users.db
+python scripts/add_genpoints_column.py users.db
+python scripts/add_accepted_at_column.py users.db
+python scripts/add_completed_columns.py users.db
+```
+
+Each script creates a timestamped backup before altering the table.
+
 ## 🐳 Docker
 
 1. Copy `.env.example` to `.env` and set a secure `SECRET_KEY` (plus any other overrides).
@@ -146,7 +159,6 @@ Once running, visit:
     "full_name": "Jan Kowalski",
     "phone": "123456789",
     "city": "Warsaw",
-    "availability_type": 1,
     "availability": [
       {
         "day_of_week": 1,
@@ -172,6 +184,7 @@ Once running, visit:
 - `GET /api/v1/accounts/volunteers/active` - Public list of active volunteers
 - `PUT /api/v1/accounts/me` - Update your account (requires auth)
 - `DELETE /api/v1/accounts/me` - Delete your account (requires auth)
+Account responses returned by authenticated endpoints now expose a `genpoints` counter so volunteers can track earned credit (+10 per completed report).
 
 ---
 
@@ -196,18 +209,25 @@ Once running, visit:
     "report_details": "Dodatkowe informacje..."
   }
   ```
+  Response bodies now include a boolean `is_reviewed` flag so operators immediately know whether the report has already been triaged. Newly created reports default to `false`.
 
 #### Browse Reports
-- `GET /api/v1/reports/` - Get all reports
-  - Query params: `skip`, `limit`, `report_type_id`, `city`
+- `GET /api/v1/reports/` - Get all available reports (excludes accepted and completed reports)
+  - Query params: `skip`, `limit`, `report_type_id`, `city`, `search`, `date_from`, `date_to`
   - Example: `/api/v1/reports/?city=Warsaw&limit=50`
+  - Note: This endpoint shows only reports that are neither currently assigned nor already completed
 
 - `GET /api/v1/reports/{id}` - Get a report by ID
 - `GET /api/v1/reports/stats` - Reports statistics
+- `GET /api/v1/reports/metrics/avg-response-time` - Public average response time (minutes) between report submission and first acceptance
+- `GET /api/v1/reports/my-accepted-report` - Authenticated helper returning the ID of the report currently assigned to you (or `null` if none)
+- `GET /api/v1/reports/my-completed-reports` - Get full report data for all reports completed by you (requires auth, supports `skip`/`limit` pagination)
 - `GET /api/v1/reports/reporter/{email}` - REMOVED
 
 #### Edit & Delete
-- `DELETE /api/v1/reports/{id}` - Delete a report
+- `POST /api/v1/reports/{id}/accept` – Accept a report (requires auth). Only one volunteer can own a report at a time; the endpoint returns HTTP `409` if somebody else already works on it, or `400` if you already have another active report.
+- `POST /api/v1/reports/active/cancel` – Release your currently assigned report so another volunteer may take it.
+- `POST /api/v1/reports/active/complete` – Mark the active report as completed. This clears `active_report`, increments the `resolved_cases` counters, and awards **+10 genpoints** (displayed on `/api/v1/accounts/me`).
 
 ---
 

@@ -55,6 +55,7 @@ class Account(Base):
     # Statistics
     resolved_cases = Column("rozwiazane_sprawy", Integer, default=0, nullable=False)
     resolved_cases_this_year = Column("rozwiazane_sprawy_ten_rok", Integer, default=0, nullable=False)
+    genpoints = Column(Integer, default=0, nullable=False)
     
     # Foreign Keys
     active_report = Column(
@@ -105,6 +106,7 @@ class Report(Base):
     
     # Contact & Status
     contact_ok = Column("czy_do_kontaktu", Boolean, default=True, nullable=False)
+    is_reviewed = Column(Boolean, default=False, nullable=False)
     
     # Foreign Keys
     report_type_id = Column("typ_zgloszenia_id", Integer, ForeignKey("typ_zgloszenia.id"), nullable=False)
@@ -117,6 +119,13 @@ class Report(Base):
     # Details
     report_details = Column("zgloszenie_szczegoly", Text, nullable=True)  # JSON or detailed text
     reported_at = Column("data_zgloszenia", DateTime(timezone=True), server_default=func.now(), nullable=False)
+    accepted_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    completed_by_email = Column(
+        String,
+        ForeignKey("konta.login_email", use_alter=True, name="fk_completed_by", ondelete="SET NULL"),
+        nullable=True,
+    )
     
     # Relationships
     report_type_rel = relationship("ReportType", back_populates="reports")

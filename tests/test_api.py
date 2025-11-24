@@ -121,6 +121,14 @@ def _backdate_report(report_id: int, days: int) -> None:
         db.commit()
 
 
+def _set_reported_at_delta_minutes(report_id: int, minutes: int) -> None:
+    with TestingSessionLocal() as db:
+        entry = db.get(models.Report, report_id)
+        assert entry.accepted_at is not None
+        entry.reported_at = entry.accepted_at - timedelta(minutes=minutes)
+        db.commit()
+
+
 def test_health_check():
     response = client.get("/health")
     assert response.status_code == 200
@@ -336,6 +344,7 @@ def test_create_report_success():
     assert data["city"] == "Warsaw"
     assert data["report_type_id"] == 1
     assert data["reporter_email"] is None
+    assert data["is_reviewed"] is False
 
 
 def test_reports_endpoints_require_token():
@@ -371,9 +380,28 @@ def test_get_all_reports_supports_filters():
         address="ul. Stara 2",
     )
     assert third.status_code == 201
-    _backdate_report(third.json()["id"], days=10)
+    third_id = third.json()["id"]
+    _backdate_report(third_id, days=10)
 
-    # city filter (case-insensitive substring)
+    # Accept one report so it's excluded from the listing
+    accept_response = client.post(f"/api/v1/reports/{third_id}/accept", headers=headers)
+    assert accept_response.status_code == 200
+
+    # Verify accepted report is excluded
+    all_reports = client.get("/api/v1/reports/", headers=headers)
+    assert all_reports.status_code == 200
+    assert len(all_reports.json()) == 2  # Only first and second
+
+    # Complete the accepted report
+    complete_response = client.post("/api/v1/reports/active/complete", headers=headers)
+    assert complete_response.status_code == 200
+
+    # Verify completed report is still excluded (completed reports shouldn't appear in main list)
+    all_reports = client.get("/api/v1/reports/", headers=headers)
+    assert all_reports.status_code == 200
+    assert len(all_reports.json()) == 2  # Still only first and second
+
+    # city filter (case-insensitive substring) - only unaccepted and uncompleted
     response = client.get("/api/v1/reports/?city=da", headers=headers)
     assert response.status_code == 200
     assert len(response.json()) == 1
@@ -385,7 +413,7 @@ def test_get_all_reports_supports_filters():
     assert len(items) == 1
     assert items[0]["report_type_id"] == 2
 
-    # date range filter
+    # date range filter - third is completed so excluded
     today = datetime.now(timezone.utc).date()
     response = client.get(
         f"/api/v1/reports/?date_from={(today - timedelta(days=1)).isoformat()}",
@@ -399,7 +427,7 @@ def test_get_all_reports_supports_filters():
         headers=headers,
     )
     assert response.status_code == 200
-    assert len(response.json()) == 1
+    assert len(response.json()) == 0  # third is completed
 
     # type filter
     response = client.get("/api/v1/reports/?report_type_id=2", headers=headers)
@@ -428,6 +456,134 @@ def test_get_reports_stats():
     assert data["by_type"]["2"] == 1
 
 
+def test_volunteer_accepts_and_blocks_others_until_release():
+    primary_headers = _auth_headers(email="volunteer1@example.com")
+    secondary_headers = _auth_headers(email="volunteer2@example.com")
+
+    create_resp = client.post("/api/v1/reports/", json=_report_payload())
+    assert create_resp.status_code == 201
+    report_id = create_resp.json()["id"]
+
+    accept = client.post(f"/api/v1/reports/{report_id}/accept", headers=primary_headers)
+    assert accept.status_code == 200
+    assert accept.json()["id"] == report_id
+    assert accept.json()["accepted_at"] is not None
+
+    conflict = client.post(f"/api/v1/reports/{report_id}/accept", headers=secondary_headers)
+    assert conflict.status_code == 409
+
+    cancel = client.post("/api/v1/reports/active/cancel", headers=primary_headers)
+    assert cancel.status_code == 200
+    assert cancel.json()["id"] == report_id
+
+    accept_second = client.post(f"/api/v1/reports/{report_id}/accept", headers=secondary_headers)
+    assert accept_second.status_code == 200
+
+
+def test_cannot_accept_new_report_while_one_active():
+    headers = _auth_headers(email="busy@example.com")
+    first_resp = client.post("/api/v1/reports/", json=_report_payload())
+    assert first_resp.status_code == 201
+    first_report = first_resp.json()["id"]
+    second_resp = client.post(
+        "/api/v1/reports/",
+        json=_report_payload(full_name="Inny", phone="123123123", report_type_id=2),
+    )
+    assert second_resp.status_code == 201
+    second_report = second_resp.json()["id"]
+
+    assert client.post(f"/api/v1/reports/{first_report}/accept", headers=headers).status_code == 200
+    blocked = client.post(f"/api/v1/reports/{second_report}/accept", headers=headers)
+    assert blocked.status_code == 400
+
+
+def test_complete_active_report_updates_counters():
+    headers = _auth_headers(email="finisher@example.com")
+    create_resp = client.post("/api/v1/reports/", json=_report_payload())
+    assert create_resp.status_code == 201
+    report_id = create_resp.json()["id"]
+
+    accepted = client.post(f"/api/v1/reports/{report_id}/accept", headers=headers)
+    assert accepted.status_code == 200
+    assert accepted.json()["accepted_at"] is not None
+
+    done = client.post("/api/v1/reports/active/complete", headers=headers)
+    assert done.status_code == 200
+    assert done.json()["id"] == report_id
+
+    me = client.get("/api/v1/accounts/me", headers=headers)
+    assert me.status_code == 200
+    data = me.json()
+    assert data["active_report"] is None
+    assert data["resolved_cases"] == 1
+    assert data["resolved_cases_this_year"] == 1
+    assert data["genpoints"] == 10
+
+
+def test_public_average_response_time_endpoint():
+    # No accepted reports yet -> null
+    empty = client.get("/api/v1/reports/metrics/avg-response-time")
+    assert empty.status_code == 200
+    assert empty.json()["average_response_minutes"] is None
+
+    headers = _auth_headers(email="metrics@example.com")
+
+    first_resp = client.post("/api/v1/reports/", json=_report_payload())
+    assert first_resp.status_code == 201
+    first_id = first_resp.json()["id"]
+    second_resp = client.post(
+        "/api/v1/reports/",
+        json=_report_payload(full_name="Druga", phone="321321321"),
+    )
+    assert second_resp.status_code == 201
+    second_id = second_resp.json()["id"]
+
+
+def test_my_accepted_endpoint_returns_id_or_null():
+    headers = _auth_headers(email="helper@example.com")
+
+    empty = client.get("/api/v1/reports/my-accepted-report", headers=headers)
+    assert empty.status_code == 200
+    assert empty.json()["report_id"] is None
+
+    create_resp = client.post("/api/v1/reports/", json=_report_payload())
+    assert create_resp.status_code == 201
+    report_id = create_resp.json()["id"]
+
+    assert client.post(f"/api/v1/reports/{report_id}/accept", headers=headers).status_code == 200
+
+    filled = client.get("/api/v1/reports/my-accepted-report", headers=headers)
+    assert filled.status_code == 200
+    assert filled.json()["report_id"] == report_id
+
+
+def test_my_completed_endpoint_lists_finished_reports():
+    headers = _auth_headers(email="completionist@example.com")
+
+    first_resp = client.post("/api/v1/reports/", json=_report_payload())
+    assert first_resp.status_code == 201
+    first_id = first_resp.json()["id"]
+
+    second_resp = client.post(
+        "/api/v1/reports/",
+        json=_report_payload(full_name="Second", phone="111222333"),
+    )
+    assert second_resp.status_code == 201
+    second_id = second_resp.json()["id"]
+
+    assert client.post(f"/api/v1/reports/{first_id}/accept", headers=headers).status_code == 200
+    assert client.post("/api/v1/reports/active/complete", headers=headers).status_code == 200
+
+    assert client.post(f"/api/v1/reports/{second_id}/accept", headers=headers).status_code == 200
+    assert client.post("/api/v1/reports/active/complete", headers=headers).status_code == 200
+
+    completed = client.get("/api/v1/reports/my-completed-reports", headers=headers)
+    assert completed.status_code == 200
+    items = completed.json()
+    assert len(items) == 2
+    assert items[0]["id"] == second_id
+    assert items[1]["id"] == first_id
+    assert items[0]["completed_by_email"] == "completionist@example.com"
 def test_delete_my_account():
     _register_account()
     login = _login_account()

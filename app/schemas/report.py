@@ -66,6 +66,7 @@ class ReportCreate(ReportBase):
         description="More details or JSON",
     )
     reporter_email: Optional[str] = None  # Set automatically from auth
+    is_reviewed: bool = False
 
 
 class ReportUpdate(BaseModel):
@@ -101,6 +102,7 @@ class ReportUpdate(BaseModel):
         None,
         max_length=REPORT_DETAILS_MAX,
     )
+    is_reviewed: Optional[bool] = None
 
 
 class ReportOut(ReportBase):
@@ -109,6 +111,10 @@ class ReportOut(ReportBase):
     report_details: Optional[str] = None
     reported_at: datetime
     reporter_email: Optional[str] = None
+    is_reviewed: bool
+    accepted_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    completed_by_email: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 class ReportWithDetails(ReportOut):

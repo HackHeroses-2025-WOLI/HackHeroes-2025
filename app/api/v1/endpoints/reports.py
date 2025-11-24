@@ -96,6 +96,49 @@ def get_reports_statistics(
 
 
 @router.get(
+    "/metrics/avg-response-time",
+    summary="Average response time",
+    description="Public metric showing the average minutes between submission and first acceptance",
+)
+def get_average_response_time(
+    db: Session = Depends(get_db),
+):
+    """Return average response time in minutes (public endpoint)."""
+    avg_minutes = ReportService.get_average_response_minutes(db)
+    return {"average_response_minutes": avg_minutes}
+
+
+@router.get(
+    "/my-accepted-report",
+    summary="Get my accepted report",
+    description="Return the ID of the report currently assigned to the authenticated volunteer.",
+)
+def get_my_accepted_report(
+    current_account: Account = Depends(get_current_account),
+):
+    """Return active report id (or null) for the current volunteer."""
+    return {"report_id": current_account.active_report}
+
+
+@router.get(
+    "/my-completed-reports",
+    response_model=List[ReportOut],
+    summary="Get my completed reports",
+    description="Return full report data for all reports that the authenticated volunteer has completed.",
+)
+def get_my_completed_reports(
+    skip: int = Query(0, ge=0, description="Skip N reports"),
+    limit: int = Query(100, ge=1, le=500, description="Max results"),
+    db: Session = Depends(get_db),
+    current_account: Account = Depends(get_current_account),
+):
+    """List completed reports for the current volunteer with full report details."""
+    return ReportService.get_completed_reports_by_volunteer(
+        db, current_account.email, skip=skip, limit=limit
+    )
+
+
+@router.get(
     "/{report_id}",
     response_model=ReportOut,
     summary="Get report by ID",
@@ -116,25 +159,47 @@ def get_report_by_id(
     return report
 
 
-@router.delete(
-    "/{report_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete report",
-    description="Delete a report"
+@router.post(
+    "/{report_id}/accept",
+    response_model=ReportOut,
+    summary="Accept a report",
+    description="Assign a report to the authenticated volunteer if it is not already taken."
 )
-def delete_report(
+def accept_report(
     report_id: int,
     db: Session = Depends(get_db),
-    _: Account = Depends(get_current_account),
+    current_account: Account = Depends(get_current_account),
 ):
-    """Delete a report."""
-    success = ReportService.delete_report(db, report_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Report with ID {report_id} not found"
-        )
-    return None
+    """Assign a report to the current volunteer, enforcing exclusivity."""
+    return ReportService.assign_report_to_volunteer(db, current_account, report_id)
+
+
+@router.post(
+    "/active/cancel",
+    response_model=ReportOut,
+    summary="Cancel current assignment",
+    description="Release the volunteer's active report so someone else can accept it."
+)
+def cancel_active_report(
+    db: Session = Depends(get_db),
+    current_account: Account = Depends(get_current_account),
+):
+    """Cancel the current volunteer's assignment."""
+    return ReportService.cancel_active_report(db, current_account)
+
+
+@router.post(
+    "/active/complete",
+    response_model=ReportOut,
+    summary="Complete current assignment",
+    description="Mark the active report as completed and increment volunteer statistics."
+)
+def complete_active_report(
+    db: Session = Depends(get_db),
+    current_account: Account = Depends(get_current_account),
+):
+    """Complete the current assignment and update counters."""
+    return ReportService.complete_active_report(db, current_account)
 
 
 # Deprecated: reporter-linked reports removed

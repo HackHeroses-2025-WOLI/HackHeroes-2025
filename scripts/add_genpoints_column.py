@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Migration helper: ensure the konta table has the is_active column.
+"""Ensure table 'konta' has the integer column 'genpoints'.
 
 Usage:
-  python scripts/add_is_active_column.py path/to/users.db
+  python scripts/add_genpoints_column.py path/to/users.db
 
-A timestamped backup of the database will be created before applying the ALTER.
+A timestamped backup of the database will be created before altering the table.
 """
 
 import shutil
@@ -26,13 +26,13 @@ def column_exists(conn: sqlite3.Connection, table: str, column: str) -> bool:
     return any(row[1] == column for row in cur.fetchall())
 
 
-def ensure_is_active(conn: sqlite3.Connection) -> bool:
-    if column_exists(conn, "konta", "is_active"):
-        print("Column 'is_active' already present on 'konta' — nothing to do.")
+def ensure_genpoints(conn: sqlite3.Connection) -> bool:
+    if column_exists(conn, "konta", "genpoints"):
+        print("Column 'genpoints' already present on 'konta' — nothing to do.")
         return False
 
-    print("Adding column 'is_active' to table 'konta' with default FALSE")
-    conn.execute("ALTER TABLE konta ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT 0;")
+    print("Adding column 'genpoints' to table 'konta' with default 0")
+    conn.execute("ALTER TABLE konta ADD COLUMN genpoints INTEGER NOT NULL DEFAULT 0;")
     conn.commit()
     return True
 
@@ -47,7 +47,7 @@ def migrate(db_path: Path) -> None:
 
     conn = sqlite3.connect(str(db_path))
     try:
-        changed = ensure_is_active(conn)
+        changed = ensure_genpoints(conn)
         if changed:
             print("Column added successfully.")
     finally:
@@ -56,7 +56,7 @@ def migrate(db_path: Path) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python scripts/add_is_active_column.py path/to/db.sqlite")
+        print("Usage: python scripts/add_genpoints_column.py path/to/db.sqlite")
         raise SystemExit(2)
 
     migrate(Path(sys.argv[1]))

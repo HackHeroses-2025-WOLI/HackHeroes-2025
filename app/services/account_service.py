@@ -75,7 +75,8 @@ class AccountService:
             is_active=account_data.is_active,
             availability_json="[]",
             resolved_cases=0,
-            resolved_cases_this_year=0
+            resolved_cases_this_year=0,
+            genpoints=0,
         )
         
         db.add(new_account)

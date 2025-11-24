@@ -230,6 +230,7 @@ curl -X POST http://localhost:8000/api/v1/reports/ \
 ```
 
 `reporter_email` is NOT set when reports are submitted anonymously; this field will be `null`.
+Response bodies expose an `is_reviewed` boolean flag (default `false`) so internal tools can immediately display triage state.
 
 **Errors:**
 
@@ -237,7 +238,7 @@ curl -X POST http://localhost:8000/api/v1/reports/ \
 
 ### GET /api/v1/reports/
 
-Get all reports (pagination + filters).
+Get all available reports (pagination + filters). This endpoint returns only reports that are **neither currently assigned to a volunteer nor already completed**, making it perfect for displaying work available to be picked up. Every record contains the `is_reviewed` flag so operators quickly know which cases require attention.
 
 ```bash
 # All reports
@@ -294,6 +295,54 @@ Przykładowa odpowiedź:
 
 - `401 Unauthorized` – requires valid token.
 
+### GET /api/v1/reports/metrics/avg-response-time
+
+Public metric endpoint returning the average number of minutes between `reported_at` and the first acceptance (`accepted_at`). No authentication required.
+
+```bash
+curl http://localhost:8000/api/v1/reports/metrics/avg-response-time
+```
+
+Response:
+
+```json
+{ "average_response_minutes": 47.5 }
+```
+
+If no report has been accepted yet, the value is `null`.
+
+### GET /api/v1/reports/my-accepted-report
+
+Return the currently assigned report ID for the authenticated volunteer.
+
+```bash
+curl http://localhost:8000/api/v1/reports/my-accepted-report \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Response structure:
+
+```json
+{ "report_id": 123 }
+```
+
+The value is `null` when no report is currently assigned.
+
+### GET /api/v1/reports/my-completed-reports
+
+Return reports that the authenticated volunteer has completed. Supports `skip` and `limit` query parameters for pagination.
+
+```bash
+curl "http://localhost:8000/api/v1/reports/my-completed-reports?limit=20" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Returns an array of `ReportOut` objects, ordered by completion date (newest first).
+
+**Errors:**
+
+- `401 Unauthorized` – missing/invalid token.
+
 ### GET /api/v1/reports/{id}
 
 Get a report by ID.
@@ -308,23 +357,57 @@ curl http://localhost:8000/api/v1/reports/1 \
 - `401 Unauthorized` – token missing.
 - `404 Not Found` – report with given ID does not exist.
 
-### GET /api/v1/reports/reporter/{email}
+### POST /api/v1/reports/{id}/accept
 
-Removed (endpoint no longer available).
-
-### DELETE /api/v1/reports/{id}
-
-Delete a report.
+Accept (assign yourself to) a report. Exactly one volunteer may own a report; attempting to accept an already taken report returns `409 Conflict`.
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/reports/1 \
+curl -X POST http://localhost:8000/api/v1/reports/123/accept \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 **Errors:**
 
+- `400 Bad Request` – you already work on another active report.
 - `401 Unauthorized` – missing/invalid token.
-- `404 Not Found` – report already removed or ID invalid.
+- `404 Not Found` – report does not exist.
+- `409 Conflict` – somebody else already accepted this report.
+
+### POST /api/v1/reports/active/cancel
+
+Cancel your current assignment (frees the report for other volunteers).
+
+```bash
+curl -X POST http://localhost:8000/api/v1/reports/active/cancel \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Response returns the released report body so the UI may update immediately.
+
+**Errors:**
+
+- `400 Bad Request` – no active report to cancel.
+- `401 Unauthorized` – token missing.
+- `404 Not Found` – stored report id no longer exists (state is cleared).
+
+### POST /api/v1/reports/active/complete
+
+Mark your current assignment as completed. The endpoint clears `active_report`, increments the volunteer's counters, grants **+10 genpoints**, and returns the report payload so dashboards stay in sync.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/reports/active/complete \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Errors:**
+
+- `400 Bad Request` – no active report to complete.
+- `401 Unauthorized` – token missing.
+- `404 Not Found` – referenced report was removed; the active flag is cleared.
+
+### GET /api/v1/reports/reporter/{email}
+
+Removed (endpoint no longer available).
 
 ---
 
@@ -361,10 +444,10 @@ Example response:
 | Category | Endpoint count |
 |-----------|-------------------|
 | Accounts | 7 |
-| Reports | 6 |
+| Reports | 9 |
 | Report Types | 1 |
 | Health | 1 |
-| **TOTAL** | **15** |
+| **TOTAL** | **18** |
 
 ---
 
