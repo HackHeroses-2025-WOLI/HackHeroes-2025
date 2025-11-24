@@ -490,6 +490,29 @@ def test_get_reports_stats_counts_only_pending_reports():
     assert "1" not in data["by_type"]
 
 
+def test_get_reports_stats_excludes_currently_accepted_reports():
+    # Ensure accepted-but-not-completed reports are not counted in stats
+    volunteer_headers = _auth_headers(email="statsvol@example.com")
+
+    # Public creation of two reports
+    r1 = _create_report()
+    r2 = _create_report(report_type_id=2)
+    assert r1.status_code == 201 and r2.status_code == 201
+
+    r1_id = r1.json()["id"]
+
+    # Volunteer accepts first report (not completing it)
+    accept = client.post(f"/api/v1/reports/{r1_id}/accept", headers=volunteer_headers)
+    assert accept.status_code == 200
+
+    # Stats should only count the second (unaccepted) report
+    response = client.get("/api/v1/reports/stats", headers=volunteer_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_reports"] == 1
+    assert data["by_type"]["2"] == 1
+
+
 def test_volunteer_accepts_and_blocks_others_until_release():
     primary_headers = _auth_headers(email="volunteer1@example.com")
     secondary_headers = _auth_headers(email="volunteer2@example.com")

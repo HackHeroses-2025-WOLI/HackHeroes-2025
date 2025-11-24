@@ -272,7 +272,7 @@ curl "http://localhost:8000/api/v1/reports/?search=winda&date_from=2025-01-01&da
 
 ### GET /api/v1/reports/stats
 
-Statistics for reports that are still pending (not completed yet).
+Statistics for reports that are still pending and currently unassigned (not accepted by any volunteer).
 
 ```bash
 curl http://localhost:8000/api/v1/reports/stats \

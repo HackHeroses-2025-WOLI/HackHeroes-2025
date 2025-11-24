@@ -239,7 +239,16 @@ class ReportService:
     @staticmethod
     def get_statistics(db: Session) -> dict:
         """Get statistics for pending (not yet completed) reports."""
-        pending_query = db.query(Report).filter(Report.completed_at.is_(None))
+        # Exclude reports that are completed OR currently accepted by any volunteer
+        assigned_ids = (
+            select(Account.active_report)
+            .where(Account.active_report.isnot(None))
+        )
+
+        pending_query = db.query(Report).filter(
+            Report.completed_at.is_(None),
+            ~Report.id.in_(assigned_ids),
+        )
         total_pending = pending_query.count()
         by_type = (
             pending_query
