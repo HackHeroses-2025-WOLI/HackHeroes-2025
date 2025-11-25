@@ -468,13 +468,13 @@ export function HelpForm({
   return (
     <div
       className={clsx(
-        "mx-auto flex w-full max-w-3xl flex-col gap-6 py-8 px-4 sm:px-0 overflow-x-hidden",
+        "mx-auto flex w-full max-w-3xl flex-col gap-6 py-8 px-4 sm:px-0",
         wrapperClassName,
       )}
     >
       <Card
         className={clsx(
-          "w-full min-w-0 overflow-hidden border border-default-100 shadow-[0_0_35px_rgba(15,23,42,0.16),0_0_0_1px_rgba(15,23,42,0.08)]",
+          "w-full min-w-0 border border-default-100 shadow-[0_0_35px_rgba(15,23,42,0.16),0_0_0_1px_rgba(15,23,42,0.08)]",
           cardClassName,
         )}
       >
@@ -585,6 +585,10 @@ export function HelpForm({
               label="Wybierz rodzaj problemu"
               isDisabled={isProblemSelectDisabled}
               isLoading={isLoadingReportTypes}
+              classNames={{
+                listbox: "max-h-none",
+                popoverContent: "max-h-none overflow-visible",
+              }}
               placeholder={problemSelectPlaceholder}
               selectedKeys={formData.problem ? [formData.problem] : []}
               onBlur={() => validateField("problem")}
