@@ -55,16 +55,62 @@
 
 // ==================== Display Settings ====================
 #ifndef DISPLAY_ROTATION
-#define DISPLAY_ROTATION 1  // Landscape
+#define DISPLAY_ROTATION 3
 #endif
 
 #ifndef TOUCH_ROTATION
-#define TOUCH_ROTATION 3  // Adjust to match display orientation
+#define TOUCH_ROTATION 1
 #endif
 
 // ==================== Serial Settings ====================
 #ifndef SERIAL_BAUD
 #define SERIAL_BAUD 115200
+#endif
+
+// ==================== WiFi / API Settings ====================
+// Provide safe defaults — override via platformio.ini build_flags for production
+#ifndef WIFI_SSID
+#define WIFI_SSID "Cudy"
+#endif
+
+#ifndef WIFI_PASSWORD
+#define WIFI_PASSWORD "91284655"
+#endif
+
+#ifndef API_BASE_URL
+#define API_BASE_URL "https://hackheroes-2025-backend.onrender.com"
+#endif
+
+/* =================== Place Settings =================== */
+
+#ifndef BUILDING_ADDRESS
+#define BUILDING_ADDRESS "ul. Przykładowa 10"
+#endif
+
+#ifndef LOCATION
+#define LOCATION "Krakow"
+#endif
+
+/* =================== Debug Settings =================== */
+#ifndef DEBUG
+#define DEBUG 1 // Set to 0 to disable debug logging
+#endif
+
+/* =========== PN532 (RFID/NFC sensor) =========== */
+#ifndef PN532_SDA_PIN
+#define PN532_SDA_PIN 7
+#endif
+
+#ifndef PN532_SCL_PIN
+#define PN532_SCL_PIN 6
+#endif
+
+#ifndef PN532_IRQ
+#define PN532_IRQ -1
+#endif
+
+#ifndef PN532_RESET
+#define PN532_RESET -1
 #endif
 
 // ==================== Application Settings ====================
@@ -74,4 +120,9 @@
 
 #ifndef APP_VERSION
 #define APP_VERSION "1.0.0"
+#endif
+
+// ==================== Maintenance / Admin ====================
+#ifndef ADMIN_CARD_UID
+#define ADMIN_CARD_UID "C0:F4:E4:5F" // 4-byte admin card UID (XX:XX:XX:XX)
 #endif

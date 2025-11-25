@@ -1,8 +1,86 @@
+# GenLink Kiosk
+
+ESP32 kiosk firmware — touchscreen UI and PN532 NFC reader for a small 'report help' flow.
+
+This project is a minimal prototype for a local kiosk where residents can select a problem category, tap an NFC card to identify themselves, and submit a report to a backend service.
+
+Project overview
+----------------
+- Platform: ESP32 (PlatformIO)
+- Display: ILI9341 TFT with XPT2046 touch controller
+- NFC reader: PN532 (I2C)
+- Main features: multi-screen UI, NFC-based resident lookup (compile-time), backend integration (report submission + metrics)
+
+Build & upload (PlatformIO)
+---------------------------
+Prerequisites:
+- PlatformIO (VSCode recommended) or pio CLI
+
+Build and upload:
+
+```powershell
+# build
+pio run
+
+# upload (connect board to USB first)
+pio run -t upload
+
+# serial monitor (115200 baud)
+pio device monitor --baud 115200
+```
+
+Configuration
+-------------
+All compile-time application settings live in `include/ProjectConfig.h`.
+Do NOT commit production secrets directly into source; for production prefer overriding values using `platformio.ini` build_flags.
+
+Key values:
+- WIFI_SSID / WIFI_PASSWORD — WiFi credentials
+- API_BASE_URL — backend URL for submitting reports
+- DEBUG — set to 0 to disable Serial logging
+
+Example (platformio.ini override)
+
+```ini
+[env:esp32dev]
+build_flags = -D WIFI_SSID=\"MySSID\" -D WIFI_PASSWORD=\"MySecret\"
+```
+
+Managing residents & NFC cards
+-----------------------------
+Current design uses a compile-time resident table. To add or change residents:
+
+1. Edit `src/data/resident_registry.cpp`.
+2. Modify the `BUILTIN_RESIDENTS` array — each entry is a 4-byte UID, a name string, a phone number and an apartment number.
+3. Rebuild and upload the firmware.
+
+Example entry:
+
+```cpp
+    {{0x04, 0xA1, 0xB2, 0xC3}, "Jan Kowalski", "600000001", 12, true}
+```
+
+Runtime management note
+-----------------------
+This firmware does not persist resident records. If you need to add/remove cards without rebuilding, we can add a persistent storage layer (ESP32 NVS / Preferences) and a small admin UI.
+
+Device maintenance (short guide)
+-------------------------------
+- To change WiFi credentials: modify `include/ProjectConfig.h` or provide build_flags in `platformio.ini`.
+- To add residents: update `src/data/resident_registry.cpp` as described and re-flash.
+- To view logs: use `pio device monitor` (115200 by default).
+
+Developer notes
+---------------
+- Code is organized under `src/` and `include/` following subsystem boundaries: `core`, `hardware`, `ui`, `data`.
+- Logger behaviour is controlled by `DEBUG` define: set `DEBUG=0` for no logging.
+- The resident registry is non-persistent and limited to 100 slots (configurable in the header).
+
+If you want funding for adding secure admin UI or runtime persistence for users, I can implement that next (NVS-backed registry and password-protected admin flows).
+
 # GenLink Kiosk - Professional Architecture
 
 ESP32-based kiosk system with ILI9341 TFT display, XPT2046 touch controller, and PN532 NFC reader.
-
-## Architecture Overview
 
 ### Core System (`src/core/`, `include/core/`)
 
@@ -22,7 +100,7 @@ ESP32-based kiosk system with ILI9341 TFT display, XPT2046 touch controller, and
 - **Screen**: Base class with lifecycle hooks (`on_enter`, `on_draw`, `on_touch_*`)
 - **ExampleScreen**: Reference implementation
 
-## Hardware Wiring
+## Hardware Wiring (default, can be changed in `config.h`)
 
 ```
 TFT Display (ILI9341):
