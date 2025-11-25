@@ -9,14 +9,11 @@ from datetime import datetime, timedelta, timezone
 
 from app.config import get_secret_key, settings
 
-# ---------------------
-# Ustawienia JWT (sekret pobierany z ENV)
+
 SECRET_KEY = get_secret_key()
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
-# ---------------------
 
-# Create tables in SQLite
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
