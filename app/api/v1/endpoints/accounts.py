@@ -38,7 +38,6 @@ def register_account(
     - **full_name**: name and surname
     - **phone**: 9-digit phone number (optional)
     - **city**: city (optional)
-    Availability data is no longer collected during registration and defaults to empty.
     """
     account = AccountService.create_account(db, account_data)
     return account
@@ -55,7 +54,6 @@ def login_account(
     db: Session = Depends(get_db)
 ):
     """Login and receive a JWT token.
-
     - **email**: your email
     - **password**: your password
     """
@@ -65,7 +63,7 @@ def login_account(
         login_data.password
     )
     
-    # Log the successful login
+    
     log_volunteer_login(account.email)
     
     access_token = create_access_token(data={"sub": account.email})
@@ -88,8 +86,6 @@ def get_my_account(
     """Return the account associated with the access token."""
     return current_account
 
-
-# Endpoint removed: direct account lookup by email no longer exists
 
 
 @router.get(

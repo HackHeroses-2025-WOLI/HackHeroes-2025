@@ -1,11 +1,16 @@
 # HackHeroes 2025 - Backend API
 
-Professional FastAPI backend with authentication and user management.
+Professional FastAPI backend for accessibility reporting system with volunteer management.
 
+```bash
 ## 🚀 Features
 
-- ✅ JWT-based authentication
-- ✅ User registration and login
+- ✅ JWT-based authentication with secure token management
+- ✅ Public report submission (no authentication required)
+- ✅ Volunteer account system with registration and profile management
+- ✅ Report assignment and completion workflow
+- ✅ Gamification with genpoints system
+- ✅ Comprehensive logging (session-based + latest.log)
 - ✅ Password hashing with bcrypt
 - ✅ Input validation with Pydantic
 - ✅ Clean architecture with separation of concerns
@@ -14,64 +19,85 @@ Professional FastAPI backend with authentication and user management.
 - ✅ Comprehensive error handling
 - ✅ Environment-based configuration
 - ✅ API documentation (Swagger/ReDoc)
+- ✅ Report statistics and filtering
+- ✅ Volunteer availability tracking
 
 ## 📁 Project Structure
 
-```
-backend/
+HackHeroes-2025/
 ├── app/
-│   ├── api/
-│   │   └── v1/
-│   │       ├── endpoints/
-│   │       │   ├── auth.py         # Authentication endpoints
-│   │       │   └── users.py        # User management endpoints
-│   │       └── router.py           # Main v1 router
-│   ├── core/
-│   │   ├── security.py             # JWT, password hashing, auth
-│   │   └── exceptions.py           # Custom exceptions
-│   ├── db/
-│   │   ├── database.py             # Database configuration
-│   │   └── models.py               # SQLAlchemy models
-│   ├── schemas/
-│   │   ├── user.py                 # User schemas
-│   │   └── token.py                # Token schemas
-│   ├── services/
-│   │   └── user_service.py         # Business logic
-│   ├── config.py                   # App configuration
-│   └── main.py                     # FastAPI app
-├── tests/                          # Unit tests
-├── .env                            # Environment variables (not in git)
-├── .env.example                    # Example environment variables
-├── .gitignore                      # Git ignore rules
-├── requirements.txt                # Python dependencies
-└── README.md                       # This file
-```
+│ ├── api/
+│ │ └── v1/
+│ │ ├── endpoints/
+│ │ │ ├── accounts.py # Volunteer account management
+│ │ │ ├── auth.py # Authentication (login)
+│ │ │ ├── reports.py # Report CRUD and assignment
+│ │ │ ├── types.py # Report type management
+│ │ │ └── users.py # User endpoints (deprecated)
+│ │ └── router.py # Main v1 router
+│ ├── core/
+│ │ ├── security.py # JWT, password hashing, auth
+│ │ ├── logger.py # Session-based logging system
+│ │ └── exceptions.py # Custom exceptions
+│ ├── db/
+│ │ ├── database.py # Database configuration
+│ │ └── models.py # SQLAlchemy models (Account, Report, ReportType)
+│ ├── schemas/
+│ │ ├── account.py # Account schemas
+│ │ ├── report.py # Report schemas
+│ │ ├── type.py # ReportType schemas
+│ │ └── token.py # Token schemas
+│ ├── services/
+│ │ ├── account_service.py # Account business logic
+│ │ └── report_service.py # Report business logic
+│ ├── config.py # App configuration
+│ └── main.py # FastAPI app entry point
+├── logs/ # Session logs (gitignored)
+│ ├── latest.log # Current session logs
+│ └── DD-MM-YYYYTHH-MM-SS.log # Timestamped session backups
+├── scripts/ # Database migration helpers
+│ ├── add_is_active_column.py
+│ ├── add_is_reviewed_column.py
+│ ├── add_genpoints_column.py
+│ ├── add_accepted_at_column.py
+│ └── add_completed_columns.py
+├── tests/
+│ └── test_api.py # Comprehensive API tests
+├── .env # Environment variables (not in git)
+├── .env.example # Example environment variables
+├── .env.template # Environment variable template
+├── .gitignore # Git ignore rules
+├── pytest.ini # Pytest configuration
+├── requirements.txt # Python dependencies
+├── run.py # Development server script
+├── init_db.py # Database initialization
+├── API_ENDPOINTS.md # Complete API documentation
+└── README.md # This file
 
 ## 🔧 Setup
 
 ### 1. Clone and navigate to project
-```bash
-cd backend
-```
+
+git clone "https://github.com/HackHeroses-2025-WOLI/HackHeroes-2025.git"
+cd HackHeroes-2025
 
 ### 2. Create virtual environment
-```bash
 python -m venv venv
 
-# Windows
+# Windows (PowerShell)
 venv\Scripts\activate
+
+# Windows (CMD)
+venv\Scripts\activate.bat
 
 # Linux/Mac
 source venv/bin/activate
-```
 
 ### 3. Install dependencies
-```bash
 pip install -r requirements.txt
-```
 
 ### 4. Configure environment variables
-```bash
+
 # Copy example file
 copy .env.example .env
 
@@ -82,182 +108,12 @@ copy .env.example .env
 
 ### 5. Run the application
 ```bash
-# Method 1: Using run.py script 
 python run.py
-
-# Method 2: Using uvicorn directly
-uvicorn app.main:app --reload
-
-# Method 3: Production mode
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 ### 6. Initialize database (first time only)
 ```bash
 python init_db.py
 ```
-
-### Optional: Manual schema helpers
-When upgrading an existing SQLite database, run the lightweight helpers to ensure all required columns exist:
-
-```bash
-python scripts/add_is_active_column.py users.db
-python scripts/add_is_reviewed_column.py users.db
-python scripts/add_genpoints_column.py users.db
-python scripts/add_accepted_at_column.py users.db
-python scripts/add_completed_columns.py users.db
-```
-
-Each script creates a timestamped backup before altering the table.
-
-
-## 📚 API Documentation
-
-Once running, visit:
-- **Swagger UI**: http://localhost:8000/api/docs
-- **ReDoc**: http://localhost:8000/api/redoc
-- **OpenAPI JSON**: http://localhost:8000/api/openapi.json
-
-## 🔑 API Endpoints
-
-### 🏥 Health & Status
-- `GET /health` - Check API health status
-
----
-
-### 👥 **ACCOUNTS** - `/api/v1/accounts`
-
-#### Registration & Login
-- `POST /api/v1/accounts/register` - Register a new account
-  ```json
-  {
-    "email": "user@example.com",
-    "password": "SecurePass123",
-    "full_name": "Jan Kowalski",
-    "phone": "123456789",
-    "city": "Warsaw",
-    "availability": [
-      {
-        "day_of_week": 1,
-        "start_time": "08:00",
-        "end_time": "16:00",
-        "is_active": true
-      }
-    ]
-  }
-  ```
-
-- `POST /api/v1/accounts/login` - Login
-  ```json
-  {
-    "email": "user@example.com",
-    "password": "SecurePass123"
-  }
-  ```
-
-#### Account Management
-- `GET /api/v1/accounts/me` - Get your account (requires auth)
-- `GET /api/v1/accounts/{email}` - REMOVED
-- `GET /api/v1/accounts/volunteers/active` - Public list of active volunteers
-- `PUT /api/v1/accounts/me` - Update your account (requires auth)
-- `DELETE /api/v1/accounts/me` - Delete your account (requires auth)
-Account responses returned by authenticated endpoints now expose a `genpoints` counter so volunteers can track earned credit (+10 per completed report).
-
----
-
-### 📋 **REPORTS** - `/api/v1/reports`
-
-> **All report endpoints require** `Authorization: Bearer <token>` obtained from
-> `/api/v1/accounts/login`.
-> Note: Reports are submitted publicly (no token required) and `reporter_email` will be empty for anonymous reports.
-
-#### Create and Manage
-- `POST /api/v1/reports/` - Create a new report
-  ```json
-  {
-    "full_name": "Anna Nowak",
-    "phone": "987654321",
-    "age": 45,
-    "address": "ul. Przykładowa 10",
-    "city": "Krakow",
-    "problem": "No wheelchair ramp at the government office entrance",
-    "contact_ok": true,
-    "report_type_id": 1,
-    "report_details": "Dodatkowe informacje..."
-  }
-  ```
-  Response bodies now include a boolean `is_reviewed` flag so operators immediately know whether the report has already been triaged. Newly created reports default to `false`.
-
-#### Browse Reports
-- `GET /api/v1/reports/` - Get all available reports (excludes accepted and completed reports)
-  - Query params: `skip`, `limit`, `report_type_id`, `city`, `search`, `date_from`, `date_to`
-  - Example: `/api/v1/reports/?city=Warsaw&limit=50`
-  - Note: This endpoint shows only reports that are neither currently assigned nor already completed
-
-- `GET /api/v1/reports/{id}` - Get a report by ID
--- `GET /api/v1/reports/stats` - Statistics for pending, unassigned reports (not completed and not accepted by any volunteer)
-- `GET /api/v1/reports/metrics/avg-response-time` - Public average response time (minutes) between report submission and first acceptance
-- `GET /api/v1/reports/my-accepted-report` - Authenticated helper returning the ID of the report currently assigned to you (or `null` if none)
-- `GET /api/v1/reports/my-completed-reports` - Get full report data for all reports completed by you (requires auth, supports `skip`/`limit` pagination)
-- `GET /api/v1/reports/reporter/{email}` - REMOVED
-
-#### Edit & Delete
-- `POST /api/v1/reports/{id}/accept` – Accept a report (requires auth). Only one volunteer can own a report at a time; the endpoint returns HTTP `409` if somebody else already works on it, or `400` if you already have another active report.
-- `POST /api/v1/reports/active/cancel` – Release your currently assigned report so another volunteer may take it.
-- `POST /api/v1/reports/active/complete` – Mark the active report as completed. This clears `active_report`, increments the `resolved_cases` counters, and awards **+10 genpoints** (displayed on `/api/v1/accounts/me`).
-
----
-
-### 🏷️ **TYPES** - `/api/v1/types`
-
-- `GET /api/v1/types/report_types` - Get all predefined report categories
-
----
-
-### 🔐 **Authentication (Legacy)** - `/api/v1/auth`
-- `POST /api/v1/auth/register` - Registration (legacy system)
-- `POST /api/v1/auth/login` - Login (legacy system)
-
-### 👤 **Users (Legacy)** - `/api/v1/users`
-- `GET /api/v1/users/me` - Get profile (legacy system)
-- `GET /api/v1/users/{user_id}` - Get user by ID
-
-## 🔐 Authentication Flow
-
-1. **Register**: `POST /api/v1/auth/register`
-   ```json
-   {
-     "username": "testuser",
-     "password": "SecurePass123"
-   }
-   ```
-
-2. **Login**: `POST /api/v1/auth/login`
-   ```json
-   {
-     "username": "testuser",
-     "password": "SecurePass123"
-   }
-   ```
-   Returns:
-   ```json
-   {
-     "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-     "token_type": "bearer"
-   }
-   ```
-
-3. **Use Protected Endpoints**:
-   Add header: `Authorization: Bearer <access_token>`
-
-## 🧪 Testing
-
-```bash
-
-pytest
-
-pytest --cov=app tests/
-```
-
 
 HackHeroes 2025 Project

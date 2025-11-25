@@ -107,6 +107,8 @@ curl http://localhost:8000/api/v1/accounts/me \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
+Account responses returned by authenticated endpoints now expose a `genpoints` counter so volunteers can track earned credit (+10 per completed report).
+
 **Errors:**
 
 - `401 Unauthorized` – missing or invalid bearer token.
@@ -157,7 +159,7 @@ curl -X PUT http://localhost:8000/api/v1/accounts/me \
   }'
 ```
 
-_Availability can only be configured through this endpoint. Provide an array of `availability` slots to change schedule data._
+Availability can only be configured through this endpoint. Provide an array of `availability` slots to change schedule data.
 
 Example `availability` payload:
 
@@ -205,9 +207,10 @@ curl -X DELETE http://localhost:8000/api/v1/accounts/me \
 
 ---
 
-## 📋 REPORTS - /api/v1/reports
+## 📋 REPORTS - /api/v1/endpoints/reports
 
-> **Authorization:** wszystkie operacje z wyjątkiem `POST /api/v1/reports/` wymagają nagłówka `Authorization: Bearer <token>`.
+> **Authorization:** All report endpoints except `POST /api/v1/reports/` require the `Authorization: Bearer <token>` header obtained from `/api/v1/accounts/login`.
+Reports are submitted publicly (no token required for creation).
 
 ### POST /api/v1/reports/
 
@@ -229,16 +232,13 @@ curl -X POST http://localhost:8000/api/v1/reports/ \
   }'
 ```
 
-`reporter_email` is NOT set when reports are submitted anonymously; this field will be `null`.
-Response bodies expose an `is_reviewed` boolean flag (default `false`) so internal tools can immediately display triage state.
-
 **Errors:**
 
-- `422 Unprocessable Entity` – invalid phone number, too-short description, itp. (format jak w sekcji „Error Payload Format”).
+- `422 Unprocessable Entity` – invalid phone number, too-short description, itp. (format like in  „Error Payload Format”).
 
 ### GET /api/v1/reports/
 
-Get all available reports (pagination + filters). This endpoint returns only reports that are **neither currently assigned to a volunteer nor already completed**, making it perfect for displaying work available to be picked up. Every record contains the `is_reviewed` flag so operators quickly know which cases require attention.
+Get all available reports (pagination + filters). This endpoint returns only reports that are **neither currently assigned to a volunteer nor already completed**, making it perfect for displaying work available to be picked up.
 
 ```bash
 # All reports
@@ -272,7 +272,7 @@ curl "http://localhost:8000/api/v1/reports/?search=winda&date_from=2025-01-01&da
 
 ### GET /api/v1/reports/stats
 
-Statistics for reports that are still pending and currently unassigned (not accepted by any volunteer).
+Statistics for pending, unassigned reports (not completed and not accepted by any volunteer).
 
 ```bash
 curl http://localhost:8000/api/v1/reports/stats \
@@ -297,7 +297,8 @@ Przykładowa odpowiedź:
 
 ### GET /api/v1/reports/metrics/avg-response-time
 
-Public metric endpoint returning the average number of minutes between `reported_at` and the first acceptance (`accepted_at`). No authentication required.
+Public metric endpoint returning average response time.
+No authentication required.
 
 ```bash
 curl http://localhost:8000/api/v1/reports/metrics/avg-response-time
@@ -313,7 +314,7 @@ If no report has been accepted yet, the value is `null`.
 
 ### GET /api/v1/reports/my-accepted-report
 
-Return the currently assigned report ID for the authenticated volunteer.
+Authenticated helper returning the ID of the report currently assigned to you (or `null` if none).
 
 ```bash
 curl http://localhost:8000/api/v1/reports/my-accepted-report \
@@ -330,7 +331,7 @@ The value is `null` when no report is currently assigned.
 
 ### GET /api/v1/reports/my-completed-reports
 
-Return reports that the authenticated volunteer has completed. Supports `skip` and `limit` query parameters for pagination.
+Get full report data for all reports completed by you (requires auth, supports `skip`/`limit` pagination).
 
 ```bash
 curl "http://localhost:8000/api/v1/reports/my-completed-reports?limit=20" \
@@ -359,7 +360,7 @@ curl http://localhost:8000/api/v1/reports/1 \
 
 ### POST /api/v1/reports/{id}/accept
 
-Accept (assign yourself to) a report. Exactly one volunteer may own a report; attempting to accept an already taken report returns `409 Conflict`.
+Accept a report (requires auth). Only one volunteer can own a report at a time; the endpoint returns HTTP `409` if somebody else already works on it, or `400` if you already have another active report.
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/reports/123/accept \
@@ -375,7 +376,7 @@ curl -X POST http://localhost:8000/api/v1/reports/123/accept \
 
 ### POST /api/v1/reports/active/cancel
 
-Cancel your current assignment (frees the report for other volunteers).
+Release your currently assigned report so another volunteer may take it.
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/reports/active/cancel \
@@ -392,7 +393,7 @@ Response returns the released report body so the UI may update immediately.
 
 ### POST /api/v1/reports/active/complete
 
-Mark your current assignment as completed. The endpoint clears `active_report`, increments the volunteer's counters, grants **+10 genpoints**, and returns the report payload so dashboards stay in sync.
+Mark the active report as completed. This clears `active_report`, increments the `resolved_cases` counters, and awards **+10 genpoints** (displayed on `/api/v1/accounts/me`).
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/reports/active/complete \
@@ -404,12 +405,6 @@ curl -X POST http://localhost:8000/api/v1/reports/active/complete \
 - `400 Bad Request` – no active report to complete.
 - `401 Unauthorized` – token missing.
 - `404 Not Found` – referenced report was removed; the active flag is cleared.
-
-### GET /api/v1/reports/reporter/{email}
-
-Removed (endpoint no longer available).
-
----
 
 ## 🏷️ TYPES - /api/v1/types
 
@@ -427,34 +422,42 @@ Example response:
 
 ```json
 [
-  {"id": 1, "name": "Aplikacje", "description": "Problemy z aplikacjami"},
-  {"id": 2, "name": "Bezpieczeństwo", "description": "Zgłoszenia bezpieczeństwa"},
-  {"id": 3, "name": "Kontakt i połączenia", "description": "Trudności komunikacyjne"},
-  {"id": 4, "name": "Płatności i bankowość", "description": "Problemy finansowe"},
-  {"id": 5, "name": "Inne", "description": "Inne zgłoszenia"}
+  {"id": 1, "name": "Phone", "description": "Problems with using mobile device"},
+  
 ]
 ```
 
----
+## 📚 API Documentation
 
-## Podsumowanie
+Once running, visit:
+- **Swagger UI**: http://localhost:8000/api/docs
+- **ReDoc**: http://localhost:8000/api/redoc
+- **OpenAPI JSON**: http://localhost:8000/api/openapi.json
 
-**Total:** 21 endpoints
+## 🔐 Authentication Flow
 
-| Category | Endpoint count |
-|-----------|-------------------|
-| Accounts | 7 |
-| Reports | 9 |
-| Report Types | 1 |
-| Health | 1 |
-| **TOTAL** | **18** |
+1. **Register**: `POST /api/v1/auth/register`
+   ```json
+   {
+     "username": "testuser",
+     "password": "SecurePass123"
+   }
+   ```
 
----
+2. **Login**: `POST /api/v1/auth/login`
+   ```json
+   {
+     "username": "testuser",
+     "password": "SecurePass123"
+   }
+   ```
+   Returns:
+   ```json
+   {
+     "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+     "token_type": "bearer"
+   }
+   ```
 
-## 🔗 Dokumentacja Interaktywna
-
-Po uruchomieniu serwera odwiedź:
-
-- **Swagger UI**: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
-- **ReDoc**: [http://localhost:8000/api/redoc](http://localhost:8000/api/redoc)
-- **OpenAPI JSON**: [http://localhost:8000/api/openapi.json](http://localhost:8000/api/openapi.json)
+3. **Use Protected Endpoints**:
+   Add header: `Authorization: Bearer <access_token>`
