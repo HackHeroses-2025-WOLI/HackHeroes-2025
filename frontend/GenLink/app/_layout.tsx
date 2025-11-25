@@ -3,6 +3,7 @@ import { Colors } from '@/constants/theme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState, Platform, StatusBar as RNStatusBar } from 'react-native';
@@ -10,6 +11,10 @@ import { isEdgeToEdge } from 'react-native-is-edge-to-edge';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+
+void SplashScreen.preventAutoHideAsync().catch(() => {
+  // keep splash visible until the web content signals readiness
+});
 
 // Helper so we can retry setting the background color (wrapper around module API)
 function NavigationBarSetBackgroundColor(navigationBar: any, color: string) {
