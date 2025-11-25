@@ -96,16 +96,7 @@ source venv/bin/activate
 ### 3. Install dependencies
 pip install -r requirements.txt
 
-### 4. Configure environment variables
-
-# Copy example file
-copy .env.example .env
-
-# Edit .env and set your SECRET_KEY (IMPORTANT!)
-# Generate a secure key with:
-# python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
-
 ### 5. Run the application
 ```bash
 python run.py
