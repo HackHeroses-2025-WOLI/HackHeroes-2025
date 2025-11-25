@@ -1,4 +1,11 @@
 # Backend
+
+> [!TIP]
+> You can use our hosting: https://hackheroes-2025-backend.onrender.com/ (this is default backend link for the entire project)
+
+> [!WARNING]  
+> For everything to work properly, you need to visit the website so that render.com can run the code on the server (this is due to the limitations of free hosting)
+
 ### 1. Download project files
 https://github.com/HackHeroses-2025-WOLI/HackHeroes-2025/releases/tag/1.0.0
 extract to desired location and go to `/backend` folder (see `/backend/README.md` for backend-specific instructions)
@@ -31,6 +38,12 @@ python init_db.py
 
 
 ## Frontend
+
+> [!TIP]
+> You can use our hosting: https://hackheroes-2025-frontend.onrender.com/ with our backend (mentioned above) (this is default backend link for the entire project)
+
+> [!WARNING]  
+> For everything to work properly, you need to visit the backend website so that render.com can run the code on the server (this is due to the limitations of free hosting)
 
 ### Download project files
 https://github.com/HackHeroses-2025-WOLI/HackHeroes-2025/releases/tag/1.0.0
@@ -137,6 +150,12 @@ eas build --platform all
 
 
 # Hardware
+
+> [!TIP]
+> You can use our backend hosting: https://hackheroes-2025-backend.onrender.com/ (this is default backend link for the entire project)
+
+> [!WARNING]  
+> For everything to work properly, you need to visit the backend website so that render.com can run the code on the server (this is due to the limitations of free hosting)
 
 ### 1. Download project files
 https://github.com/HackHeroses-2025-WOLI/HackHeroes-2025/releases/tag/1.0.0
