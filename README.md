@@ -1,7 +1,7 @@
 # Backend
 ### 1. Download project files
 https://github.com/HackHeroses-2025-WOLI/HackHeroes-2025/releases/tag/1.0.0
-extract to desired location and go to `/backend` folder
+extract to desired location and go to `/backend` folder (see `/backend/README.md` for backend-specific instructions)
 
 ### 2. Create virtual environment
 python -m venv venv
@@ -34,7 +34,7 @@ python init_db.py
 
 ### Download project files
 https://github.com/HackHeroses-2025-WOLI/HackHeroes-2025/releases/tag/1.0.0
-extract to desired location and go to the `/frontend` folder.
+extract to desired location and go to the `/frontend` folder (see `/frontend/README.md` or per-subproject READMEs inside `/frontend/GenLink Web App` and `/frontend/GenLink`).
 
 The frontend contains two separate projects:
 - `frontend/GenLink Web App` — the web application
@@ -140,7 +140,12 @@ eas build --platform all
 
 ### 1. Download project files
 https://github.com/HackHeroses-2025-WOLI/HackHeroes-2025/releases/tag/1.0.0
-extract to desired location and go to `/hardware` folder
+extract to desired location and go to `/hardware` folder (see `/hardware/README.md` for hardware-specific details)
+
+Additional hardware resources in this repository:
+
+- `/hardware/models` — device/ML models and related files
+- `/hardware/zdjecia` — zdjęcia / sample images used by the hardware project
 
 
 2. Build and upload:
