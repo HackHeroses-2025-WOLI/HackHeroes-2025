@@ -29,7 +29,6 @@ class ReportType(Base):
     name = Column("nazwa", String, unique=True, nullable=False)
     description = Column("opis", String)
     
-    # Relationships
     reports = relationship("Report", back_populates="report_type_rel")
     
     def __repr__(self):
@@ -40,29 +39,25 @@ class Account(Base):
     """User account."""
     __tablename__ = "konta"
     
-    # Primary Key
     email = Column("login_email", String, primary_key=True, index=True)
     
-    # User Information
     full_name = Column("imie_nazwisko", String, nullable=False)
     phone = Column("nr_tel", String(9), nullable=True)
     password_hash = Column("hash_hasla", String, nullable=False)
     is_active = Column(Boolean, default=False, nullable=False)
     
-    # Location
     city = Column("miejscowosc", String, nullable=True)
     
-    # Statistics
     resolved_cases = Column("rozwiazane_sprawy", Integer, default=0, nullable=False)
     resolved_cases_this_year = Column("rozwiazane_sprawy_ten_rok", Integer, default=0, nullable=False)
     genpoints = Column(Integer, default=0, nullable=False)
     
-    # Foreign Keys
     active_report = Column(
         Integer,
         ForeignKey("zgloszenia.id", use_alter=True, name="fk_konta_zgloszenia", ondelete="SET NULL"),
         nullable=True,
     )
+
     # JSON field for additional accessibility settings
     availability_json = Column(
         "dostepnosc_json",
@@ -71,7 +66,6 @@ class Account(Base):
         default="[]",
     )  # JSON string stored for volunteers' schedules
     
-    # Relationships
     active_report_rel = relationship(
         "Report",
         foreign_keys=[active_report],
@@ -93,7 +87,6 @@ class Report(Base):
     """Problem report."""
     __tablename__ = "zgloszenia"
     
-    # Primary Key
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     
     # Basic Information

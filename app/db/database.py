@@ -5,7 +5,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from app.config import settings
 
 
-# Create database engine
+# Create database 
 engine = create_engine(
     settings.DATABASE_URL, 
     connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}

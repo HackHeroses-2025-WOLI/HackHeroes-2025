@@ -24,12 +24,10 @@ class UserService:
     @staticmethod
     def create_user(db: Session, user_data: UserCreate) -> User:
         """Create a new user."""
-        # Check if user already exists
         existing_user = UserService.get_user_by_username(db, user_data.username)
         if existing_user:
             raise UserAlreadyExistsException(user_data.username)
         
-        # Create new user
         hashed_password = get_password_hash(user_data.password)
         new_user = User(
             username=user_data.username.lower(),

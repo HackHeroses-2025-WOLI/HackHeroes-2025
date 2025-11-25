@@ -57,15 +57,12 @@ class AccountService:
     @staticmethod
     def create_account(db: Session, account_data: AccountCreate) -> Account:
         """Create a new account."""
-        # Check if account already exists
         existing_account = AccountService.get_account_by_email(db, account_data.email)
         if existing_account:
             raise UserAlreadyExistsException(account_data.email)
         
-        # Hash password
         hashed_password = get_password_hash(account_data.password)
         
-        # Create new account
         new_account = Account(
             email=account_data.email.lower(),
             full_name=account_data.full_name,
@@ -105,7 +102,6 @@ class AccountService:
         if not account:
             return None
         
-        # Update fields if provided
         if account_data.full_name is not None:
             account.full_name = account_data.full_name
         if account_data.phone is not None:

@@ -19,13 +19,12 @@ _BCRYPT_MAX_BYTES = 72
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/accounts/login")
 
-
+# Helper functions for password handling (length check and hashing)
 def _prepare_password(password: str) -> bytes:
     """Encode password and keep it within bcrypt limits."""
     password_bytes = password.encode("utf-8")
     if len(password_bytes) <= _BCRYPT_MAX_BYTES:
         return password_bytes
-    # Pre-hash long passwords to avoid silent truncation
     return hashlib.sha256(password_bytes).digest()
 
 

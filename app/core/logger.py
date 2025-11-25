@@ -20,35 +20,29 @@ def setup_logger(name: str = "app_logger") -> logging.Logger:
     """Configure and return a logger that writes to both latest.log and timestamped backup files."""
     logger = logging.getLogger(name)
     
-    # Only configure if handlers haven't been added yet
     if not logger.handlers:
         logger.setLevel(logging.INFO)
         
-        # Create formatter
         formatter = logging.Formatter(
             fmt="%(asctime)s - %(levelname)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S"
         )
         
-        # Handler for latest.log (always overwritten on app restart)
         latest_handler = logging.FileHandler(LATEST_LOG, mode='w', encoding='utf-8')
         latest_handler.setLevel(logging.INFO)
         latest_handler.setFormatter(formatter)
         logger.addHandler(latest_handler)
         
-        # Handler for timestamped backup log (append mode for this session)
         backup_handler = logging.FileHandler(TIMESTAMPED_LOG, mode='a', encoding='utf-8')
         backup_handler.setLevel(logging.INFO)
         backup_handler.setFormatter(formatter)
         logger.addHandler(backup_handler)
         
-        # Prevent propagation to root logger
         logger.propagate = False
     
     return logger
 
 
-# Initialize the logger
 app_logger = setup_logger()
 
 
