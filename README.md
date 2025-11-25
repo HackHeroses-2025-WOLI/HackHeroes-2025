@@ -25,15 +25,14 @@ source venv/bin/activate
 ### 3. Install dependencies
 pip install -r requirements.txt
 
+### 4. Initialize database (first time only)
+```bash
+python init_db.py
 ```
+
 ### 5. Run the application
 ```bash
 python run.py
-```
-
-### 6. Initialize database (first time only)
-```bash
-python init_db.py
 ```
 
 
@@ -163,9 +162,8 @@ extract to desired location and go to `/hardware` folder (see `/hardware/README.
 
 Additional hardware resources in this repository:
 
-- `/hardware/models` — device/ML models and related files
-- `/hardware/zdjecia` — zdjęcia / sample images used by the hardware project
-
+- `/hardware/models` — 3D models of GenLink Kiosk outer-casing
+- `/hardware/zdjecia` — images of our prototype of GenLink Kiosk device
 
 2. Build and upload:
 
