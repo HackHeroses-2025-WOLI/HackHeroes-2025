@@ -1,0 +1,76 @@
+# Python bytecode and build artefacts
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+build/
+dist/
+wheels/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+*.egg
+*.egg-info/
+share/python-wheels/
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment configuration
+.env
+.env.local
+.env.*.local
+
+# Databases and local storage
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+test.db
+users.db
+
+# Certificates / keys
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Test artefacts
+.pytest_cache/
+.coverage*
+htmlcov/
+.tox/
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backups / dumps
+old_backup/
+*.bak
+*.backup

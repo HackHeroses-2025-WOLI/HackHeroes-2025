@@ -1,0 +1,14 @@
+{
+    // Let PlatformIO provide IntelliSense where available
+    "C_Cpp.default.configurationProvider": "platformio.platformio-ide",
+    // Treat Arduino .ino files as C++ for the editor
+    "files.associations": {
+        "*.ino": "cpp"
+    },
+    // Helpful to auto-format on save during development (optional)
+    "editor.formatOnSave": true
+}
+{
+    "stm32-for-vscode.openOCDPath": false,
+    "stm32-for-vscode.makePath": false
+}

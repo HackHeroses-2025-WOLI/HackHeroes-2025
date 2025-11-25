@@ -1,0 +1,14 @@
+[Unit]
+Description=FastAPI Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/fastapi-test
+Environment="PATH=/home/pi/fastapi-test/venv/bin"
+ExecStart=/home/pi/fastapi-test/fastapi.sh
+#ExecStart=
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

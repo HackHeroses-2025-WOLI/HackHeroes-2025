@@ -1,0 +1,34 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.env
+.venv/
+
+# Distribution / build artifacts
+build/
+dist/
+*.egg-info/
+
+# Version control
+.git
+.gitignore
+
+# Editor settings
+.vscode/
+.idea/
+
+# Tests artifacts
+.coverage
+htmlcov/
+pytest.cache/
+
+# Local databases / backups
+*.db
+*.sqlite3
+users.bak*
+
+# Misc
+.DS_Store
