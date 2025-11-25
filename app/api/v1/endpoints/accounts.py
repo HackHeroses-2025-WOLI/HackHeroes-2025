@@ -14,6 +14,7 @@ from app.schemas import (
 )
 from app.services.account_service import AccountService
 from app.core.security import create_access_token, get_current_account
+from app.core.logger import log_volunteer_login
 from app.db.models import Account
 
 router = APIRouter()
@@ -63,6 +64,10 @@ def login_account(
         login_data.email, 
         login_data.password
     )
+    
+    # Log the successful login
+    log_volunteer_login(account.email)
+    
     access_token = create_access_token(data={"sub": account.email})
     
     return {

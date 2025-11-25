@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_account
+from app.core.logger import log_new_report, log_report_accepted, log_report_completed, log_report_cancelled
 from app.db.database import get_db
 from app.db.models import Account
 from app.schemas import ReportCreate, ReportOut
@@ -38,6 +39,16 @@ def create_report(
     - **report_details**: additional details
     """
     report = ReportService.create_report(db, report_data, reporter_email=None)
+    
+    # Log the new report creation
+    report_type_name = report.report_type_rel.name if report.report_type_rel else "Unknown"
+    log_new_report(
+        report_id=report.id,
+        reporter_name=report.full_name,
+        city=report.city,
+        report_type=report_type_name
+    )
+    
     return report
 
 
@@ -201,7 +212,12 @@ def accept_report(
     current_account: Account = Depends(get_current_account),
 ):
     """Assign a report to the current volunteer, enforcing exclusivity."""
-    return ReportService.assign_report_to_volunteer(db, current_account, report_id)
+    report = ReportService.assign_report_to_volunteer(db, current_account, report_id)
+    
+    # Log the report acceptance
+    log_report_accepted(report_id=report.id, volunteer_email=current_account.email)
+    
+    return report
 
 
 @router.post(
@@ -215,7 +231,14 @@ def cancel_active_report(
     current_account: Account = Depends(get_current_account),
 ):
     """Cancel the current volunteer's assignment."""
-    return ReportService.cancel_active_report(db, current_account)
+    report_id = current_account.active_report
+    report = ReportService.cancel_active_report(db, current_account)
+    
+    # Log the report cancellation
+    if report_id:
+        log_report_cancelled(report_id=report_id, volunteer_email=current_account.email)
+    
+    return report
 
 
 @router.post(
@@ -229,7 +252,14 @@ def complete_active_report(
     current_account: Account = Depends(get_current_account),
 ):
     """Complete the current assignment and update counters."""
-    return ReportService.complete_active_report(db, current_account)
+    report_id = current_account.active_report
+    report = ReportService.complete_active_report(db, current_account)
+    
+    # Log the report completion
+    if report_id:
+        log_report_completed(report_id=report_id, volunteer_email=current_account.email)
+    
+    return report
 
 
 # Deprecated: reporter-linked reports removed
