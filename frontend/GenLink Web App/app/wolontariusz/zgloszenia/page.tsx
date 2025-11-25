@@ -18,7 +18,6 @@ import { useReportTypes } from "@/hooks/use-report-types";
 import { Report } from "@/types";
 
 const FILTER_LAYOUT = {
-  // Adjust these values (in px) to control the category box width.
   categoryWidth: 300,
 };
 

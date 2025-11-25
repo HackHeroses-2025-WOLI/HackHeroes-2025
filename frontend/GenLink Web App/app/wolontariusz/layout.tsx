@@ -13,7 +13,6 @@ export default function WolontariuszLayout({
   const pathname = usePathname();
   const p = pathname ?? "";
 
-  // Require auth for everything under /wolontariusz except /login and /rejestracja
   const requireAuth = /^\/wolontariusz(?!\/(?:login|rejestracja)(?:\/|$))/.test(p);
 
   useRequireAuth("/wolontariusz/login", requireAuth);

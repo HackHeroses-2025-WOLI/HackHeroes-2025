@@ -190,7 +190,6 @@ export function HelpForm({
         remember: true,
       }));
     } catch {
-      // Ignore - silent fail for cached form data
     }
   }, []);
 
@@ -624,7 +623,6 @@ export function HelpForm({
                     variant="flat"
                     onPress={() => {
                       refreshReportTypes().catch(() => {
-                        /* błąd obsługiwany w stanie */
                       });
                     }}
                   >

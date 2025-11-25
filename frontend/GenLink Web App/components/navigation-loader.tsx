@@ -107,12 +107,9 @@ export const NavigationLoaderProvider = ({
   );
 
   const show = useCallback(() => {
-    // clear any pending hide timers and record when we showed the loader
     clearHideTimeout();
     showTimestampRef.current = getNow();
 
-    // schedule the visible state change in a microtask to avoid
-    // triggering setState during insertion effects in React internals.
     Promise.resolve().then(() => setIsVisible(true));
   }, [clearHideTimeout, getNow]);
 

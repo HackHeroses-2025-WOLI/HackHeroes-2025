@@ -68,7 +68,6 @@ export function ConfirmationContent({
     loadAverageResponseTime();
   }, []);
 
-  // Use API response time if available, otherwise fall back to resolveEtaMinutes logic
   const getEtaDisplay = () => {
     if (averageResponseMinutes !== null && !isLoadingEta) {
       return `${averageResponseMinutes} minut`;

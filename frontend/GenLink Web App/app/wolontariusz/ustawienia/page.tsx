@@ -98,13 +98,13 @@ const timeStringToTime = (value?: string | null) => {
 };
 
 const timeToString = (value?: any) => {
-  // support Time objects produced by https://github.com/adopted-ember-intl/intl or similar
+  //https://github.com/adopted-ember-intl/intl
   if (!value) return "";
   if (typeof value === "string") {
     return value;
   }
   if (typeof value === "object") {
-    // The internationalized date Time has .hour and .minute
+    //HH:MM
     const hour = (value.hour ?? value.hours ?? value.H ?? value.h) as number | undefined;
     const minute = (value.minute ?? value.minutes ?? value.M ?? value.m) as number | undefined;
 
@@ -205,7 +205,6 @@ export default function VolunteerSettingsPage() {
           end: normalizeTimeString(slots[0].end_time ?? DEFAULT_TIME_RANGE.end),
         });
         setIsManualActive(Boolean(user.is_active));
-        // availability_type no longer editable from UI
       } else {
         setSelectedDays(new Set());
         setTimeRange({
@@ -213,7 +212,6 @@ export default function VolunteerSettingsPage() {
           end: normalizeTimeString(DEFAULT_TIME_RANGE.end),
         });
         setIsManualActive(Boolean(user.is_active));
-        // availability_type no longer editable from UI
       }
     }
   }, [user]);
@@ -270,7 +268,6 @@ export default function VolunteerSettingsPage() {
   const handleTimeObjectChange = (field: keyof typeof timeRange) => (
     value: any,
   ) => {
-    // try to convert various value shapes to HH:MM
     const next = timeToString(value) || formatTimeValue(String(value ?? ""));
     setTimeRange((prev) => ({ ...prev, [field]: next }));
     setAvailabilityError(null);
@@ -311,7 +308,6 @@ export default function VolunteerSettingsPage() {
       }
     }
 
-    // Validate required profile values
     const nextProfileErrors: Partial<Record<"fullName" | "city", string>> = {};
     let hasErrors = false;
 
@@ -561,13 +557,12 @@ export default function VolunteerSettingsPage() {
               <TimeInput
                 label="Od"
                 labelPlacement="outside"
-                // force Polish locale and 24-hour hourCycle to display 24h clock
+                //24 godzinny format
                 {...({ locale: "pl-PL", hourCycle: "h23" } as any)}
                 startContent={
                   <ClockCircleLinearIcon className="text-xl text-default-400 pointer-events-none shrink-0" />
                 }
                 defaultValue={timeStringToTime(timeRange.start)}
-                // ensure value updates when timeRange state changes
                 value={timeStringToTime(timeRange.start) as any}
                 onChange={handleTimeObjectChange("start")}
               />

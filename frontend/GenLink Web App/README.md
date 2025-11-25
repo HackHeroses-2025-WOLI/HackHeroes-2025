@@ -98,13 +98,12 @@ pnpm install
 ```
 
 ### 3. Configure environment variables
-```bash
-# Copy example file
-cp .env.example .env.local
-
-# Edit .env.local and set your API URL
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
-```
+'''
+export const API_CONFIG = {
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || "https://hackheroes-2025-backend.onrender.com", // http://localhost:8000
+};
+'''
+To kod pdłączający backend do strony. Jeśli chcesz używać swojego przerobionego backendy mysisz zastąpić link: "https://hackheroes-2025-backend.onrender.com" linkiem do swojego backendu.
 
 ### 4. Run development server
 ```bash

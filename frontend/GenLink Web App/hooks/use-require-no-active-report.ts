@@ -5,10 +5,6 @@ import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/components/auth/auth-provider";
 
-/**
- * Hook that redirects to /wolontariusz/panel if user has an active report.
- * Use this on pages like /zgloszenia where users shouldn't be if they have active work.
- */
 export const useRequireNoActiveReport = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();

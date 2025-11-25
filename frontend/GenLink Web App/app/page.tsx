@@ -42,7 +42,7 @@ const steps = [
 export default function Home() {
   return (
     <div
-      className="flex flex-col gap-16 py-4 md:py-4" /*tu też można zmienić padding*/
+      className="flex flex-col gap-16 py-4 md:py-4" /*padding do zmiany*/
     >
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-400 to-primary-600 px-6 py-16 text-center shadow-lg md:px-12">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-primary-foreground">

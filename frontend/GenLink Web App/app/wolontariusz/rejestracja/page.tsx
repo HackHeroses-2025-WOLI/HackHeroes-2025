@@ -97,8 +97,6 @@ export default function VolunteerRegisterPage() {
     }
 
     try {
-      // send phone to the API as digits-only (e.g. 600600600), while keeping
-      // the displayed value formatted as XXX-XXX-XXX in the UI
       const phoneForApi = form.phone.replace(/\D/g, "").slice(0, PHONE_DIGIT_LIMIT);
 
       const normalizedFirstName = trimForPayload(form.firstName);

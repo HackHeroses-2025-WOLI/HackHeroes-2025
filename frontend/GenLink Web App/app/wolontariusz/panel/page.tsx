@@ -52,7 +52,6 @@ export default function VolunteerPanelPage() {
     setIsProcessing(true);
     try {
       await api.reports.active.cancel();
-      // Odświeź dane
       const [accountData, statsData, reportsData, completedData] = await Promise.all([
         api.auth.me(),
         api.reports.stats(),
@@ -78,7 +77,6 @@ export default function VolunteerPanelPage() {
     setIsProcessing(true);
     try {
       await api.reports.active.complete();
-      // Odświeź dane
       const [accountData, statsData, reportsData, completedData] = await Promise.all([
         api.auth.me(),
         api.reports.stats(),
@@ -123,7 +121,6 @@ export default function VolunteerPanelPage() {
         setStats(statsData);
         applyRecentReports(reportsData);
         setCompletedReports(completedData);
-        // fetch active report for display if the account claims one
         if (accountData?.active_report) {
           try {
             const active = await api.reports.by_id(accountData.active_report as number);
@@ -325,7 +322,7 @@ export default function VolunteerPanelPage() {
                           <span className="font-semibold text-default-900">
                             {request.full_name}
                           </span>
-                          {/* group + city chips — odstęp od imienia */}
+                          {/* grupa i miasto "chips" — odstęp od imienia */}
                           <div className="ml-3 flex items-center gap-2">
                             {groupMeta ? (
                               <Chip color={groupMeta.color} size="sm" variant="flat">
@@ -343,9 +340,7 @@ export default function VolunteerPanelPage() {
                         </p>
                       </div>
 
-                      {/* right side: review chip + action button */}
                       <div className="flex items-center gap-3 self-end sm:self-auto">
-                          {/* review chip: pinned then action button comes after */}
                           <div className="ml-4 sm:ml-6 flex items-center">
                             <Chip
                               color={request.is_reviewed ? "success" : "warning"}
@@ -366,7 +361,6 @@ export default function VolunteerPanelPage() {
                               </Button>
                             </div>
                           </div>
-                        {/* review chip: pinned to the right edge with extra left margin */}
                       </div>
                     </CardBody>
                   </Card>

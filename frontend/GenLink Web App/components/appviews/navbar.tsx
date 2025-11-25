@@ -5,10 +5,8 @@ import clsx from "clsx";
 
 import { siteConfig } from "@/config/site";
 import { Logo } from "@/components/icons";
-// Note: Navbar intentionally contains no links; navigation is disabled here
 
 export const Navbar = () => {
-  // Intentionally no navigation handlers: the header is decorative in this appviews component
   return (
     <HeroUINavbar isBlurred className={clsx("fixed w-full z-50 left-0 right-0 top-0 border-b-2 border-default-100")} maxWidth="xl" position="static">
       <NavbarContent className="w-full" justify="center">

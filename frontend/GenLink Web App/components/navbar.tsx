@@ -121,16 +121,10 @@ export const Navbar = () => {
     const s = (str || "").toString();
     let hash = 0;
     for (let i = 0; i < s.length; i++) {
-      // simple hash
-      // eslint-disable-next-line no-bitwise
       hash = s.charCodeAt(i) + ((hash << 5) - hash);
     }
-    // convert int hash to RGB
-    // eslint-disable-next-line no-bitwise
     const r = (hash >> 24) & 0xff;
-    // eslint-disable-next-line no-bitwise
     const g = (hash >> 16) & 0xff;
-    // eslint-disable-next-line no-bitwise
     const b = (hash >> 8) & 0xff;
     const toHex = (v: number) => v.toString(16).padStart(2, "0");
     const hex = `#${toHex((r + 256) % 256)}${toHex((g + 256) % 256)}${toHex((b + 256) % 256)}`;
@@ -142,9 +136,8 @@ export const Navbar = () => {
     const r = parseInt(bg.substring(0, 2), 16);
     const g = parseInt(bg.substring(2, 4), 16);
     const b = parseInt(bg.substring(4, 6), 16);
-    // relative luminance formula (perceived brightness)
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.6 ? "#111827" : "#ffffff"; // dark text for light backgrounds, else white
+    return luminance > 0.6 ? "#111827" : "#ffffff";
   };
 
   const userName = user?.full_name ?? "Wolontariusz";
